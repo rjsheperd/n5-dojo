@@ -9,9 +9,11 @@ Open it once online so it downloads everything (about 8 MB); after that it works
 - `site/` – the published app (pages, audio, bundled fonts, icons, manifest, service worker). Deployed by `.github/workflows/pages.yml` on every push to `main`.
 - `build/` – how `site/` is made. `build/src/` holds the pages exported from the claude.ai artifact; `build.py` swaps Google Fonts for bundled ones, turns on each app's offline mode, adds the manifest and icons, and writes a service worker that precaches everything.
 
+`build/jukugo/` makes the Jukugo page: `extra.py` holds the exam sentences and look-alike kanji, and `gen.py` combines them with the compound list in `src/asobiba.html` into `src/jukugo.html`.
+
 To rebuild after changing `build/src/`:
 ```
-cd build && npm ci && python3 build.py
+cd build && python3 jukugo/gen.py && npm ci && python3 build.py
 ```
 
 ## Progress

@@ -1,0 +1,876 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<title>N5 Jukugo</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Klee+One:wght@400;600&family=Zen+Kaku+Gothic+New:wght@400;500;700&display=swap">
+<style>
+/* Layout: practice-paper board of 110 squares grouped by the Anki subdecks; every game runs in one
+   centred "practice square" stage. Ink = sumi black, guides = practice-paper green, stamps = hanko red. */
+:root {
+  --paper: #f5f6f3;
+  --sheet: #ffffff;
+  --ink: #1d2220;
+  --muted: #5d6762;
+  --faint: #c9cfcb;
+  --guide: #9cc3ad;
+  --guide-soft: #e6f1ea;
+  --hanko: #c43d2b;
+  --hanko-soft: #fbe9e6;
+  --ok: #2f7d55;
+  --ok-soft: #e3f3ea;
+  --bad: #b8432f;
+  --bad-soft: #f8e6e2;
+  --gold: #b9842a;
+  --kanji: "Klee One", "Hiragino Mincho ProN", "Yu Mincho", serif;
+  --ui: "Zen Kaku Gothic New", "Hiragino Sans", "Yu Gothic", "Noto Sans JP", system-ui, sans-serif;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --paper: #141816; --sheet: #1c211f; --ink: #e9ece9; --muted: #9aa49f; --faint: #3a423e;
+    --guide: #3f6a54; --guide-soft: #1e2b24; --hanko: #e2614c; --hanko-soft: #3a211d;
+    --ok: #6cc596; --ok-soft: #1b3326; --bad: #ec8a76; --bad-soft: #3a221d; --gold: #ddb062; color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --paper: #141816; --sheet: #1c211f; --ink: #e9ece9; --muted: #9aa49f; --faint: #3a423e;
+  --guide: #3f6a54; --guide-soft: #1e2b24; --hanko: #e2614c; --hanko-soft: #3a211d;
+  --ok: #6cc596; --ok-soft: #1b3326; --bad: #ec8a76; --bad-soft: #3a221d; --gold: #ddb062; color-scheme: dark;
+}
+* { box-sizing: border-box; }
+html, body { background: var(--paper); }
+body { color: var(--ink); font-family: var(--ui); font-size: 16px; line-height: 1.6; }
+button { font: inherit; color: inherit; }
+button:focus-visible, [tabindex]:focus-visible { outline: 2px solid var(--guide); outline-offset: 2px; }
+h1, h2, h3 { margin: 0; text-wrap: balance; }
+.wrap { max-width: 860px; margin: 0 auto; padding-inline: 16px; padding-block: 0 56px; }
+
+/* top bar */
+.bar { position: sticky; top: env(safe-area-inset-top, 0px); z-index: 20; background: var(--paper); border-bottom: 1px solid var(--faint); }
+.bar-in { max-width: 860px; margin: 0 auto; padding: 10px 16px; display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+.brand { font-family: var(--kanji); font-weight: 600; font-size: 1.25rem; margin-right: auto; display: flex; align-items: baseline; gap: 8px; cursor: pointer; background: none; border: 0; padding: 0; }
+.brand small { font-family: var(--ui); font-size: .72rem; letter-spacing: .14em; text-transform: uppercase; color: var(--muted); font-weight: 700; }
+.pill { display: inline-flex; align-items: center; gap: 6px; font-size: .82rem; font-weight: 700; padding: 3px 10px; border-radius: 999px; background: var(--sheet); border: 1px solid var(--faint); font-variant-numeric: tabular-nums; white-space: nowrap; }
+.pill svg { width: 14px; height: 14px; }
+.pill.streak { color: var(--hanko); }
+.icon-btn { border: 1px solid var(--faint); background: var(--sheet); border-radius: 999px; width: 34px; height: 34px; display: grid; place-items: center; cursor: pointer; }
+.icon-btn svg { width: 18px; height: 18px; }
+
+/* home: hero */
+.hero { padding-block: 26px 6px; display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 18px; align-items: end; }
+.hero h1 { font-family: var(--kanji); font-weight: 600; font-size: clamp(1.8rem, 6vw, 2.6rem); line-height: 1.15; }
+.hero p { margin: 6px 0 0; color: var(--muted); max-width: 52ch; }
+.tally { display: grid; justify-items: end; gap: 4px; }
+.tally .big { font-family: var(--kanji); font-weight: 600; font-size: 2.4rem; line-height: 1; font-variant-numeric: tabular-nums; }
+.tally .big span { font-size: 1rem; color: var(--muted); }
+.tally .lbl { font-size: .75rem; letter-spacing: .1em; text-transform: uppercase; color: var(--muted); font-weight: 700; }
+.levelbar { margin-top: 14px; display: grid; grid-template-columns: auto minmax(0, 1fr) auto; gap: 10px; align-items: center; font-size: .82rem; color: var(--muted); font-variant-numeric: tabular-nums; }
+.levelbar .track { height: 8px; border-radius: 999px; background: var(--guide-soft); overflow: hidden; }
+.levelbar .fill { height: 100%; background: var(--guide); border-radius: 999px; transition: width .6s ease; }
+.levelbar b { color: var(--ink); }
+
+/* today card */
+.today { margin-top: 18px; background: var(--sheet); border: 1px solid var(--faint); border-radius: 16px; padding: 18px; display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 14px; align-items: center; }
+.today h2 { font-size: 1.15rem; }
+.today p { margin: 2px 0 0; color: var(--muted); font-size: .92rem; }
+.cta { border: 0; border-radius: 12px; background: var(--ink); color: var(--paper); font-weight: 700; padding: 12px 20px; cursor: pointer; font-size: 1rem; white-space: nowrap; }
+.cta:disabled { opacity: .4; cursor: default; }
+.cta.red { background: var(--hanko); color: #fff; }
+.ghost { border: 1px solid var(--faint); background: var(--sheet); border-radius: 12px; padding: 10px 16px; font-weight: 700; cursor: pointer; }
+
+/* games */
+.section-h { margin-top: 30px; display: flex; align-items: baseline; justify-content: space-between; gap: 10px; flex-wrap: wrap; }
+.section-h h2 { font-size: 1.05rem; letter-spacing: .02em; }
+.section-h .hint { font-size: .82rem; color: var(--muted); }
+.games { margin-top: 12px; display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 10px; }
+.game { text-align: left; background: var(--sheet); border: 1px solid var(--faint); border-radius: 14px; padding: 14px; cursor: pointer; display: grid; gap: 4px; transition: transform .15s ease, border-color .15s ease; }
+.game:hover { transform: translateY(-2px); border-color: var(--guide); }
+.game .gk { font-family: var(--kanji); font-size: 1.6rem; line-height: 1.1; }
+.game b { font-size: .98rem; }
+.game span { font-size: .82rem; color: var(--muted); }
+.game .best { color: var(--gold); font-weight: 700; }
+
+/* chips */
+.chips { margin-top: 12px; display: flex; gap: 6px; flex-wrap: wrap; }
+.chip { border: 1px solid var(--faint); background: var(--sheet); border-radius: 999px; padding: 4px 12px; font-size: .82rem; cursor: pointer; font-variant-numeric: tabular-nums; }
+.chip[aria-pressed="true"] { background: var(--ink); color: var(--paper); border-color: var(--ink); }
+
+/* board */
+.group { margin-top: 18px; }
+.group-h { display: flex; justify-content: space-between; align-items: baseline; font-size: .8rem; color: var(--muted); font-weight: 700; letter-spacing: .06em; margin-bottom: 6px; }
+.group-h { gap: 10px; }
+.group-h > span:last-child { white-space: nowrap; }
+.board { display: grid; grid-template-columns: repeat(auto-fill, minmax(54px, 1fr)); gap: 6px; }
+.tile { position: relative; aspect-ratio: 1; border: 1px solid var(--guide); background: var(--sheet); border-radius: 4px; cursor: pointer; display: grid; place-items: center; padding: 0; max-width: 100%; }
+.tile::before, .tile::after { content: ""; position: absolute; background: none; pointer-events: none; }
+.tile::before { left: 50%; top: 8%; bottom: 8%; border-left: 1px dashed var(--guide-soft); }
+.tile::after { top: 50%; left: 8%; right: 8%; border-top: 1px dashed var(--guide-soft); }
+.tile .k { position: relative; z-index: 1; font-family: var(--kanji); font-size: 1.7rem; line-height: 1; color: color-mix(in srgb, var(--ink) 22%, var(--faint)); }
+.tile.s1 .k { color: color-mix(in srgb, var(--ink) 45%, var(--faint)); }
+.tile.s2 .k { color: color-mix(in srgb, var(--ink) 65%, var(--faint)); }
+.tile.s3 .k { color: color-mix(in srgb, var(--ink) 85%, var(--faint)); }
+.tile.s4 .k, .tile.s5 .k, .tile.s6 .k { color: var(--ink); }
+.tile .stamp { position: absolute; right: 3px; bottom: 3px; width: 15px; height: 15px; z-index: 2; }
+.tile .due { position: absolute; top: 4px; right: 4px; width: 7px; height: 7px; border-radius: 50%; background: var(--gold); z-index: 2; }
+.legend { margin-top: 12px; display: flex; flex-wrap: wrap; gap: 14px; font-size: .78rem; color: var(--muted); align-items: center; }
+.legend i { display: inline-block; width: 10px; height: 10px; border-radius: 2px; margin-right: 5px; vertical-align: -1px; }
+
+/* stage (sessions) */
+.stage { padding-block: 18px 30px; display: grid; gap: 16px; justify-items: center; }
+.stage-top { width: 100%; max-width: 560px; display: grid; grid-template-columns: auto minmax(0, 1fr) auto; gap: 12px; align-items: center; }
+.progress { height: 8px; border-radius: 999px; background: var(--guide-soft); overflow: hidden; }
+.progress .fill { height: 100%; background: var(--guide); transition: width .3s ease; }
+.progress.timer .fill { background: var(--gold); transition: width 1s linear; }
+.counter { font-size: .85rem; font-weight: 700; color: var(--muted); font-variant-numeric: tabular-nums; white-space: nowrap; }
+.combo { font-size: .85rem; font-weight: 700; color: var(--hanko); min-height: 1.4em; font-variant-numeric: tabular-nums; }
+.square { position: relative; width: min(64vw, 260px); aspect-ratio: 1; background: var(--sheet); border: 2px solid var(--guide); border-radius: 6px; display: grid; place-items: center; }
+.square::before { content: ""; position: absolute; left: 50%; top: 6%; bottom: 6%; border-left: 2px dashed var(--guide-soft); }
+.square::after { content: ""; position: absolute; top: 50%; left: 6%; right: 6%; border-top: 2px dashed var(--guide-soft); }
+.square .k { position: relative; z-index: 1; font-family: var(--kanji); font-size: min(44vw, 180px); line-height: 1; }
+.square.text { width: min(88vw, 420px); aspect-ratio: auto; min-height: 150px; padding: 22px; }
+.square.text::before, .square.text::after { display: none; }
+.square.text .t { position: relative; z-index: 1; font-size: 1.45rem; font-weight: 700; text-align: center; line-height: 1.35; }
+.square.text .t.kana { font-family: var(--kanji); font-size: 2.4rem; font-weight: 600; }
+.square .sub { position: absolute; bottom: 10px; left: 0; right: 0; text-align: center; font-size: .82rem; color: var(--muted); z-index: 1; }
+.q-label { font-size: .8rem; letter-spacing: .12em; text-transform: uppercase; color: var(--muted); font-weight: 700; text-align: center; }
+.options { width: 100%; max-width: 560px; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+.opt { border: 1px solid var(--faint); background: var(--sheet); border-radius: 12px; padding: 14px 12px; cursor: pointer; text-align: center; font-weight: 600; min-height: 64px; display: grid; place-items: center; transition: transform .1s ease; position: relative; }
+.opt:active { transform: scale(.98); }
+.opt .n { position: absolute; top: 6px; left: 9px; font-size: .7rem; color: var(--muted); font-weight: 700; }
+.opt.k { font-family: var(--kanji); font-size: 2.2rem; font-weight: 600; padding: 8px; }
+.opt.r { font-family: var(--kanji); font-size: 1.05rem; }
+.opt .rom { display: block; font-family: var(--ui); font-size: .75rem; color: var(--muted); font-weight: 500; }
+.opt.right { background: var(--ok-soft); border-color: var(--ok); }
+.opt.wrong { background: var(--bad-soft); border-color: var(--bad); animation: shake .3s; }
+.opt[disabled] { cursor: default; }
+.feedback { min-height: 1.6em; font-weight: 700; text-align: center; max-width: 560px; }
+.feedback.ok { color: var(--ok); }
+.feedback.no { color: var(--bad); }
+.nextrow { display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; }
+
+/* flashcard back */
+.back { width: 100%; max-width: 560px; background: var(--sheet); border: 1px solid var(--faint); border-radius: 14px; padding: 16px 18px; display: grid; gap: 10px; }
+.rrow { display: grid; grid-template-columns: 4.5em minmax(0, 1fr); gap: 10px; align-items: baseline; }
+.rrow .lab { font-size: .72rem; letter-spacing: .1em; text-transform: uppercase; color: var(--muted); font-weight: 700; }
+.readings { display: flex; flex-wrap: wrap; gap: 6px; }
+.rd { font-family: var(--kanji); font-size: 1.15rem; padding: 2px 10px; border-radius: 8px; background: var(--guide-soft); line-height: 1.5; }
+.rd small { display: block; font-family: var(--ui); font-size: .7rem; color: var(--muted); text-align: center; line-height: 1.2; padding-bottom: 2px; }
+.meaning { font-size: 1.1rem; font-weight: 700; }
+.from { font-size: .75rem; color: var(--muted); }
+.grades { width: 100%; max-width: 560px; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; }
+.grade { border-radius: 12px; padding: 12px 8px; cursor: pointer; font-weight: 700; border: 1px solid var(--faint); background: var(--sheet); display: grid; gap: 2px; }
+.grade small { font-weight: 500; font-size: .74rem; color: var(--muted); }
+.grade.again { border-color: var(--bad); color: var(--bad); }
+.grade.good { border-color: var(--ok); color: var(--ok); }
+.grade.easy { border-color: var(--guide); }
+
+/* pairs */
+.pairs { width: 100%; max-width: 620px; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
+@media (min-width: 560px) { .pairs { grid-template-columns: repeat(4, minmax(0, 1fr)); } }
+.pcard { min-height: 86px; border: 1px solid var(--faint); background: var(--sheet); border-radius: 12px; cursor: pointer; padding: 8px; display: grid; place-items: center; text-align: center; font-weight: 600; font-size: .9rem; line-height: 1.3; transition: transform .12s ease, opacity .35s ease; }
+.pcard.k { font-family: var(--kanji); font-size: 2.2rem; }
+.pcard.sel { border-color: var(--ink); box-shadow: 0 0 0 2px var(--ink) inset; }
+.pcard.miss { border-color: var(--bad); background: var(--bad-soft); animation: shake .3s; }
+.pcard.done { border-color: var(--ok); background: var(--ok-soft); opacity: .35; cursor: default; }
+
+/* summary */
+.summary { width: 100%; max-width: 560px; background: var(--sheet); border: 1px solid var(--faint); border-radius: 16px; padding: 22px; display: grid; gap: 14px; justify-items: center; text-align: center; }
+.summary h2 { font-family: var(--kanji); font-size: 1.8rem; font-weight: 600; }
+.stats3 { width: 100%; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
+.stats3 div { background: var(--paper); border-radius: 10px; padding: 10px 6px; }
+.stats3 b { display: block; font-size: 1.5rem; font-variant-numeric: tabular-nums; }
+.stats3 span { font-size: .74rem; color: var(--muted); }
+.missed { display: flex; flex-wrap: wrap; gap: 6px; justify-content: center; }
+.missed button { font-family: var(--kanji); font-size: 1.5rem; width: 46px; height: 46px; border: 1px solid var(--bad); background: var(--bad-soft); border-radius: 6px; cursor: pointer; }
+
+/* overlays */
+.overlay { position: fixed; inset: 0; z-index: 50; background: color-mix(in srgb, var(--ink) 45%, transparent); display: grid; place-items: end center; padding: 16px; padding-bottom: calc(16px + env(safe-area-inset-bottom, 0px)); }
+@media (min-width: 640px) { .overlay { place-items: center; } }
+.sheet { width: 100%; max-width: 520px; max-height: 86vh; overflow: auto; background: var(--sheet); border-radius: 18px; padding: 20px; display: grid; gap: 14px; }
+.sheet-h { display: flex; justify-content: space-between; align-items: center; gap: 10px; }
+.sheet-h h2 { font-size: 1.1rem; }
+.detail-top { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 16px; align-items: center; }
+.detail-top .square { width: 120px; }
+.detail-top .square .k { font-size: 92px; }
+.kv { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
+.kv div { background: var(--paper); border-radius: 10px; padding: 8px; text-align: center; }
+.kv b { display: block; font-variant-numeric: tabular-nums; }
+.kv span { font-size: .72rem; color: var(--muted); }
+.setrow { display: flex; justify-content: space-between; align-items: center; gap: 12px; padding: 8px 0; border-bottom: 1px solid var(--faint); }
+.setrow:last-child { border-bottom: 0; }
+.switch { position: relative; width: 46px; height: 26px; border-radius: 999px; border: 0; background: var(--faint); cursor: pointer; }
+.switch::after { content: ""; position: absolute; top: 3px; left: 3px; width: 20px; height: 20px; border-radius: 50%; background: var(--sheet); transition: transform .2s ease; }
+.switch[aria-checked="true"] { background: var(--ok); }
+.switch[aria-checked="true"]::after { transform: translateX(20px); }
+.seg { display: inline-flex; border: 1px solid var(--faint); border-radius: 10px; overflow: hidden; }
+.seg button { border: 0; background: transparent; padding: 5px 11px; cursor: pointer; font-size: .85rem; font-variant-numeric: tabular-nums; }
+.seg button[aria-pressed="true"] { background: var(--ink); color: var(--paper); }
+.danger { color: var(--bad); border-color: var(--bad); }
+footer { margin-top: 36px; font-size: .78rem; color: var(--muted); display: grid; gap: 4px; }
+
+/* celebrations */
+.fx { position: fixed; inset: 0; pointer-events: none; z-index: 60; display: grid; place-items: center; }
+.hanamaru { width: min(60vw, 240px); }
+.hanamaru path, .hanamaru circle { fill: none; stroke: var(--hanko); stroke-width: 5; stroke-linecap: round; }
+.xpfloat { position: fixed; z-index: 61; pointer-events: none; font-weight: 800; color: var(--gold); font-size: 1.1rem; }
+.bigstamp { width: 150px; height: 150px; }
+@media (prefers-reduced-motion: no-preference) {
+  .hanamaru path, .hanamaru circle { stroke-dasharray: 1200; stroke-dashoffset: 1200; animation: draw 1s ease forwards; }
+  .xpfloat { animation: floatup 1s ease forwards; }
+  .bigstamp { animation: stamp .55s cubic-bezier(.2, 1.6, .4, 1) both; }
+  .fx.fade { animation: fadeout .5s ease .9s forwards; }
+  .tile.pop { animation: pop .5s ease; }
+}
+@keyframes draw { to { stroke-dashoffset: 0; } }
+@keyframes floatup { from { opacity: 1; transform: translateY(0); } to { opacity: 0; transform: translateY(-40px); } }
+@keyframes stamp { 0% { transform: scale(2.4) rotate(-14deg); opacity: 0; } 100% { transform: scale(1) rotate(-8deg); opacity: 1; } }
+@keyframes fadeout { to { opacity: 0; } }
+@keyframes shake { 25% { transform: translateX(-4px); } 75% { transform: translateX(4px); } }
+@keyframes pop { 50% { transform: scale(1.15); } }
+@media (max-width: 520px) {
+  .hero { grid-template-columns: 1fr; }
+  .tally { justify-items: start; }
+  .today { grid-template-columns: 1fr; }
+  .board { grid-template-columns: repeat(auto-fill, minmax(46px, 1fr)); gap: 5px; }
+  .tile .k { font-size: 1.45rem; }
+  .opt.k { font-size: 1.9rem; }
+}
+
+/* ---- jukugo additions ---- */
+.square.word { width: min(92vw, 460px); aspect-ratio: auto; min-height: 150px; padding: 18px 14px; }
+.square.word::before, .square.word::after { display: none; }
+.square.word .k { font-size: clamp(3rem, 15vw, 5.4rem); letter-spacing: .04em; }
+.sentence { width: 100%; max-width: 560px; background: var(--sheet); border: 1px solid var(--faint); border-radius: 14px; padding: 18px 16px; font-size: 1.3rem; line-height: 2; text-align: center; font-family: var(--kanji); font-weight: 600; }
+.sentence u { text-decoration: none; border-bottom: 3px solid var(--hanko); padding: 0 2px; }
+.sentence .en { display: block; font-family: var(--ui); font-weight: 500; font-size: .82rem; color: var(--muted); line-height: 1.4; margin-top: 4px; }
+.opt.kana { font-family: var(--kanji); font-size: 1.3rem; }
+.opt.kw { font-family: var(--kanji); font-size: 1.9rem; font-weight: 600; }
+.why { width: 100%; max-width: 560px; background: var(--sheet); border: 1px solid var(--faint); border-radius: 14px; padding: 14px 16px; display: grid; gap: 10px; }
+.why .head { display: flex; align-items: baseline; gap: 10px; flex-wrap: wrap; }
+.why .head .w { font-family: var(--kanji); font-size: 1.6rem; font-weight: 600; }
+.why .head .r { font-family: var(--kanji); font-size: 1.15rem; color: var(--ok); font-weight: 600; }
+.why .head .m { font-weight: 700; }
+.parts { display: flex; flex-wrap: wrap; gap: 6px; align-items: stretch; }
+.part { display: grid; justify-items: center; gap: 1px; padding: 6px 10px; border-radius: 10px; background: var(--guide-soft); min-width: 64px; }
+.part .pk { font-family: var(--kanji); font-size: 1.6rem; font-weight: 600; line-height: 1.2; }
+.part .pr { font-family: var(--kanji); font-size: 1rem; font-weight: 600; }
+.part .pr.chg { color: var(--hanko); }
+.part small { font-size: .7rem; color: var(--muted); text-align: center; line-height: 1.25; max-width: 11em; }
+.part.kana { background: transparent; border: 1px dashed var(--faint); }
+.note { font-size: .88rem; color: var(--ink); }
+.note b.trap { color: var(--hanko); }
+.trapnote { font-size: .85rem; color: var(--muted); }
+.fam-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(54px, 1fr)); gap: 6px; margin-top: 12px; }
+.fam-grid .tile .n { position: absolute; bottom: 3px; right: 5px; font-size: .62rem; color: var(--muted); font-weight: 700; z-index: 2; }
+.fam-list { display: grid; gap: 6px; }
+.fam-row { display: grid; grid-template-columns: minmax(5.2em, auto) minmax(0, 1fr); gap: 10px; align-items: baseline; padding: 6px 0; border-bottom: 1px solid var(--faint); }
+.fam-row:last-child { border-bottom: 0; }
+.fam-row .w { font-family: var(--kanji); font-size: 1.35rem; font-weight: 600; white-space: nowrap; }
+.fam-row .w mark { background: none; color: var(--hanko); }
+.fam-row .r { font-family: var(--kanji); font-weight: 600; }
+.fam-row .m { font-size: .85rem; color: var(--muted); }
+.fam-row .core { font-size: .65rem; font-weight: 700; color: var(--gold); letter-spacing: .06em; margin-left: 6px; }
+.exam-tag { display: inline-block; font-size: .7rem; font-weight: 700; letter-spacing: .08em; padding: 1px 8px; border-radius: 999px; background: var(--hanko-soft); color: var(--hanko); }
+</style>
+
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <symbol id="i-flame" viewBox="0 0 24 24"><path fill="currentColor" d="M12 2c1 3.5-1.6 5-1.6 7.6 0 1.4 1 2.4 2.2 2.4 1.6 0 2.4-1.4 2-3.4 2.4 1.6 4.4 4.3 4.4 7.4A7 7 0 0 1 12 23a7 7 0 0 1-7-7c0-4.9 4.6-7.6 7-14z"/></symbol>
+  <symbol id="i-gear" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" d="M12 15.5a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7zM19.4 13.5l1.6 1-1.8 3.2-1.8-.6a7.6 7.6 0 0 1-1.8 1l-.3 1.9H11l-.3-1.9a7.6 7.6 0 0 1-1.8-1l-1.8.6-1.8-3.2 1.6-1a7.6 7.6 0 0 1 0-2.1l-1.6-1 1.8-3.2 1.8.6a7.6 7.6 0 0 1 1.8-1L11 2.9h3.6l.3 1.9a7.6 7.6 0 0 1 1.8 1l1.8-.6 1.8 3.2-1.6 1a7.6 7.6 0 0 1 0 2.1z"/></symbol>
+  <symbol id="i-close" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" d="M6 6l12 12M18 6L6 18"/></symbol>
+  <symbol id="i-stamp" viewBox="0 0 40 40"><rect x="3" y="3" width="34" height="34" rx="6" fill="var(--hanko)"/><rect x="6" y="6" width="28" height="28" rx="4" fill="none" stroke="#fff" stroke-width="1.6"/><text x="20" y="27.5" text-anchor="middle" font-size="20" font-family="Klee One, serif" font-weight="600" fill="#fff">合</text></symbol>
+</svg>
+
+<header class="bar">
+  <div class="bar-in">
+    <button class="brand" id="home-btn" aria-label="Home">熟語 <small>N5</small></button>
+    <span class="pill streak" title="Days in a row"><svg><use href="#i-flame"/></svg><span id="streak-n">0</span></span>
+    <span class="pill" id="level-pill">Lv 1</span>
+    <button class="icon-btn" id="settings-btn" aria-label="Settings"><svg><use href="#i-gear"/></svg></button>
+  </div>
+</header>
+<main class="wrap" id="view"></main>
+<div id="overlay-root"></div>
+
+<script>
+const DATA = {"kanji":[{"k":"日","m":"day, sun","m1":"day","snd":["か","じつ","にち","ひ","び"]},{"k":"一","m":"one","m1":"one","snd":["いち","ひと"]},{"k":"国","m":"country","m1":"country","snd":["くに","こく"]},{"k":"人","m":"person","m1":"person","snd":["じん","にん","ひと"]},{"k":"年","m":"year, counter for years","m1":"year","snd":["とし","ねん"]},{"k":"大","m":"large, big","m1":"large","snd":["おお","たい","だい"]},{"k":"十","m":"ten, 10","m1":"ten","snd":["じゅう","と","とお"]},{"k":"二","m":"two, 2","m1":"two","snd":["じ","に","ふた"]},{"k":"本","m":"book, present","m1":"book","snd":["ほん","もと"]},{"k":"中","m":"in, inside","m1":"in","snd":["あた","うち","ちゅう","なか"]},{"k":"長","m":"long, leader","m1":"long","snd":["おさ","ちょう","なが"]},{"k":"出","m":"exit, leave","m1":"exit","snd":["い","しゅつ","すい","だ","で"]},{"k":"三","m":"three, 3","m1":"three","snd":["さん","み"]},{"k":"時","m":"time, hour","m1":"time","snd":["じ","とき","どき"]},{"k":"行","m":"going, journey","m1":"going","snd":["あん","い","おこな","ぎょう","こう","ゆ"]},{"k":"見","m":"see, hopes","m1":"see","snd":["けん","み"]},{"k":"月","m":"month, moon","m1":"month","snd":["がつ","げつ","つき"]},{"k":"分","m":"part, divide","m1":"part","snd":["ふん","ぶ","ぶん","わ"]},{"k":"後","m":"behind, back","m1":"behind","snd":["あと","うし","こう","ご","のち"]},{"k":"前","m":"in front, before","m1":"in front","snd":["ぜん","まえ"]},{"k":"生","m":"life, genuine","m1":"life","snd":["い","う","お","しょう","せい","なま","は"]},{"k":"五","m":"five, 5","m1":"five","snd":["いつ","ご"]},{"k":"間","m":"interval, space","m1":"interval","snd":["あい","あいだ","かん","けん","ま"]},{"k":"上","m":"above, up","m1":"above","snd":["あ","うえ","うわ","かみ","しゃん","しょう","じょう","たてまつ","のぼ"]},{"k":"東","m":"east","m1":"east","snd":["とう","ひがし"]},{"k":"四","m":"four, 4","m1":"four","snd":["し","よ","よん"]},{"k":"今","m":"now, the present","m1":"now","snd":["いま","きん","こん"]},{"k":"金","m":"gold","m1":"gold","snd":["かな","かね","がね","きん","こん","ごん"]},{"k":"九","m":"nine, 9","m1":"nine","snd":["きゅう","く","ここの"]},{"k":"入","m":"enter, insert","m1":"enter","snd":["い","にゅう","はい"]},{"k":"学","m":"study, learning","m1":"study","snd":["がく","まな"]},{"k":"高","m":"tall, high","m1":"tall","snd":["こう","たか"]},{"k":"円","m":"circle, yen","m1":"circle","snd":["えん","まる"]},{"k":"子","m":"child","m1":"child","snd":["こ","し","す","つ","ね"]},{"k":"外","m":"outside","m1":"outside","snd":["がい","げ","そと","と","はず","ほか"]},{"k":"八","m":"eight, 8","m1":"eight","snd":["はち","や","よう"]},{"k":"六","m":"six, 6","m1":"six","snd":["む","むい","ろく"]},{"k":"下","m":"below, down","m1":"below","snd":["お","か","くだ","げ","さ","した","しも","もと"]},{"k":"来","m":"come, due","m1":"come","snd":["き","きた","く","こ","たい","らい"]},{"k":"気","m":"spirit, mind","m1":"spirit","snd":["いき","き","け"]},{"k":"小","m":"little, small","m1":"little","snd":["お","こ","さ","しょう","ちい"]},{"k":"七","m":"seven, 7","m1":"seven","snd":["しち","なな","なの"]},{"k":"山","m":"mountain","m1":"mountain","snd":["さん","せん","やま"]},{"k":"話","m":"tale, talk","m1":"tale","snd":["はな","はなし","わ"]},{"k":"女","m":"woman, female","m1":"woman","snd":["おんな","じょ","め"]},{"k":"北","m":"north","m1":"north","snd":["きた","ほく"]},{"k":"午","m":"noon, sign of the horse","m1":"noon","snd":["うま","ご"]},{"k":"百","m":"hundred","m1":"hundred","snd":["ひゃく","びゃく","もも"]},{"k":"書","m":"write","m1":"write","snd":["か","しょ"]},{"k":"先","m":"before, ahead","m1":"before","snd":["さき","せん","ま"]},{"k":"名","m":"name, noted","m1":"name","snd":["な","みょう","めい"]},{"k":"川","m":"river, stream","m1":"river","snd":["かわ","せん"]},{"k":"千","m":"thousand","m1":"thousand","snd":["せん","ち"]},{"k":"水","m":"water","m1":"water","snd":["すい","みず"]},{"k":"半","m":"half, middle","m1":"half","snd":["なか","はん"]},{"k":"男","m":"male, man","m1":"male","snd":["お","おとこ","だん","なん"]},{"k":"西","m":"west","m1":"west","snd":["さい","せい","にし"]},{"k":"電","m":"electricity, electric powered","m1":"electricity","snd":["でん"]},{"k":"校","m":"school, exam","m1":"school","snd":["こう"]},{"k":"語","m":"word, speech","m1":"word","snd":["かた","ご"]},{"k":"土","m":"soil, earth","m1":"soil","snd":["つち","と","ど"]},{"k":"木","m":"tree, wood","m1":"tree","snd":["き","こ","ぼく","もく"]},{"k":"聞","m":"to hear, to listen","m1":"to hear","snd":["き","ぶん","もん"]},{"k":"食","m":"eat, food","m1":"eat","snd":["く","しょく","じき","た","は"]},{"k":"車","m":"car, wheel","m1":"car","snd":["くるま","しゃ"]},{"k":"何","m":"what","m1":"what","snd":["か","なに","なん"]},{"k":"南","m":"south","m1":"south","snd":["な","なん","みなみ"]},{"k":"万","m":"ten thousand, 10","m1":"ten thousand","snd":["ばん","まん"]},{"k":"毎","m":"every","m1":"every","snd":["ごと","まい"]},{"k":"白","m":"white","m1":"white","snd":["しろ","はく","びゃく"]},{"k":"天","m":"heavens, sky","m1":"heavens","snd":["あまつ","てん"]},{"k":"母","m":"mother","m1":"mother","snd":["かあ","はは","ぼ"]},{"k":"火","m":"fire","m1":"fire","snd":["か","ひ","び","ほ"]},{"k":"右","m":"right (direction)","m1":"right (direction)","snd":["う","みぎ","ゆう"]},{"k":"読","m":"to read","m1":"to read","snd":["とう","とく","どく","よ"]},{"k":"友","m":"friend","m1":"friend","snd":["とも","ゆう"]},{"k":"左","m":"left","m1":"left","snd":["さ","しゃ","ひだり"]},{"k":"休","m":"rest, day off","m1":"rest","snd":["きゅう","やす"]},{"k":"父","m":"father","m1":"father","snd":["ちち","とう","ふ"]},{"k":"雨","m":"rain","m1":"rain","snd":["あま","あめ","う"]},{"k":"会","m":"meeting, meet","m1":"meeting","snd":["あ","かい"]},{"k":"手","m":"hand","m1":"hand","snd":["しゅ","て"]},{"k":"多","m":"many, frequent","m1":"many","snd":["おお","た"]},{"k":"口","m":"mouth","m1":"mouth","snd":["くち","こう"]},{"k":"少","m":"few, little","m1":"few","snd":["しょう","すく","すこ"]},{"k":"店","m":"store, shop","m1":"store","snd":["てん","みせ"]},{"k":"新","m":"new","m1":"new","snd":["あたら","あら","しん"]},{"k":"社","m":"company, firm","m1":"company","snd":["しゃ","やしろ"]},{"k":"空","m":"empty, sky","m1":"empty","snd":["あ","から","くう","す","そら","むな"]},{"k":"立","m":"stand up, rise","m1":"stand up","snd":["た","りつ"]},{"k":"言","m":"say, word","m1":"say","snd":["い","げん","こと","ごん"]},{"k":"足","m":"leg, foot","m1":"leg","snd":["あし","そく","た"]},{"k":"道","m":"road-way, street","m1":"road-way","snd":["どう","みち"]},{"k":"田","m":"rice field, rice paddy","m1":"rice field","snd":["た","だ","でん"]},{"k":"目","m":"eye, item","m1":"eye","snd":["め","もく"]},{"k":"耳","m":"ear","m1":"ear","snd":["じ","みみ"]},{"k":"力","m":"power, strength","m1":"power","snd":["ちから","りき","りょく"]},{"k":"牛","m":"cow, cattle","m1":"cow","snd":["うし","ぎゅう"]},{"k":"馬","m":"horse","m1":"horse","snd":["うま","ば"]},{"k":"魚","m":"fish","m1":"fish","snd":["うお","ぎょ","さかな"]},{"k":"鳥","m":"bird","m1":"bird","snd":["ちょう","とり"]},{"k":"門","m":"gate","m1":"gate","snd":["かど","もん"]},{"k":"花","m":"flower","m1":"flower","snd":["か","はな"]},{"k":"安","m":"cheap, peaceful","m1":"cheap","snd":["あん","やす"]},{"k":"古","m":"old (things)","m1":"old (things)","snd":["こ","ふる"]},{"k":"早","m":"early, fast","m1":"early","snd":["そう","はや"]},{"k":"飲","m":"drink","m1":"drink","snd":["いん","の"]},{"k":"買","m":"buy","m1":"buy","snd":["か","ばい"]},{"k":"週","m":"week","m1":"week","snd":["しゅう"]},{"k":"駅","m":"station","m1":"station","snd":["えき"]}],"compounds":[{"w":"一人","r":"ひとり","m":"one person; alone","note":"Irregular: ひとり, not いちにん. 一人で = by oneself.","special":true,"core":1,"sentence":"きのうは {}で えいがを みました。","en":"Yesterday I watched a movie alone."},{"w":"二人","r":"ふたり","m":"two people","note":"Irregular: ふたり, not ににん.","special":true,"core":1,"sentence":"{}で レストランに いきました。","en":"The two of us went to a restaurant."},{"w":"三人","r":"さんにん","m":"three people","note":"Regular from here on: number + にん.","parts":[{"k":"三","r":"さん","kind":"on","plain":"さん","change":null},{"k":"人","r":"にん","kind":"on","plain":"にん","change":null}],"core":1,"sentence":"きょうだいは {}です。","en":"There are three of us siblings."},{"w":"四人","r":"よにん","m":"four people","note":"よにん — not よんにん or しにん.","parts":[{"k":"四","r":"よ","kind":"kun","plain":"よ(つ)","change":null},{"k":"人","r":"にん","kind":"on","plain":"にん","change":null}],"core":0},{"w":"五人","r":"ごにん","m":"five people","note":"","parts":[{"k":"五","r":"ご","kind":"on","plain":"ご","change":null},{"k":"人","r":"にん","kind":"on","plain":"にん","change":null}],"core":0},{"w":"六人","r":"ろくにん","m":"six people","note":"","parts":[{"k":"六","r":"ろく","kind":"on","plain":"ろく","change":null},{"k":"人","r":"にん","kind":"on","plain":"にん","change":null}],"core":0},{"w":"七人","r":"しちにん","m":"seven people","note":"Both readings are used.","parts":[{"k":"七","r":"しち","kind":"on","plain":"しち","change":null},{"k":"人","r":"にん","kind":"on","plain":"にん","change":null}],"core":0},{"w":"八人","r":"はちにん","m":"eight people","note":"","parts":[{"k":"八","r":"はち","kind":"on","plain":"はち","change":null},{"k":"人","r":"にん","kind":"on","plain":"にん","change":null}],"core":0},{"w":"九人","r":"きゅうにん","m":"nine people","note":"","parts":[{"k":"九","r":"きゅう","kind":"on","plain":"きゅう","change":null},{"k":"人","r":"にん","kind":"on","plain":"にん","change":null}],"core":0},{"w":"十人","r":"じゅうにん","m":"ten people","note":"","parts":[{"k":"十","r":"じゅう","kind":"on","plain":"じゅう","change":null},{"k":"人","r":"にん","kind":"on","plain":"にん","change":null}],"core":0},{"w":"何人","r":"なんにん","m":"how many people?","note":"","parts":[{"k":"何","r":"なん","kind":"kun","plain":"なん","change":null},{"k":"人","r":"にん","kind":"on","plain":"にん","change":null}],"core":1,"sentence":"クラスに がくせいが {} いますか。","en":"How many students are in the class?"},{"w":"一日","r":"ついたち","m":"1st of the month (ついたち); one day (いちにち)","note":"The date is ついたち; the duration is いちにち.","special":true,"core":1,"sentence":"四がつ {}に がっこうが はじまります。","en":"School starts on April 1st."},{"w":"二日","r":"ふつか","m":"2nd of the month; two days","note":"Native reading.","special":true,"core":1,"sentence":"{}は にちようびです。","en":"The 2nd is a Sunday."},{"w":"三日","r":"みっか","m":"3rd; three days","note":"Native reading.","parts":[{"k":"三","r":"みっ","kind":"kun","plain":"み(つ)","change":"small っ"},{"k":"日","r":"か","kind":"kun","plain":"か","change":null}],"core":1,"sentence":"五がつ {}は やすみです。","en":"May 3rd is a holiday."},{"w":"四日","r":"よっか","m":"4th; four days","note":"Native reading.","parts":[{"k":"四","r":"よっ","kind":"kun","plain":"よ(つ)","change":"small っ"},{"k":"日","r":"か","kind":"kun","plain":"か","change":null}],"core":1,"sentence":"{}に テストが あります。","en":"There is a test on the 4th."},{"w":"五日","r":"いつか","m":"5th; five days","note":"Native reading.","parts":[{"k":"五","r":"いつ","kind":"kun","plain":"いつ(つ)","change":null},{"k":"日","r":"か","kind":"kun","plain":"か","change":null}],"core":1,"sentence":"こどもの ひは 五がつ {}です。","en":"Children's Day is May 5th."},{"w":"六日","r":"むいか","m":"6th; six days","note":"Native reading.","parts":[{"k":"六","r":"むい","kind":"kun","plain":"むい","change":null},{"k":"日","r":"か","kind":"kun","plain":"か","change":null}],"core":1,"sentence":"{}に ともだちが きます。","en":"A friend is coming on the 6th."},{"w":"七日","r":"なのか","m":"7th; seven days","note":"Native reading (also なぬか).","parts":[{"k":"七","r":"なの","kind":"kun","plain":"なの","change":null},{"k":"日","r":"か","kind":"kun","plain":"か","change":null}],"core":1,"sentence":"七がつ {}は たなばたです。","en":"July 7th is Tanabata."},{"w":"八日","r":"ようか","m":"8th; eight days","note":"Native reading — not はちにち.","parts":[{"k":"八","r":"よう","kind":"kun","plain":"よう","change":null},{"k":"日","r":"か","kind":"kun","plain":"か","change":null}],"core":1,"sentence":"{}に かいものに いきます。","en":"I'll go shopping on the 8th."},{"w":"九日","r":"ここのか","m":"9th; nine days","note":"Native reading.","parts":[{"k":"九","r":"ここの","kind":"kun","plain":"ここの(つ)","change":null},{"k":"日","r":"か","kind":"kun","plain":"か","change":null}],"core":1,"sentence":"{}は ははの たんじょうびです。","en":"The 9th is my mother's birthday."},{"w":"十日","r":"とおか","m":"10th; ten days","note":"Native reading.","parts":[{"k":"十","r":"とお","kind":"kun","plain":"とお","change":null},{"k":"日","r":"か","kind":"kun","plain":"か","change":null}],"core":1,"sentence":"{}に くにへ かえります。","en":"I go back to my country on the 10th."},{"w":"十一日","r":"じゅういちにち","m":"11th; eleven days","note":"From 11 on: number + にち (with exceptions below).","parts":[{"k":"十","r":"じゅう","kind":"on","plain":"じゅう","change":null},{"k":"一","r":"いち","kind":"on","plain":"いち","change":null},{"k":"日","r":"にち","kind":"on","plain":"にち","change":null}],"core":1,"sentence":"{}の ごごは ひまです。","en":"I'm free on the afternoon of the 11th."},{"w":"十四日","r":"じゅうよっか","m":"14th; fourteen days","note":"Exception: ends in よっか.","parts":[{"k":"十","r":"じゅう","kind":"on","plain":"じゅう","change":null},{"k":"四","r":"よっ","kind":"kun","plain":"よ(つ)","change":"small っ"},{"k":"日","r":"か","kind":"kun","plain":"か","change":null}],"core":1,"sentence":"二がつ {}は バレンタインデーです。","en":"February 14th is Valentine's Day."},{"w":"二十日","r":"はつか","m":"20th; twenty days","note":"Exception: special reading はつか.","special":true,"core":1,"sentence":"{}に ひっこします。","en":"I'm moving on the 20th."},{"w":"二十四日","r":"にじゅうよっか","m":"24th; twenty-four days","note":"Exception: ends in よっか.","parts":[{"k":"二","r":"に","kind":"on","plain":"に","change":null},{"k":"十","r":"じゅう","kind":"on","plain":"じゅう","change":null},{"k":"四","r":"よっ","kind":"kun","plain":"よ(つ)","change":"small っ"},{"k":"日","r":"か","kind":"kun","plain":"か","change":null}],"core":1,"sentence":"十二がつ {}は クリスマスイブです。","en":"December 24th is Christmas Eve."},{"w":"何日","r":"なんにち","m":"what day (of the month)? how many days?","note":"","parts":[{"k":"何","r":"なん","kind":"kun","plain":"なん","change":null},{"k":"日","r":"にち","kind":"on","plain":"にち","change":null}],"core":1,"sentence":"たんじょうびは {}ですか。","en":"What date is your birthday?"},{"w":"一月","r":"いちがつ","m":"January","note":"","parts":[{"k":"一","r":"いち","kind":"on","plain":"いち","change":null},{"k":"月","r":"がつ","kind":"on","plain":"がつ","change":null}],"core":0},{"w":"二月","r":"にがつ","m":"February","note":"","parts":[{"k":"二","r":"に","kind":"on","plain":"に","change":null},{"k":"月","r":"がつ","kind":"on","plain":"がつ","change":null}],"core":0},{"w":"三月","r":"さんがつ","m":"March","note":"","parts":[{"k":"三","r":"さん","kind":"on","plain":"さん","change":null},{"k":"月","r":"がつ","kind":"on","plain":"がつ","change":null}],"core":0},{"w":"四月","r":"しがつ","m":"April","note":"しがつ — not よんがつ.","parts":[{"k":"四","r":"し","kind":"on","plain":"し","change":null},{"k":"月","r":"がつ","kind":"on","plain":"がつ","change":null}],"core":1,"sentence":"にほんの がっこうは {}に はじまります。","en":"Japanese schools start in April."},{"w":"五月","r":"ごがつ","m":"May","note":"","parts":[{"k":"五","r":"ご","kind":"on","plain":"ご","change":null},{"k":"月","r":"がつ","kind":"on","plain":"がつ","change":null}],"core":0},{"w":"六月","r":"ろくがつ","m":"June","note":"","parts":[{"k":"六","r":"ろく","kind":"on","plain":"ろく","change":null},{"k":"月","r":"がつ","kind":"on","plain":"がつ","change":null}],"core":0},{"w":"七月","r":"しちがつ","m":"July","note":"しちがつ is standard; なながつ is sometimes heard in speech.","parts":[{"k":"七","r":"しち","kind":"on","plain":"しち","change":null},{"k":"月","r":"がつ","kind":"on","plain":"がつ","change":null}],"core":1,"sentence":"{}は あついです。","en":"July is hot."},{"w":"八月","r":"はちがつ","m":"August","note":"","parts":[{"k":"八","r":"はち","kind":"on","plain":"はち","change":null},{"k":"月","r":"がつ","kind":"on","plain":"がつ","change":null}],"core":0},{"w":"九月","r":"くがつ","m":"September","note":"くがつ — not きゅうがつ.","parts":[{"k":"九","r":"く","kind":"on","plain":"く","change":null},{"k":"月","r":"がつ","kind":"on","plain":"がつ","change":null}],"core":1,"sentence":"{}に だいがくに はいります。","en":"I enter university in September."},{"w":"十月","r":"じゅうがつ","m":"October","note":"","parts":[{"k":"十","r":"じゅう","kind":"on","plain":"じゅう","change":null},{"k":"月","r":"がつ","kind":"on","plain":"がつ","change":null}],"core":0},{"w":"十一月","r":"じゅういちがつ","m":"November","note":"","parts":[{"k":"十","r":"じゅう","kind":"on","plain":"じゅう","change":null},{"k":"一","r":"いち","kind":"on","plain":"いち","change":null},{"k":"月","r":"がつ","kind":"on","plain":"がつ","change":null}],"core":0},{"w":"十二月","r":"じゅうにがつ","m":"December","note":"","parts":[{"k":"十","r":"じゅう","kind":"on","plain":"じゅう","change":null},{"k":"二","r":"に","kind":"on","plain":"に","change":null},{"k":"月","r":"がつ","kind":"on","plain":"がつ","change":null}],"core":0},{"w":"何月","r":"なんがつ","m":"what month?","note":"","parts":[{"k":"何","r":"なん","kind":"kun","plain":"なん","change":null},{"k":"月","r":"がつ","kind":"on","plain":"がつ","change":null}],"core":1,"sentence":"{}に うまれましたか。","en":"Which month were you born in?"},{"w":"一週間","r":"いっしゅうかん","m":"one week (duration)","note":"Sound change: いっ + しゅうかん.","parts":[{"k":"一","r":"いっ","kind":"on","plain":"いち","change":"small っ"},{"k":"週","r":"しゅう","kind":"on","plain":"しゅう","change":null},{"k":"間","r":"かん","kind":"on","plain":"かん","change":null}],"core":1,"sentence":"{} やすみました。","en":"I took a week off."},{"w":"二週間","r":"にしゅうかん","m":"two weeks","note":"","parts":[{"k":"二","r":"に","kind":"on","plain":"に","change":null},{"k":"週","r":"しゅう","kind":"on","plain":"しゅう","change":null},{"k":"間","r":"かん","kind":"on","plain":"かん","change":null}],"core":0},{"w":"何週間","r":"なんしゅうかん","m":"how many weeks?","note":"","parts":[{"k":"何","r":"なん","kind":"kun","plain":"なん","change":null},{"k":"週","r":"しゅう","kind":"on","plain":"しゅう","change":null},{"k":"間","r":"かん","kind":"on","plain":"かん","change":null}],"core":0},{"w":"一か月","r":"いっかげつ","m":"one month (duration)","note":"Duration uses かげつ; compare 一月 (January). Also written 一ヶ月.","parts":[{"k":"一","r":"いっ","kind":"on","plain":"いち","change":"small っ"},{"kana":"か"},{"k":"月","r":"げつ","kind":"on","plain":"げつ","change":null}],"core":1,"sentence":"{} にほんごを べんきょうしました。","en":"I studied Japanese for one month."},{"w":"二か月","r":"にかげつ","m":"two months","note":"","parts":[{"k":"二","r":"に","kind":"on","plain":"に","change":null},{"kana":"か"},{"k":"月","r":"げつ","kind":"on","plain":"げつ","change":null}],"core":0},{"w":"三か月","r":"さんかげつ","m":"three months","note":"","parts":[{"k":"三","r":"さん","kind":"on","plain":"さん","change":null},{"kana":"か"},{"k":"月","r":"げつ","kind":"on","plain":"げつ","change":null}],"core":0},{"w":"六か月","r":"ろっかげつ","m":"six months","note":"Sound change: ろっ.","parts":[{"k":"六","r":"ろっ","kind":"on","plain":"ろく","change":"small っ"},{"kana":"か"},{"k":"月","r":"げつ","kind":"on","plain":"げつ","change":null}],"core":0},{"w":"十か月","r":"じゅっかげつ","m":"ten months","note":"Sound change: じゅっ (also じっ).","parts":[{"k":"十","r":"じゅっ","kind":"on","plain":"じゅう","change":"small っ"},{"kana":"か"},{"k":"月","r":"げつ","kind":"on","plain":"げつ","change":null}],"core":0},{"w":"何か月","r":"なんかげつ","m":"how many months?","note":"","parts":[{"k":"何","r":"なん","kind":"kun","plain":"なん","change":null},{"kana":"か"},{"k":"月","r":"げつ","kind":"on","plain":"げつ","change":null}],"core":0},{"w":"半年","r":"はんとし","m":"half a year","note":"","parts":[{"k":"半","r":"はん","kind":"on","plain":"はん","change":null},{"k":"年","r":"とし","kind":"kun","plain":"とし","change":null}],"core":1,"sentence":"にほんに {} すみました。","en":"I lived in Japan for half a year."},{"w":"一年","r":"いちねん","m":"one year","note":"","parts":[{"k":"一","r":"いち","kind":"on","plain":"いち","change":null},{"k":"年","r":"ねん","kind":"on","plain":"ねん","change":null}],"core":0},{"w":"四年","r":"よねん","m":"four years; year 4","note":"よねん — not よんねん.","parts":[{"k":"四","r":"よ","kind":"kun","plain":"よ(つ)","change":null},{"k":"年","r":"ねん","kind":"on","plain":"ねん","change":null}],"core":0},{"w":"九年","r":"きゅうねん","m":"nine years","note":"きゅうねん — not くねん.","parts":[{"k":"九","r":"きゅう","kind":"on","plain":"きゅう","change":null},{"k":"年","r":"ねん","kind":"on","plain":"ねん","change":null}],"core":0},{"w":"一年間","r":"いちねんかん","m":"for one year (duration)","note":"～間 (かん) stresses the span of time.","parts":[{"k":"一","r":"いち","kind":"on","plain":"いち","change":null},{"k":"年","r":"ねん","kind":"on","plain":"ねん","change":null},{"k":"間","r":"かん","kind":"on","plain":"かん","change":null}],"core":0},{"w":"何年","r":"なんねん","m":"what year? how many years?","note":"","parts":[{"k":"何","r":"なん","kind":"kun","plain":"なん","change":null},{"k":"年","r":"ねん","kind":"on","plain":"ねん","change":null}],"core":1,"sentence":"{}に うまれましたか。","en":"What year were you born?"},{"w":"一時","r":"いちじ","m":"one o'clock","note":"","parts":[{"k":"一","r":"いち","kind":"on","plain":"いち","change":null},{"k":"時","r":"じ","kind":"on","plain":"じ","change":null}],"core":0},{"w":"二時","r":"にじ","m":"two o'clock","note":"","parts":[{"k":"二","r":"に","kind":"on","plain":"に","change":null},{"k":"時","r":"じ","kind":"on","plain":"じ","change":null}],"core":0},{"w":"三時","r":"さんじ","m":"three o'clock","note":"","parts":[{"k":"三","r":"さん","kind":"on","plain":"さん","change":null},{"k":"時","r":"じ","kind":"on","plain":"じ","change":null}],"core":0},{"w":"四時","r":"よじ","m":"four o'clock","note":"よじ — not よんじ.","parts":[{"k":"四","r":"よ","kind":"kun","plain":"よ(つ)","change":null},{"k":"時","r":"じ","kind":"on","plain":"じ","change":null}],"core":1,"sentence":"{}に えきで あいましょう。","en":"Let's meet at the station at four."},{"w":"五時","r":"ごじ","m":"five o'clock","note":"","parts":[{"k":"五","r":"ご","kind":"on","plain":"ご","change":null},{"k":"時","r":"じ","kind":"on","plain":"じ","change":null}],"core":0},{"w":"六時","r":"ろくじ","m":"six o'clock","note":"","parts":[{"k":"六","r":"ろく","kind":"on","plain":"ろく","change":null},{"k":"時","r":"じ","kind":"on","plain":"じ","change":null}],"core":0},{"w":"七時","r":"しちじ","m":"seven o'clock","note":"しちじ is standard; ななじ is also common in speech (avoids confusion with いちじ).","parts":[{"k":"七","r":"しち","kind":"on","plain":"しち","change":null},{"k":"時","r":"じ","kind":"on","plain":"じ","change":null}],"core":0},{"w":"八時","r":"はちじ","m":"eight o'clock","note":"","parts":[{"k":"八","r":"はち","kind":"on","plain":"はち","change":null},{"k":"時","r":"じ","kind":"on","plain":"じ","change":null}],"core":0},{"w":"九時","r":"くじ","m":"nine o'clock","note":"くじ — not きゅうじ.","parts":[{"k":"九","r":"く","kind":"on","plain":"く","change":null},{"k":"時","r":"じ","kind":"on","plain":"じ","change":null}],"core":1,"sentence":"じゅぎょうは {}からです。","en":"Class is from nine."},{"w":"十時","r":"じゅうじ","m":"ten o'clock","note":"","parts":[{"k":"十","r":"じゅう","kind":"on","plain":"じゅう","change":null},{"k":"時","r":"じ","kind":"on","plain":"じ","change":null}],"core":0},{"w":"十一時","r":"じゅういちじ","m":"eleven o'clock","note":"","parts":[{"k":"十","r":"じゅう","kind":"on","plain":"じゅう","change":null},{"k":"一","r":"いち","kind":"on","plain":"いち","change":null},{"k":"時","r":"じ","kind":"on","plain":"じ","change":null}],"core":0},{"w":"十二時","r":"じゅうにじ","m":"twelve o'clock","note":"","parts":[{"k":"十","r":"じゅう","kind":"on","plain":"じゅう","change":null},{"k":"二","r":"に","kind":"on","plain":"に","change":null},{"k":"時","r":"じ","kind":"on","plain":"じ","change":null}],"core":0},{"w":"何時","r":"なんじ","m":"what time?","note":"","parts":[{"k":"何","r":"なん","kind":"kun","plain":"なん","change":null},{"k":"時","r":"じ","kind":"on","plain":"じ","change":null}],"core":1,"sentence":"いま {}ですか。","en":"What time is it now?"},{"w":"三時半","r":"さんじはん","m":"half past three","note":"半 (はん) = half past.","parts":[{"k":"三","r":"さん","kind":"on","plain":"さん","change":null},{"k":"時","r":"じ","kind":"on","plain":"じ","change":null},{"k":"半","r":"はん","kind":"on","plain":"はん","change":null}],"core":0},{"w":"一時間","r":"いちじかん","m":"one hour (duration)","note":"時 = o'clock; 時間 = hours of duration.","parts":[{"k":"一","r":"いち","kind":"on","plain":"いち","change":null},{"k":"時","r":"じ","kind":"on","plain":"じ","change":null},{"k":"間","r":"かん","kind":"on","plain":"かん","change":null}],"core":1,"sentence":"まいにち {} あるきます。","en":"I walk for one hour every day."},{"w":"四時間","r":"よじかん","m":"four hours","note":"よじかん — not よんじかん.","parts":[{"k":"四","r":"よ","kind":"kun","plain":"よ(つ)","change":null},{"k":"時","r":"じ","kind":"on","plain":"じ","change":null},{"k":"間","r":"かん","kind":"on","plain":"かん","change":null}],"core":0},{"w":"何時間","r":"なんじかん","m":"how many hours?","note":"","parts":[{"k":"何","r":"なん","kind":"kun","plain":"なん","change":null},{"k":"時","r":"じ","kind":"on","plain":"じ","change":null},{"k":"間","r":"かん","kind":"on","plain":"かん","change":null}],"core":0},{"w":"午前","r":"ごぜん","m":"a.m.; morning","note":"Lit. before noon.","parts":[{"k":"午","r":"ご","kind":"on","plain":"ご","change":null},{"k":"前","r":"ぜん","kind":"on","plain":"ぜん","change":null}],"core":1,"sentence":"{}は うちに います。","en":"I'm at home in the morning."},{"w":"午後","r":"ごご","m":"p.m.; afternoon","note":"Lit. after noon.","parts":[{"k":"午","r":"ご","kind":"on","plain":"ご","change":null},{"k":"後","r":"ご","kind":"on","plain":"ご","change":null}],"core":1,"sentence":"{} 三じに あいましょう。","en":"Let's meet at 3 p.m."},{"w":"一分","r":"いっぷん","m":"one minute","note":"Sound change: いっぷん.","parts":[{"k":"一","r":"いっ","kind":"on","plain":"いち","change":"small っ"},{"k":"分","r":"ぷん","kind":"on","plain":"ふん","change":"p-sound"}],"core":1,"sentence":"あと {} まって ください。","en":"Please wait one more minute."},{"w":"二分","r":"にふん","m":"two minutes","note":"","parts":[{"k":"二","r":"に","kind":"on","plain":"に","change":null},{"k":"分","r":"ふん","kind":"on","plain":"ふん","change":null}],"core":0},{"w":"三分","r":"さんぷん","m":"three minutes","note":"Sound change: ぷん after ん.","parts":[{"k":"三","r":"さん","kind":"on","plain":"さん","change":null},{"k":"分","r":"ぷん","kind":"on","plain":"ふん","change":"p-sound"}],"core":1,"sentence":"えきまで あるいて {}です。","en":"It's a three-minute walk to the station."},{"w":"四分","r":"よんぷん","m":"four minutes","note":"よんぷん.","parts":[{"k":"四","r":"よん","kind":"kun","plain":"よん","change":null},{"k":"分","r":"ぷん","kind":"on","plain":"ふん","change":"p-sound"}],"core":0},{"w":"五分","r":"ごふん","m":"five minutes","note":"","parts":[{"k":"五","r":"ご","kind":"on","plain":"ご","change":null},{"k":"分","r":"ふん","kind":"on","plain":"ふん","change":null}],"core":1,"sentence":"{} やすみましょう。","en":"Let's rest for five minutes."},{"w":"六分","r":"ろっぷん","m":"six minutes","note":"Sound change: ろっぷん.","parts":[{"k":"六","r":"ろっ","kind":"on","plain":"ろく","change":"small っ"},{"k":"分","r":"ぷん","kind":"on","plain":"ふん","change":"p-sound"}],"core":1,"sentence":"バスは {}ごに きます。","en":"The bus comes in six minutes."},{"w":"七分","r":"ななふん","m":"seven minutes","note":"Also しちふん.","parts":[{"k":"七","r":"なな","kind":"kun","plain":"なな(つ)","change":null},{"k":"分","r":"ふん","kind":"on","plain":"ふん","change":null}],"core":0},{"w":"八分","r":"はっぷん","m":"eight minutes","note":"Also はちふん.","parts":[{"k":"八","r":"はっ","kind":"on","plain":"はち","change":"small っ"},{"k":"分","r":"ぷん","kind":"on","plain":"ふん","change":"p-sound"}],"core":0},{"w":"九分","r":"きゅうふん","m":"nine minutes","note":"","parts":[{"k":"九","r":"きゅう","kind":"on","plain":"きゅう","change":null},{"k":"分","r":"ふん","kind":"on","plain":"ふん","change":null}],"core":0},{"w":"十分","r":"じゅっぷん","m":"ten minutes (じゅっぷん); enough (じゅうぶん)","note":"Same kanji, two words. Also じっぷん.","parts":[{"k":"十","r":"じゅっ","kind":"on","plain":"じゅう","change":"small っ"},{"k":"分","r":"ぷん","kind":"on","plain":"ふん","change":"p-sound"}],"core":1,"sentence":"じゅぎょうは 九じ {}からです。","en":"Class is from 9:10."},{"w":"三十分","r":"さんじゅっぷん","m":"thirty minutes","note":"","parts":[{"k":"三","r":"さん","kind":"on","plain":"さん","change":null},{"k":"十","r":"じゅっ","kind":"on","plain":"じゅう","change":"small っ"},{"k":"分","r":"ぷん","kind":"on","plain":"ふん","change":"p-sound"}],"core":0},{"w":"何分","r":"なんぷん","m":"how many minutes?","note":"","parts":[{"k":"何","r":"なん","kind":"kun","plain":"なん","change":null},{"k":"分","r":"ぷん","kind":"on","plain":"ふん","change":"p-sound"}],"core":1,"sentence":"えきまで {} かかりますか。","en":"How many minutes does it take to the station?"},{"w":"一本","r":"いっぽん","m":"one (long object)","note":"Sound change: いっぽん. For pens, bottles, umbrellas, trees…","parts":[{"k":"一","r":"いっ","kind":"on","plain":"いち","change":"small っ"},{"k":"本","r":"ぽん","kind":"on","plain":"ほん","change":"p-sound"}],"core":1,"sentence":"ペンを {} かして ください。","en":"Please lend me one pen."},{"w":"二本","r":"にほん","m":"two (long objects)","note":"Same sound as 日本 — context tells them apart.","parts":[{"k":"二","r":"に","kind":"on","plain":"に","change":null},{"k":"本","r":"ほん","kind":"on","plain":"ほん","change":null}],"core":0},{"w":"三本","r":"さんぼん","m":"three (long objects)","note":"Sound change: ぼん after ん.","parts":[{"k":"三","r":"さん","kind":"on","plain":"さん","change":null},{"k":"本","r":"ぼん","kind":"on","plain":"ほん","change":"voiced"}],"core":1,"sentence":"ビールを {} かいました。","en":"I bought three bottles of beer."},{"w":"四本","r":"よんほん","m":"four (long objects)","note":"","parts":[{"k":"四","r":"よん","kind":"kun","plain":"よん","change":null},{"k":"本","r":"ほん","kind":"on","plain":"ほん","change":null}],"core":0},{"w":"五本","r":"ごほん","m":"five (long objects)","note":"","parts":[{"k":"五","r":"ご","kind":"on","plain":"ご","change":null},{"k":"本","r":"ほん","kind":"on","plain":"ほん","change":null}],"core":0},{"w":"六本","r":"ろっぽん","m":"six (long objects)","note":"Sound change: ろっぽん.","parts":[{"k":"六","r":"ろっ","kind":"on","plain":"ろく","change":"small っ"},{"k":"本","r":"ぽん","kind":"on","plain":"ほん","change":"p-sound"}],"core":1,"sentence":"えんぴつが {} あります。","en":"There are six pencils."},{"w":"七本","r":"ななほん","m":"seven (long objects)","note":"","parts":[{"k":"七","r":"なな","kind":"kun","plain":"なな(つ)","change":null},{"k":"本","r":"ほん","kind":"on","plain":"ほん","change":null}],"core":0},{"w":"八本","r":"はっぽん","m":"eight (long objects)","note":"Also はちほん.","parts":[{"k":"八","r":"はっ","kind":"on","plain":"はち","change":"small っ"},{"k":"本","r":"ぽん","kind":"on","plain":"ほん","change":"p-sound"}],"core":0},{"w":"九本","r":"きゅうほん","m":"nine (long objects)","note":"","parts":[{"k":"九","r":"きゅう","kind":"on","plain":"きゅう","change":null},{"k":"本","r":"ほん","kind":"on","plain":"ほん","change":null}],"core":0},{"w":"十本","r":"じゅっぽん","m":"ten (long objects)","note":"Also じっぽん.","parts":[{"k":"十","r":"じゅっ","kind":"on","plain":"じゅう","change":"small っ"},{"k":"本","r":"ぽん","kind":"on","plain":"ほん","change":"p-sound"}],"core":0},{"w":"何本","r":"なんぼん","m":"how many (long objects)?","note":"Sound change: なんぼん.","parts":[{"k":"何","r":"なん","kind":"kun","plain":"なん","change":null},{"k":"本","r":"ぼん","kind":"on","plain":"ほん","change":"voiced"}],"core":1,"sentence":"かさは {} ありますか。","en":"How many umbrellas are there?"},{"w":"二百","r":"にひゃく","m":"two hundred","note":"","parts":[{"k":"二","r":"に","kind":"on","plain":"に","change":null},{"k":"百","r":"ひゃく","kind":"on","plain":"ひゃく","change":null}],"core":1,"sentence":"この きっぷは {}えんです。","en":"This ticket is 200 yen."},{"w":"三百","r":"さんびゃく","m":"three hundred","note":"Sound change: びゃく.","parts":[{"k":"三","r":"さん","kind":"on","plain":"さん","change":null},{"k":"百","r":"びゃく","kind":"on","plain":"びゃく","change":null}],"core":1,"sentence":"りんごは 一つ {}えんです。","en":"Apples are 300 yen each."},{"w":"六百","r":"ろっぴゃく","m":"six hundred","note":"Sound change: ろっぴゃく.","parts":[{"k":"六","r":"ろっ","kind":"on","plain":"ろく","change":"small っ"},{"k":"百","r":"ぴゃく","kind":"on","plain":"ひゃく","change":"p-sound"}],"core":1,"sentence":"ぜんぶで {}えんです。","en":"It's 600 yen altogether."},{"w":"八百","r":"はっぴゃく","m":"eight hundred","note":"Sound change: はっぴゃく.","parts":[{"k":"八","r":"はっ","kind":"on","plain":"はち","change":"small っ"},{"k":"百","r":"ぴゃく","kind":"on","plain":"ひゃく","change":"p-sound"}],"core":1,"sentence":"ケーキは {}えんでした。","en":"The cake was 800 yen."},{"w":"何百","r":"なんびゃく","m":"how many hundred?","note":"","parts":[{"k":"何","r":"なん","kind":"kun","plain":"なん","change":null},{"k":"百","r":"びゃく","kind":"on","plain":"びゃく","change":null}],"core":0},{"w":"三千","r":"さんぜん","m":"three thousand","note":"Sound change: ぜん.","parts":[{"k":"三","r":"さん","kind":"on","plain":"さん","change":null},{"k":"千","r":"ぜん","kind":"on","plain":"せん","change":"voiced"}],"core":1,"sentence":"この シャツは {}えんです。","en":"This shirt is 3,000 yen."},{"w":"八千","r":"はっせん","m":"eight thousand","note":"Sound change: はっせん.","parts":[{"k":"八","r":"はっ","kind":"on","plain":"はち","change":"small っ"},{"k":"千","r":"せん","kind":"on","plain":"せん","change":null}],"core":1,"sentence":"くつは {}えんでした。","en":"The shoes were 8,000 yen."},{"w":"何千","r":"なんぜん","m":"how many thousand?","note":"","parts":[{"k":"何","r":"なん","kind":"kun","plain":"なん","change":null},{"k":"千","r":"ぜん","kind":"on","plain":"せん","change":"voiced"}],"core":0},{"w":"一万","r":"いちまん","m":"ten thousand","note":"Always いちまん — 万 needs the 一.","parts":[{"k":"一","r":"いち","kind":"on","plain":"いち","change":null},{"k":"万","r":"まん","kind":"on","plain":"まん","change":null}],"core":0},{"w":"十万","r":"じゅうまん","m":"one hundred thousand","note":"","parts":[{"k":"十","r":"じゅう","kind":"on","plain":"じゅう","change":null},{"k":"万","r":"まん","kind":"on","plain":"まん","change":null}],"core":0},{"w":"百万","r":"ひゃくまん","m":"one million","note":"","parts":[{"k":"百","r":"ひゃく","kind":"on","plain":"ひゃく","change":null},{"k":"万","r":"まん","kind":"on","plain":"まん","change":null}],"core":0},{"w":"百円","r":"ひゃくえん","m":"100 yen","note":"","parts":[{"k":"百","r":"ひゃく","kind":"on","plain":"ひゃく","change":null},{"k":"円","r":"えん","kind":"on","plain":"えん","change":null}],"core":1,"sentence":"この ノートは {}です。","en":"This notebook is 100 yen."},{"w":"四円","r":"よえん","m":"4 yen","note":"よえん — not よんえん.","parts":[{"k":"四","r":"よ","kind":"kun","plain":"よ(つ)","change":null},{"k":"円","r":"えん","kind":"on","plain":"えん","change":null}],"core":0},{"w":"五百円","r":"ごひゃくえん","m":"500 yen","note":"","parts":[{"k":"五","r":"ご","kind":"on","plain":"ご","change":null},{"k":"百","r":"ひゃく","kind":"on","plain":"ひゃく","change":null},{"k":"円","r":"えん","kind":"on","plain":"えん","change":null}],"core":0},{"w":"千円","r":"せんえん","m":"1,000 yen","note":"","parts":[{"k":"千","r":"せん","kind":"on","plain":"せん","change":null},{"k":"円","r":"えん","kind":"on","plain":"えん","change":null}],"core":1,"sentence":"{}で たりますか。","en":"Is 1,000 yen enough?"},{"w":"一万円","r":"いちまんえん","m":"10,000 yen","note":"","parts":[{"k":"一","r":"いち","kind":"on","plain":"いち","change":null},{"k":"万","r":"まん","kind":"on","plain":"まん","change":null},{"k":"円","r":"えん","kind":"on","plain":"えん","change":null}],"core":1,"sentence":"{}を かして ください。","en":"Please lend me 10,000 yen."},{"w":"今日","r":"きょう","m":"today","note":"Irregular reading.","special":true,"core":1,"sentence":"{}は いそがしいです。","en":"I'm busy today."},{"w":"本日","r":"ほんじつ","m":"today (formal)","note":"","parts":[{"k":"本","r":"ほん","kind":"on","plain":"ほん","change":null},{"k":"日","r":"じつ","kind":"on","plain":"じつ","change":null}],"core":0},{"w":"毎日","r":"まいにち","m":"every day","note":"","parts":[{"k":"毎","r":"まい","kind":"on","plain":"まい","change":null},{"k":"日","r":"にち","kind":"on","plain":"にち","change":null}],"core":1,"sentence":"{} 七じに おきます。","en":"I get up at seven every day."},{"w":"今週","r":"こんしゅう","m":"this week","note":"","parts":[{"k":"今","r":"こん","kind":"on","plain":"こん","change":null},{"k":"週","r":"しゅう","kind":"on","plain":"しゅう","change":null}],"core":1,"sentence":"{}の どようびは ひまです。","en":"I'm free this Saturday."},{"w":"先週","r":"せんしゅう","m":"last week","note":"","parts":[{"k":"先","r":"せん","kind":"on","plain":"せん","change":null},{"k":"週","r":"しゅう","kind":"on","plain":"しゅう","change":null}],"core":1,"sentence":"{} きょうとへ いきました。","en":"I went to Kyoto last week."},{"w":"来週","r":"らいしゅう","m":"next week","note":"","parts":[{"k":"来","r":"らい","kind":"on","plain":"らい","change":null},{"k":"週","r":"しゅう","kind":"on","plain":"しゅう","change":null}],"core":1,"sentence":"{} テストが あります。","en":"There is a test next week."},{"w":"毎週","r":"まいしゅう","m":"every week","note":"","parts":[{"k":"毎","r":"まい","kind":"on","plain":"まい","change":null},{"k":"週","r":"しゅう","kind":"on","plain":"しゅう","change":null}],"core":1,"sentence":"{} プールで およぎます。","en":"I swim at the pool every week."},{"w":"今月","r":"こんげつ","m":"this month","note":"","parts":[{"k":"今","r":"こん","kind":"on","plain":"こん","change":null},{"k":"月","r":"げつ","kind":"on","plain":"げつ","change":null}],"core":1,"sentence":"{}は やすみが すくないです。","en":"There are few days off this month."},{"w":"先月","r":"せんげつ","m":"last month","note":"","parts":[{"k":"先","r":"せん","kind":"on","plain":"せん","change":null},{"k":"月","r":"げつ","kind":"on","plain":"げつ","change":null}],"core":1,"sentence":"{} ひっこしました。","en":"I moved last month."},{"w":"来月","r":"らいげつ","m":"next month","note":"","parts":[{"k":"来","r":"らい","kind":"on","plain":"らい","change":null},{"k":"月","r":"げつ","kind":"on","plain":"げつ","change":null}],"core":1,"sentence":"{} けっこんします。","en":"I'm getting married next month."},{"w":"毎月","r":"まいつき","m":"every month","note":"Also まいげつ.","parts":[{"k":"毎","r":"まい","kind":"on","plain":"まい","change":null},{"k":"月","r":"つき","kind":"kun","plain":"つき","change":null}],"core":1,"sentence":"{} 一かい、えいがを みます。","en":"I see a movie once a month."},{"w":"今年","r":"ことし","m":"this year","note":"Irregular reading.","special":true,"core":1,"sentence":"{}の なつは あついです。","en":"This summer is hot."},{"w":"来年","r":"らいねん","m":"next year","note":"","parts":[{"k":"来","r":"らい","kind":"on","plain":"らい","change":null},{"k":"年","r":"ねん","kind":"on","plain":"ねん","change":null}],"core":1,"sentence":"{} にほんへ いきたいです。","en":"I want to go to Japan next year."},{"w":"毎年","r":"まいとし","m":"every year","note":"Also まいねん.","parts":[{"k":"毎","r":"まい","kind":"on","plain":"まい","change":null},{"k":"年","r":"とし","kind":"kun","plain":"とし","change":null}],"core":1,"sentence":"{} ふゆに スキーを します。","en":"I go skiing every winter."},{"w":"新年","r":"しんねん","m":"New Year","note":"","parts":[{"k":"新","r":"しん","kind":"on","plain":"しん","change":null},{"k":"年","r":"ねん","kind":"on","plain":"ねん","change":null}],"core":0},{"w":"先日","r":"せんじつ","m":"the other day","note":"","parts":[{"k":"先","r":"せん","kind":"on","plain":"せん","change":null},{"k":"日","r":"じつ","kind":"on","plain":"じつ","change":null}],"core":0},{"w":"休日","r":"きゅうじつ","m":"holiday, day off","note":"","parts":[{"k":"休","r":"きゅう","kind":"on","plain":"きゅう","change":null},{"k":"日","r":"じつ","kind":"on","plain":"じつ","change":null}],"core":0},{"w":"半日","r":"はんにち","m":"half a day","note":"","parts":[{"k":"半","r":"はん","kind":"on","plain":"はん","change":null},{"k":"日","r":"にち","kind":"on","plain":"にち","change":null}],"core":0},{"w":"一日中","r":"いちにちじゅう","m":"all day long","note":"","special":true,"core":0},{"w":"日中","r":"にっちゅう","m":"daytime","note":"","parts":[{"k":"日","r":"にっ","kind":"on","plain":"にち","change":"small っ"},{"k":"中","r":"ちゅう","kind":"on","plain":"ちゅう","change":null}],"core":0},{"w":"時々","r":"ときどき","m":"sometimes","note":"々 repeats the previous kanji.","parts":[{"k":"時","r":"とき","kind":"kun","plain":"とき","change":null},{"k":"々","r":"どき","kind":"kun","plain":"どき","change":null}],"core":1,"sentence":"{} としょかんで べんきょうします。","en":"I sometimes study at the library."},{"w":"今後","r":"こんご","m":"from now on","note":"","parts":[{"k":"今","r":"こん","kind":"on","plain":"こん","change":null},{"k":"後","r":"ご","kind":"on","plain":"ご","change":null}],"core":0},{"w":"前後","r":"ぜんご","m":"around, approximately; before and after","note":"","parts":[{"k":"前","r":"ぜん","kind":"on","plain":"ぜん","change":null},{"k":"後","r":"ご","kind":"on","plain":"ご","change":null}],"core":0},{"w":"一生","r":"いっしょう","m":"one's whole life","note":"","parts":[{"k":"一","r":"いっ","kind":"on","plain":"いち","change":"small っ"},{"k":"生","r":"しょう","kind":"on","plain":"しょう","change":null}],"core":0},{"w":"生年月日","r":"せいねんがっぴ","m":"date of birth","note":"Common on forms.","parts":[{"k":"生","r":"せい","kind":"on","plain":"せい","change":null},{"k":"年","r":"ねん","kind":"on","plain":"ねん","change":null},{"k":"月","r":"がっ","kind":"on","plain":"がつ","change":"small っ"},{"k":"日","r":"ぴ","kind":"kun","plain":"ひ","change":"p-sound"}],"core":0},{"w":"日本人","r":"にほんじん","m":"Japanese person","note":"国 + 人 = person from that country.","parts":[{"k":"日","r":"に","kind":"on","plain":"に","change":null},{"k":"本","r":"ほん","kind":"on","plain":"ほん","change":null},{"k":"人","r":"じん","kind":"on","plain":"じん","change":null}],"core":0},{"w":"外国人","r":"がいこくじん","m":"foreigner","note":"","parts":[{"k":"外","r":"がい","kind":"on","plain":"がい","change":null},{"k":"国","r":"こく","kind":"on","plain":"こく","change":null},{"k":"人","r":"じん","kind":"on","plain":"じん","change":null}],"core":1,"sentence":"この まちには {}が おおいです。","en":"There are many foreigners in this town."},{"w":"中国人","r":"ちゅうごくじん","m":"Chinese person","note":"","parts":[{"k":"中","r":"ちゅう","kind":"on","plain":"ちゅう","change":null},{"k":"国","r":"ごく","kind":"on","plain":"こく","change":"voiced"},{"k":"人","r":"じん","kind":"on","plain":"じん","change":null}],"core":0},{"w":"大人","r":"おとな","m":"adult","note":"Irregular reading.","special":true,"core":1,"sentence":"{}は 二人、こどもは 一人です。","en":"Two adults and one child."},{"w":"男の人","r":"おとこのひと","m":"man","note":"","parts":[{"k":"男","r":"おとこ","kind":"kun","plain":"おとこ","change":null},{"kana":"の"},{"k":"人","r":"ひと","kind":"kun","plain":"ひと","change":null}],"core":1,"sentence":"あそこに {}が います。","en":"There is a man over there."},{"w":"女の人","r":"おんなのひと","m":"woman","note":"","parts":[{"k":"女","r":"おんな","kind":"kun","plain":"おんな","change":null},{"kana":"の"},{"k":"人","r":"ひと","kind":"kun","plain":"ひと","change":null}],"core":1,"sentence":"{}が でんわを して います。","en":"A woman is on the phone."},{"w":"男の子","r":"おとこのこ","m":"boy","note":"","parts":[{"k":"男","r":"おとこ","kind":"kun","plain":"おとこ","change":null},{"kana":"の"},{"k":"子","r":"こ","kind":"kun","plain":"こ","change":null}],"core":1,"sentence":"{}が こうえんで あそんで います。","en":"A boy is playing in the park."},{"w":"女の子","r":"おんなのこ","m":"girl","note":"","parts":[{"k":"女","r":"おんな","kind":"kun","plain":"おんな","change":null},{"kana":"の"},{"k":"子","r":"こ","kind":"kun","plain":"こ","change":null}],"core":1,"sentence":"その {}は なんさいですか。","en":"How old is that girl?"},{"w":"男子","r":"だんし","m":"boy, male","note":"","parts":[{"k":"男","r":"だん","kind":"on","plain":"だん","change":null},{"k":"子","r":"し","kind":"on","plain":"し","change":null}],"core":0},{"w":"女子","r":"じょし","m":"girl, female","note":"","parts":[{"k":"女","r":"じょ","kind":"on","plain":"じょ","change":null},{"k":"子","r":"し","kind":"on","plain":"し","change":null}],"core":0},{"w":"男女","r":"だんじょ","m":"men and women","note":"","parts":[{"k":"男","r":"だん","kind":"on","plain":"だん","change":null},{"k":"女","r":"じょ","kind":"on","plain":"じょ","change":null}],"core":0},{"w":"少年","r":"しょうねん","m":"boy, youth","note":"","parts":[{"k":"少","r":"しょう","kind":"on","plain":"しょう","change":null},{"k":"年","r":"ねん","kind":"on","plain":"ねん","change":null}],"core":0},{"w":"少女","r":"しょうじょ","m":"girl, young woman","note":"","parts":[{"k":"少","r":"しょう","kind":"on","plain":"しょう","change":null},{"k":"女","r":"じょ","kind":"on","plain":"じょ","change":null}],"core":0},{"w":"長男","r":"ちょうなん","m":"eldest son","note":"","parts":[{"k":"長","r":"ちょう","kind":"on","plain":"ちょう","change":null},{"k":"男","r":"なん","kind":"on","plain":"なん","change":null}],"core":0},{"w":"長女","r":"ちょうじょ","m":"eldest daughter","note":"","parts":[{"k":"長","r":"ちょう","kind":"on","plain":"ちょう","change":null},{"k":"女","r":"じょ","kind":"on","plain":"じょ","change":null}],"core":0},{"w":"友人","r":"ゆうじん","m":"friend (formal)","note":"","parts":[{"k":"友","r":"ゆう","kind":"on","plain":"ゆう","change":null},{"k":"人","r":"じん","kind":"on","plain":"じん","change":null}],"core":0},{"w":"先生","r":"せんせい","m":"teacher, doctor","note":"Lit. born before.","parts":[{"k":"先","r":"せん","kind":"on","plain":"せん","change":null},{"k":"生","r":"せい","kind":"on","plain":"せい","change":null}],"core":1,"sentence":"{}に しつもんを しました。","en":"I asked the teacher a question."},{"w":"学生","r":"がくせい","m":"student","note":"","parts":[{"k":"学","r":"がく","kind":"on","plain":"がく","change":null},{"k":"生","r":"せい","kind":"on","plain":"せい","change":null}],"core":1,"sentence":"あの ひとは {}ですか。","en":"Is that person a student?"},{"w":"大学生","r":"だいがくせい","m":"university student","note":"","parts":[{"k":"大","r":"だい","kind":"on","plain":"だい","change":null},{"k":"学","r":"がく","kind":"on","plain":"がく","change":null},{"k":"生","r":"せい","kind":"on","plain":"せい","change":null}],"core":1,"sentence":"あねは {}です。","en":"My sister is a university student."},{"w":"高校生","r":"こうこうせい","m":"high school student","note":"","parts":[{"k":"高","r":"こう","kind":"on","plain":"こう","change":null},{"k":"校","r":"こう","kind":"on","plain":"こう","change":null},{"k":"生","r":"せい","kind":"on","plain":"せい","change":null}],"core":1,"sentence":"おとうとは {}です。","en":"My younger brother is a high-school student."},{"w":"中学生","r":"ちゅうがくせい","m":"junior high student","note":"","parts":[{"k":"中","r":"ちゅう","kind":"on","plain":"ちゅう","change":null},{"k":"学","r":"がく","kind":"on","plain":"がく","change":null},{"k":"生","r":"せい","kind":"on","plain":"せい","change":null}],"core":1,"sentence":"この こうえんには {}が たくさん います。","en":"There are lots of junior-high students in this park."},{"w":"小学生","r":"しょうがくせい","m":"elementary school student","note":"","parts":[{"k":"小","r":"しょう","kind":"on","plain":"しょう","change":null},{"k":"学","r":"がく","kind":"on","plain":"がく","change":null},{"k":"生","r":"せい","kind":"on","plain":"せい","change":null}],"core":1,"sentence":"{}が みちを あるいて います。","en":"Elementary-school children are walking on the road."},{"w":"新入生","r":"しんにゅうせい","m":"new student, freshman","note":"","parts":[{"k":"新","r":"しん","kind":"on","plain":"しん","change":null},{"k":"入","r":"にゅう","kind":"on","plain":"にゅう","change":null},{"k":"生","r":"せい","kind":"on","plain":"せい","change":null}],"core":0},{"w":"年上","r":"としうえ","m":"older (person)","note":"","parts":[{"k":"年","r":"とし","kind":"kun","plain":"とし","change":null},{"k":"上","r":"うえ","kind":"kun","plain":"うえ","change":null}],"core":0},{"w":"年下","r":"としした","m":"younger (person)","note":"","parts":[{"k":"年","r":"とし","kind":"kun","plain":"とし","change":null},{"k":"下","r":"した","kind":"kun","plain":"した","change":null}],"core":0},{"w":"人々","r":"ひとびと","m":"people","note":"々 repeats; ひ → び.","parts":[{"k":"人","r":"ひと","kind":"kun","plain":"ひと","change":null},{"k":"々","r":"びと","kind":"kun","plain":"ひと","change":"voiced"}],"core":0},{"w":"名人","r":"めいじん","m":"expert, master","note":"","parts":[{"k":"名","r":"めい","kind":"on","plain":"めい","change":null},{"k":"人","r":"じん","kind":"on","plain":"じん","change":null}],"core":0},{"w":"人口","r":"じんこう","m":"population","note":"","parts":[{"k":"人","r":"じん","kind":"on","plain":"じん","change":null},{"k":"口","r":"こう","kind":"on","plain":"こう","change":null}],"core":0},{"w":"人生","r":"じんせい","m":"(human) life","note":"","parts":[{"k":"人","r":"じん","kind":"on","plain":"じん","change":null},{"k":"生","r":"せい","kind":"on","plain":"せい","change":null}],"core":0},{"w":"日本","r":"にほん","m":"Japan","note":"Also にっぽん.","parts":[{"k":"日","r":"に","kind":"on","plain":"に","change":null},{"k":"本","r":"ほん","kind":"on","plain":"ほん","change":null}],"core":1,"sentence":"らいねん {}へ いきます。","en":"I'm going to Japan next year."},{"w":"外国","r":"がいこく","m":"foreign country","note":"","parts":[{"k":"外","r":"がい","kind":"on","plain":"がい","change":null},{"k":"国","r":"こく","kind":"on","plain":"こく","change":null}],"core":1,"sentence":"{}に すんで いる ひとが おおいです。","en":"Many people live abroad."},{"w":"中国","r":"ちゅうごく","m":"China","note":"","parts":[{"k":"中","r":"ちゅう","kind":"on","plain":"ちゅう","change":null},{"k":"国","r":"ごく","kind":"on","plain":"こく","change":"voiced"}],"core":1,"sentence":"{}は 大きい くにです。","en":"China is a big country."},{"w":"学校","r":"がっこう","m":"school","note":"Sound change: がく → がっ.","parts":[{"k":"学","r":"がっ","kind":"on","plain":"がく","change":"small っ"},{"k":"校","r":"こう","kind":"on","plain":"こう","change":null}],"core":1,"sentence":"{}は 八じに はじまります。","en":"School starts at eight."},{"w":"小学校","r":"しょうがっこう","m":"elementary school","note":"","parts":[{"k":"小","r":"しょう","kind":"on","plain":"しょう","change":null},{"k":"学","r":"がっ","kind":"on","plain":"がく","change":"small っ"},{"k":"校","r":"こう","kind":"on","plain":"こう","change":null}],"core":1,"sentence":"いもうとは {}に かよって います。","en":"My little sister goes to elementary school."},{"w":"中学校","r":"ちゅうがっこう","m":"junior high school","note":"","parts":[{"k":"中","r":"ちゅう","kind":"on","plain":"ちゅう","change":null},{"k":"学","r":"がっ","kind":"on","plain":"がく","change":"small っ"},{"k":"校","r":"こう","kind":"on","plain":"こう","change":null}],"core":1,"sentence":"{}の となりに こうえんが あります。","en":"There is a park next to the junior high school."},{"w":"高校","r":"こうこう","m":"high school","note":"","parts":[{"k":"高","r":"こう","kind":"on","plain":"こう","change":null},{"k":"校","r":"こう","kind":"on","plain":"こう","change":null}],"core":1,"sentence":"{}の ともだちに あいました。","en":"I met a friend from high school."},{"w":"大学","r":"だいがく","m":"university","note":"","parts":[{"k":"大","r":"だい","kind":"on","plain":"だい","change":null},{"k":"学","r":"がく","kind":"on","plain":"がく","change":null}],"core":1,"sentence":"あにの {}は とうきょうに あります。","en":"My brother's university is in Tokyo."},{"w":"校長","r":"こうちょう","m":"school principal","note":"","parts":[{"k":"校","r":"こう","kind":"on","plain":"こう","change":null},{"k":"長","r":"ちょう","kind":"on","plain":"ちょう","change":null}],"core":0},{"w":"校門","r":"こうもん","m":"school gate","note":"","parts":[{"k":"校","r":"こう","kind":"on","plain":"こう","change":null},{"k":"門","r":"もん","kind":"on","plain":"もん","change":null}],"core":0},{"w":"入学","r":"にゅうがく","m":"entering school","note":"","parts":[{"k":"入","r":"にゅう","kind":"on","plain":"にゅう","change":null},{"k":"学","r":"がく","kind":"on","plain":"がく","change":null}],"core":1,"sentence":"四がつに だいがくに {}します。","en":"I enter university in April."},{"w":"見学","r":"けんがく","m":"field trip, observation visit","note":"","parts":[{"k":"見","r":"けん","kind":"on","plain":"けん","change":null},{"k":"学","r":"がく","kind":"on","plain":"がく","change":null}],"core":0},{"w":"学年","r":"がくねん","m":"school year, grade","note":"","parts":[{"k":"学","r":"がく","kind":"on","plain":"がく","change":null},{"k":"年","r":"ねん","kind":"on","plain":"ねん","change":null}],"core":0},{"w":"会社","r":"かいしゃ","m":"company","note":"","parts":[{"k":"会","r":"かい","kind":"on","plain":"かい","change":null},{"k":"社","r":"しゃ","kind":"on","plain":"しゃ","change":null}],"core":1,"sentence":"ちちは {}に いきました。","en":"My father went to the company."},{"w":"社長","r":"しゃちょう","m":"company president","note":"","parts":[{"k":"社","r":"しゃ","kind":"on","plain":"しゃ","change":null},{"k":"長","r":"ちょう","kind":"on","plain":"ちょう","change":null}],"core":1,"sentence":"{}は いま かいぎちゅうです。","en":"The company president is in a meeting now."},{"w":"入社","r":"にゅうしゃ","m":"joining a company","note":"","parts":[{"k":"入","r":"にゅう","kind":"on","plain":"にゅう","change":null},{"k":"社","r":"しゃ","kind":"on","plain":"しゃ","change":null}],"core":0},{"w":"国立","r":"こくりつ","m":"national (e.g. university)","note":"","parts":[{"k":"国","r":"こく","kind":"on","plain":"こく","change":null},{"k":"立","r":"りつ","kind":"on","plain":"りつ","change":null}],"core":0},{"w":"駅前","r":"えきまえ","m":"in front of the station","note":"","parts":[{"k":"駅","r":"えき","kind":"on","plain":"えき","change":null},{"k":"前","r":"まえ","kind":"kun","plain":"まえ","change":null}],"core":0},{"w":"入口","r":"いりぐち","m":"entrance","note":"Native reading ぐち.","parts":[{"k":"入","r":"いり","kind":"kun","plain":"い(る)","change":null},{"k":"口","r":"ぐち","kind":"kun","plain":"くち","change":"voiced"}],"core":1,"sentence":"えきの {}で まって います。","en":"I'll wait at the station entrance."},{"w":"出口","r":"でぐち","m":"exit","note":"","parts":[{"k":"出","r":"で","kind":"kun","plain":"で(る)","change":null},{"k":"口","r":"ぐち","kind":"kun","plain":"くち","change":"voiced"}],"core":1,"sentence":"{}は あちらです。","en":"The exit is over there."},{"w":"出入口","r":"でいりぐち","m":"doorway (entrance/exit)","note":"","parts":[{"k":"出","r":"で","kind":"kun","plain":"で(る)","change":null},{"k":"入","r":"いり","kind":"kun","plain":"い(る)","change":null},{"k":"口","r":"ぐち","kind":"kun","plain":"くち","change":"voiced"}],"core":0},{"w":"東口","r":"ひがしぐち","m":"east exit (of a station)","note":"","parts":[{"k":"東","r":"ひがし","kind":"kun","plain":"ひがし","change":null},{"k":"口","r":"ぐち","kind":"kun","plain":"くち","change":"voiced"}],"core":1,"sentence":"えきの {}で あいましょう。","en":"Let's meet at the station's east exit."},{"w":"西口","r":"にしぐち","m":"west exit","note":"","parts":[{"k":"西","r":"にし","kind":"kun","plain":"にし","change":null},{"k":"口","r":"ぐち","kind":"kun","plain":"くち","change":"voiced"}],"core":1,"sentence":"{}から バスに のります。","en":"I take the bus from the west exit."},{"w":"南口","r":"みなみぐち","m":"south exit","note":"","parts":[{"k":"南","r":"みなみ","kind":"kun","plain":"みなみ","change":null},{"k":"口","r":"ぐち","kind":"kun","plain":"くち","change":"voiced"}],"core":1,"sentence":"{}を でて、みぎに まがって ください。","en":"Leave by the south exit and turn right."},{"w":"北口","r":"きたぐち","m":"north exit","note":"","parts":[{"k":"北","r":"きた","kind":"kun","plain":"きた","change":null},{"k":"口","r":"ぐち","kind":"kun","plain":"くち","change":"voiced"}],"core":1,"sentence":"{}の まえに ぎんこうが あります。","en":"There is a bank in front of the north exit."},{"w":"名門","r":"めいもん","m":"prestigious (school, family)","note":"","parts":[{"k":"名","r":"めい","kind":"on","plain":"めい","change":null},{"k":"門","r":"もん","kind":"on","plain":"もん","change":null}],"core":0},{"w":"外出","r":"がいしゅつ","m":"going out","note":"","parts":[{"k":"外","r":"がい","kind":"on","plain":"がい","change":null},{"k":"出","r":"しゅつ","kind":"on","plain":"しゅつ","change":null}],"core":0},{"w":"来日","r":"らいにち","m":"coming to Japan","note":"","parts":[{"k":"来","r":"らい","kind":"on","plain":"らい","change":null},{"k":"日","r":"にち","kind":"on","plain":"にち","change":null}],"core":0},{"w":"日本語","r":"にほんご","m":"Japanese (language)","note":"国 + 語 = that country's language.","parts":[{"k":"日","r":"に","kind":"on","plain":"に","change":null},{"k":"本","r":"ほん","kind":"on","plain":"ほん","change":null},{"k":"語","r":"ご","kind":"on","plain":"ご","change":null}],"core":1,"sentence":"まいにち {}を べんきょうします。","en":"I study Japanese every day."},{"w":"中国語","r":"ちゅうごくご","m":"Chinese (language)","note":"","parts":[{"k":"中","r":"ちゅう","kind":"on","plain":"ちゅう","change":null},{"k":"国","r":"ごく","kind":"on","plain":"こく","change":"voiced"},{"k":"語","r":"ご","kind":"on","plain":"ご","change":null}],"core":1,"sentence":"ワンさんは {}を おしえて います。","en":"Mr. Wang teaches Chinese."},{"w":"外国語","r":"がいこくご","m":"foreign language","note":"","parts":[{"k":"外","r":"がい","kind":"on","plain":"がい","change":null},{"k":"国","r":"こく","kind":"on","plain":"こく","change":null},{"k":"語","r":"ご","kind":"on","plain":"ご","change":null}],"core":1,"sentence":"どんな {}が すきですか。","en":"Which foreign language do you like?"},{"w":"国語","r":"こくご","m":"national language; Japanese (school subject)","note":"","parts":[{"k":"国","r":"こく","kind":"on","plain":"こく","change":null},{"k":"語","r":"ご","kind":"on","plain":"ご","change":null}],"core":0},{"w":"言語","r":"げんご","m":"language (formal)","note":"","parts":[{"k":"言","r":"げん","kind":"on","plain":"げん","change":null},{"k":"語","r":"ご","kind":"on","plain":"ご","change":null}],"core":0},{"w":"語学","r":"ごがく","m":"language study","note":"","parts":[{"k":"語","r":"ご","kind":"on","plain":"ご","change":null},{"k":"学","r":"がく","kind":"on","plain":"がく","change":null}],"core":0},{"w":"会話","r":"かいわ","m":"conversation","note":"","parts":[{"k":"会","r":"かい","kind":"on","plain":"かい","change":null},{"k":"話","r":"わ","kind":"on","plain":"わ","change":null}],"core":1,"sentence":"にほんごの {}の じゅぎょうが あります。","en":"There is a Japanese conversation class."},{"w":"電話","r":"でんわ","m":"telephone","note":"","parts":[{"k":"電","r":"でん","kind":"on","plain":"でん","change":null},{"k":"話","r":"わ","kind":"on","plain":"わ","change":null}],"core":1,"sentence":"よる {}を かけます。","en":"I'll call at night."},{"w":"話し中","r":"はなしちゅう","m":"busy (phone line); while talking","note":"","parts":[{"k":"話","r":"はな","kind":"kun","plain":"はな(す)","change":null},{"kana":"し"},{"k":"中","r":"ちゅう","kind":"on","plain":"ちゅう","change":null}],"core":0},{"w":"話し手","r":"はなして","m":"speaker","note":"","parts":[{"k":"話","r":"はな","kind":"kun","plain":"はな(す)","change":null},{"kana":"し"},{"k":"手","r":"て","kind":"kun","plain":"て","change":null}],"core":0},{"w":"聞き手","r":"ききて","m":"listener","note":"","parts":[{"k":"聞","r":"き","kind":"kun","plain":"き(く)","change":null},{"kana":"き"},{"k":"手","r":"て","kind":"kun","plain":"て","change":null}],"core":0},{"w":"読み書き","r":"よみかき","m":"reading and writing","note":"","parts":[{"k":"読","r":"よ","kind":"kun","plain":"よ(む)","change":null},{"kana":"み"},{"k":"書","r":"か","kind":"kun","plain":"か(く)","change":null},{"kana":"き"}],"core":0},{"w":"読書","r":"どくしょ","m":"reading (books)","note":"","parts":[{"k":"読","r":"どく","kind":"on","plain":"どく","change":null},{"k":"書","r":"しょ","kind":"on","plain":"しょ","change":null}],"core":1,"sentence":"しゅみは {}です。","en":"My hobby is reading."},{"w":"新聞","r":"しんぶん","m":"newspaper","note":"Lit. new + hear.","parts":[{"k":"新","r":"しん","kind":"on","plain":"しん","change":null},{"k":"聞","r":"ぶん","kind":"on","plain":"ぶん","change":null}],"core":1,"sentence":"ちちは あさ {}を よみます。","en":"My father reads the newspaper in the morning."},{"w":"名前","r":"なまえ","m":"name","note":"","parts":[{"k":"名","r":"な","kind":"kun","plain":"な","change":null},{"k":"前","r":"まえ","kind":"kun","plain":"まえ","change":null}],"core":1,"sentence":"ここに {}を かいて ください。","en":"Please write your name here."},{"w":"本名","r":"ほんみょう","m":"real name","note":"","parts":[{"k":"本","r":"ほん","kind":"on","plain":"ほん","change":null},{"k":"名","r":"みょう","kind":"on","plain":"みょう","change":null}],"core":0},{"w":"入門","r":"にゅうもん","m":"introduction (to a subject)","note":"Common in textbook titles.","parts":[{"k":"入","r":"にゅう","kind":"on","plain":"にゅう","change":null},{"k":"門","r":"もん","kind":"on","plain":"もん","change":null}],"core":0},{"w":"早口","r":"はやくち","m":"fast talking","note":"","parts":[{"k":"早","r":"はや","kind":"kun","plain":"はや(い)","change":null},{"k":"口","r":"くち","kind":"kun","plain":"くち","change":null}],"core":0},{"w":"天気","r":"てんき","m":"weather","note":"","parts":[{"k":"天","r":"てん","kind":"on","plain":"てん","change":null},{"k":"気","r":"き","kind":"on","plain":"き","change":null}],"core":1,"sentence":"きょうは いい {}ですね。","en":"Nice weather today, isn't it?"},{"w":"空気","r":"くうき","m":"air","note":"","parts":[{"k":"空","r":"くう","kind":"on","plain":"くう","change":null},{"k":"気","r":"き","kind":"on","plain":"き","change":null}],"core":1,"sentence":"やまの {}は きれいです。","en":"The mountain air is clean."},{"w":"大空","r":"おおぞら","m":"the sky, firmament","note":"","parts":[{"k":"大","r":"おお","kind":"kun","plain":"おお(きい)","change":null},{"k":"空","r":"ぞら","kind":"kun","plain":"そら","change":"voiced"}],"core":0},{"w":"大雨","r":"おおあめ","m":"heavy rain","note":"","parts":[{"k":"大","r":"おお","kind":"kun","plain":"おお(きい)","change":null},{"k":"雨","r":"あめ","kind":"kun","plain":"あめ","change":null}],"core":0},{"w":"小雨","r":"こさめ","m":"light rain, drizzle","note":"Irregular: さめ.","special":true,"core":0},{"w":"雨水","r":"あまみず","m":"rainwater","note":"あめ → あま.","parts":[{"k":"雨","r":"あま","kind":"kun","plain":"あま","change":null},{"k":"水","r":"みず","kind":"kun","plain":"みず","change":null}],"core":0},{"w":"天国","r":"てんごく","m":"heaven, paradise","note":"","parts":[{"k":"天","r":"てん","kind":"on","plain":"てん","change":null},{"k":"国","r":"ごく","kind":"on","plain":"こく","change":"voiced"}],"core":0},{"w":"火山","r":"かざん","m":"volcano","note":"","parts":[{"k":"火","r":"か","kind":"on","plain":"か","change":null},{"k":"山","r":"ざん","kind":"on","plain":"さん","change":"voiced"}],"core":0},{"w":"花火","r":"はなび","m":"fireworks","note":"Lit. flower fire.","parts":[{"k":"花","r":"はな","kind":"kun","plain":"はな","change":null},{"k":"火","r":"び","kind":"kun","plain":"び","change":null}],"core":1,"sentence":"なつに {}を みに いきました。","en":"I went to see fireworks in summer."},{"w":"花見","r":"はなみ","m":"cherry-blossom viewing","note":"","parts":[{"k":"花","r":"はな","kind":"kun","plain":"はな","change":null},{"k":"見","r":"み","kind":"kun","plain":"み(る)","change":null}],"core":1,"sentence":"こうえんで {}を しました。","en":"We had a cherry-blossom viewing in the park."},{"w":"水中","r":"すいちゅう","m":"underwater","note":"","parts":[{"k":"水","r":"すい","kind":"on","plain":"すい","change":null},{"k":"中","r":"ちゅう","kind":"on","plain":"ちゅう","change":null}],"core":0},{"w":"水道","r":"すいどう","m":"water supply, tap water","note":"","parts":[{"k":"水","r":"すい","kind":"on","plain":"すい","change":null},{"k":"道","r":"どう","kind":"on","plain":"どう","change":null}],"core":1,"sentence":"{}の みずを のみました。","en":"I drank tap water."},{"w":"金魚","r":"きんぎょ","m":"goldfish","note":"","parts":[{"k":"金","r":"きん","kind":"on","plain":"きん","change":null},{"k":"魚","r":"ぎょ","kind":"on","plain":"ぎょ","change":null}],"core":0},{"w":"生魚","r":"なまざかな","m":"raw fish","note":"","parts":[{"k":"生","r":"なま","kind":"kun","plain":"なま","change":null},{"k":"魚","r":"ざかな","kind":"kun","plain":"さかな","change":"voiced"}],"core":0},{"w":"小鳥","r":"ことり","m":"small bird","note":"","parts":[{"k":"小","r":"こ","kind":"kun","plain":"こ","change":null},{"k":"鳥","r":"とり","kind":"kun","plain":"とり","change":null}],"core":0},{"w":"白鳥","r":"はくちょう","m":"swan","note":"Lit. white bird.","parts":[{"k":"白","r":"はく","kind":"on","plain":"はく","change":null},{"k":"鳥","r":"ちょう","kind":"on","plain":"ちょう","change":null}],"core":0},{"w":"馬力","r":"ばりき","m":"horsepower","note":"","parts":[{"k":"馬","r":"ば","kind":"on","plain":"ば","change":null},{"k":"力","r":"りき","kind":"on","plain":"りき","change":null}],"core":0},{"w":"上下","r":"じょうげ","m":"up and down; top and bottom","note":"","parts":[{"k":"上","r":"じょう","kind":"on","plain":"じょう","change":null},{"k":"下","r":"げ","kind":"on","plain":"げ","change":null}],"core":0},{"w":"左右","r":"さゆう","m":"left and right","note":"","parts":[{"k":"左","r":"さ","kind":"on","plain":"さ","change":null},{"k":"右","r":"ゆう","kind":"on","plain":"ゆう","change":null}],"core":0},{"w":"東西","r":"とうざい","m":"east and west","note":"","parts":[{"k":"東","r":"とう","kind":"on","plain":"とう","change":null},{"k":"西","r":"ざい","kind":"on","plain":"さい","change":"voiced"}],"core":0},{"w":"南北","r":"なんぼく","m":"north and south","note":"","parts":[{"k":"南","r":"なん","kind":"on","plain":"なん","change":null},{"k":"北","r":"ぼく","kind":"on","plain":"ほく","change":"voiced"}],"core":0},{"w":"東北","r":"とうほく","m":"northeast; Tōhoku region","note":"","parts":[{"k":"東","r":"とう","kind":"on","plain":"とう","change":null},{"k":"北","r":"ほく","kind":"on","plain":"ほく","change":null}],"core":0},{"w":"目の前","r":"めのまえ","m":"right in front of one's eyes","note":"","parts":[{"k":"目","r":"め","kind":"kun","plain":"め","change":null},{"kana":"の"},{"k":"前","r":"まえ","kind":"kun","plain":"まえ","change":null}],"core":1,"sentence":"ぎんこうは えきの {}です。","en":"The bank is right in front of the station."},{"w":"左手","r":"ひだりて","m":"left hand","note":"","parts":[{"k":"左","r":"ひだり","kind":"kun","plain":"ひだり","change":null},{"k":"手","r":"て","kind":"kun","plain":"て","change":null}],"core":1,"sentence":"{}で じを かきます。","en":"I write with my left hand."},{"w":"右手","r":"みぎて","m":"right hand","note":"","parts":[{"k":"右","r":"みぎ","kind":"kun","plain":"みぎ","change":null},{"k":"手","r":"て","kind":"kun","plain":"て","change":null}],"core":1,"sentence":"{}に かさを もって います。","en":"I'm holding an umbrella in my right hand."},{"w":"手足","r":"てあし","m":"hands and feet; limbs","note":"","parts":[{"k":"手","r":"て","kind":"kun","plain":"て","change":null},{"k":"足","r":"あし","kind":"kun","plain":"あし","change":null}],"core":0},{"w":"上手","r":"じょうず","m":"skillful, good at","note":"Irregular reading.","special":true,"core":1,"sentence":"ははは りょうりが {}です。","en":"My mother is good at cooking."},{"w":"下手","r":"へた","m":"unskillful, bad at","note":"Irregular reading.","special":true,"core":1,"sentence":"わたしは うたが {}です。","en":"I'm bad at singing."},{"w":"空手","r":"からて","m":"karate","note":"Lit. empty hand.","parts":[{"k":"空","r":"から","kind":"kun","plain":"から","change":null},{"k":"手","r":"て","kind":"kun","plain":"て","change":null}],"core":0},{"w":"電気","r":"でんき","m":"electricity; lights","note":"","parts":[{"k":"電","r":"でん","kind":"on","plain":"でん","change":null},{"k":"気","r":"き","kind":"on","plain":"き","change":null}],"core":1,"sentence":"へやの {}を けして ください。","en":"Please turn off the room light."},{"w":"電車","r":"でんしゃ","m":"train","note":"","parts":[{"k":"電","r":"でん","kind":"on","plain":"でん","change":null},{"k":"車","r":"しゃ","kind":"on","plain":"しゃ","change":null}],"core":1,"sentence":"{}で かいしゃに いきます。","en":"I go to work by train."},{"w":"電力","r":"でんりょく","m":"electric power","note":"","parts":[{"k":"電","r":"でん","kind":"on","plain":"でん","change":null},{"k":"力","r":"りょく","kind":"on","plain":"りょく","change":null}],"core":0},{"w":"水力","r":"すいりょく","m":"water power","note":"","parts":[{"k":"水","r":"すい","kind":"on","plain":"すい","change":null},{"k":"力","r":"りょく","kind":"on","plain":"りょく","change":null}],"core":0},{"w":"新車","r":"しんしゃ","m":"new car","note":"","parts":[{"k":"新","r":"しん","kind":"on","plain":"しん","change":null},{"k":"車","r":"しゃ","kind":"on","plain":"しゃ","change":null}],"core":0},{"w":"中古","r":"ちゅうこ","m":"secondhand, used","note":"","parts":[{"k":"中","r":"ちゅう","kind":"on","plain":"ちゅう","change":null},{"k":"古","r":"こ","kind":"on","plain":"こ","change":null}],"core":0},{"w":"中古車","r":"ちゅうこしゃ","m":"used car","note":"","parts":[{"k":"中","r":"ちゅう","kind":"on","plain":"ちゅう","change":null},{"k":"古","r":"こ","kind":"on","plain":"こ","change":null},{"k":"車","r":"しゃ","kind":"on","plain":"しゃ","change":null}],"core":0},{"w":"古本","r":"ふるほん","m":"used book","note":"","parts":[{"k":"古","r":"ふる","kind":"kun","plain":"ふる(い)","change":null},{"k":"本","r":"ほん","kind":"on","plain":"ほん","change":null}],"core":0},{"w":"半分","r":"はんぶん","m":"half","note":"","parts":[{"k":"半","r":"はん","kind":"on","plain":"はん","change":null},{"k":"分","r":"ぶん","kind":"on","plain":"ぶん","change":null}],"core":1,"sentence":"パンを {} ともだちに あげました。","en":"I gave half the bread to a friend."},{"w":"多分","r":"たぶん","m":"probably, maybe","note":"","parts":[{"k":"多","r":"た","kind":"on","plain":"た","change":null},{"k":"分","r":"ぶん","kind":"on","plain":"ぶん","change":null}],"core":1,"sentence":"あしたは {} あめでしょう。","en":"It will probably rain tomorrow."},{"w":"少々","r":"しょうしょう","m":"a little, just a moment","note":"Polite: 少々お待ちください.","parts":[{"k":"少","r":"しょう","kind":"on","plain":"しょう","change":null},{"k":"々","r":"しょう","kind":"on","plain":"しょう","change":null}],"core":0},{"w":"人気","r":"にんき","m":"popularity","note":"","parts":[{"k":"人","r":"にん","kind":"on","plain":"にん","change":null},{"k":"気","r":"き","kind":"on","plain":"き","change":null}],"core":1,"sentence":"この みせは {}が あります。","en":"This shop is popular."},{"w":"気分","r":"きぶん","m":"feeling, mood","note":"","parts":[{"k":"気","r":"き","kind":"on","plain":"き","change":null},{"k":"分","r":"ぶん","kind":"on","plain":"ぶん","change":null}],"core":0},{"w":"本気","r":"ほんき","m":"seriousness, for real","note":"","parts":[{"k":"本","r":"ほん","kind":"on","plain":"ほん","change":null},{"k":"気","r":"き","kind":"on","plain":"き","change":null}],"core":0},{"w":"長生き","r":"ながいき","m":"long life","note":"","parts":[{"k":"長","r":"なが","kind":"kun","plain":"なが(い)","change":null},{"k":"生","r":"い","kind":"kun","plain":"い(きる)","change":null},{"kana":"き"}],"core":0},{"w":"食前","r":"しょくぜん","m":"before meals","note":"Seen on medicine labels.","parts":[{"k":"食","r":"しょく","kind":"on","plain":"しょく","change":null},{"k":"前","r":"ぜん","kind":"on","plain":"ぜん","change":null}],"core":0},{"w":"食後","r":"しょくご","m":"after meals","note":"","parts":[{"k":"食","r":"しょく","kind":"on","plain":"しょく","change":null},{"k":"後","r":"ご","kind":"on","plain":"ご","change":null}],"core":0},{"w":"外食","r":"がいしょく","m":"eating out","note":"","parts":[{"k":"外","r":"がい","kind":"on","plain":"がい","change":null},{"k":"食","r":"しょく","kind":"on","plain":"しょく","change":null}],"core":0},{"w":"飲み水","r":"のみみず","m":"drinking water","note":"","parts":[{"k":"飲","r":"の","kind":"kun","plain":"の(む)","change":null},{"kana":"み"},{"k":"水","r":"みず","kind":"kun","plain":"みず","change":null}],"core":0},{"w":"時間","r":"じかん","m":"time; hours","note":"","parts":[{"k":"時","r":"じ","kind":"on","plain":"じ","change":null},{"k":"間","r":"かん","kind":"on","plain":"かん","change":null}],"core":1,"sentence":"あまり {}が ありません。","en":"I don't have much time."},{"w":"百人","r":"ひゃくにん","m":"100 people","note":"Not びゃくにん: 百 is only voiced after 三 and 何 (さんびゃく, なんびゃく).","parts":[{"k":"百","r":"ひゃく","kind":"on","plain":"ひゃく","change":null},{"k":"人","r":"にん","kind":"on","plain":"にん","change":null}],"core":1,"sentence":"せいとは {} います。","en":"There are 100 students."},{"w":"月よう日","r":"げつようび","m":"Monday","note":"The exam writes 曜 in kana: 火よう日. 日 becomes び here.","parts":[{"k":"月","r":"げつ","kind":"on","plain":"げつ","change":null},{"kana":"よう"},{"k":"日","r":"び","kind":"kun","plain":"ひ","change":"ひ → び (voiced)"}],"core":1,"sentence":"{}に テストが あります。","en":"There is a test on Monday."},{"w":"火よう日","r":"かようび","m":"Tuesday","note":"The exam writes 曜 in kana: 火よう日. 日 becomes び here.","parts":[{"k":"火","r":"か","kind":"on","plain":"か","change":null},{"kana":"よう"},{"k":"日","r":"び","kind":"kun","plain":"ひ","change":"ひ → び (voiced)"}],"core":1,"sentence":"あしたは {}です。","en":"Tomorrow is Tuesday."},{"w":"水よう日","r":"すいようび","m":"Wednesday","note":"The exam writes 曜 in kana: 火よう日. 日 becomes び here.","parts":[{"k":"水","r":"すい","kind":"on","plain":"すい","change":null},{"kana":"よう"},{"k":"日","r":"び","kind":"kun","plain":"ひ","change":"ひ → び (voiced)"}],"core":1,"sentence":"{}は じゅぎょうが ありません。","en":"There's no class on Wednesday."},{"w":"木よう日","r":"もくようび","m":"Thursday","note":"The exam writes 曜 in kana: 火よう日. 日 becomes び here.","parts":[{"k":"木","r":"もく","kind":"on","plain":"もく","change":null},{"kana":"よう"},{"k":"日","r":"び","kind":"kun","plain":"ひ","change":"ひ → び (voiced)"}],"core":1,"sentence":"{}に としょかんへ いきます。","en":"I go to the library on Thursday."},{"w":"金よう日","r":"きんようび","m":"Friday","note":"The exam writes 曜 in kana: 火よう日. 日 becomes び here.","parts":[{"k":"金","r":"きん","kind":"on","plain":"きん","change":null},{"kana":"よう"},{"k":"日","r":"び","kind":"kun","plain":"ひ","change":"ひ → び (voiced)"}],"core":1,"sentence":"{}の よる、パーティーが あります。","en":"There is a party on Friday night."},{"w":"土よう日","r":"どようび","m":"Saturday","note":"The exam writes 曜 in kana: 火よう日. 日 becomes び here.","parts":[{"k":"土","r":"ど","kind":"on","plain":"ど","change":null},{"kana":"よう"},{"k":"日","r":"び","kind":"kun","plain":"ひ","change":"ひ → び (voiced)"}],"core":1,"sentence":"{}は かいしゃが やすみです。","en":"The office is closed on Saturday."},{"w":"日よう日","r":"にちようび","m":"Sunday","note":"The exam writes 曜 in kana: 火よう日. 日 becomes び here.","parts":[{"k":"日","r":"にち","kind":"on","plain":"にち","change":null},{"kana":"よう"},{"k":"日","r":"び","kind":"kun","plain":"ひ","change":"ひ → び (voiced)"}],"core":1,"sentence":"{}に かいものを します。","en":"I go shopping on Sunday."},{"w":"何よう日","r":"なんようび","m":"what day of the week","note":"The exam writes 曜 in kana: 火よう日. 日 becomes び here.","parts":[{"k":"何","r":"なん","kind":"kun","plain":"なん","change":null},{"kana":"よう"},{"k":"日","r":"び","kind":"kun","plain":"ひ","change":"ひ → び (voiced)"}],"core":1,"sentence":"きょうは {}ですか。","en":"What day is it today?"}],"look":{"大":"犬太天","人":"入八","入":"人八","学":"字宇","生":"牛先主","先":"生光","校":"枚板","会":"公今合","社":"仕杜","外":"夕名","国":"困図固","時":"持待寺","間":"聞問門","天":"夫大","気":"汽丸","電":"雷雪","話":"語活読","車":"東軍","名":"各多","前":"首","新":"親","聞":"間問門","日":"目白曰","本":"木休体","語":"話読","午":"牛千年","後":"役待","今":"会令","年":"午牛","月":"用円","週":"周道","来":"米未","毎":"母海","半":"羊平","分":"公父","上":"土止","手":"毛牛","下":"不卜","二":"三工","三":"二川","何":"可河","一":"二","四":"西匹","五":"王互","六":"穴文","七":"匕十","八":"人入","九":"丸力","十":"千土","百":"白自","千":"干午","万":"方力","円":"内冊","中":"申虫","小":"少川","高":"京亭","出":"山生","口":"日回","東":"車束","西":"四酉","北":"比","南":"幸","水":"氷永木","道":"首週","花":"化","見":"貝目兄","火":"人","空":"究穴","多":"名夕","左":"右在","右":"石左","目":"日自","男":"田思","女":"安好","子":"字了","白":"百日","鳥":"島烏","読":"続話","書":"昼害","長":"表","土":"士工","木":"本未","金":"全今"}};
+const PWA = /*PWA*/false;     // true in the installable build
+const KANJI = DATA.kanji, BYK = Object.fromEntries(KANJI.map(k => [k.k, k]));
+const ALL = DATA.compounds, BYW = Object.fromEntries(ALL.map(c => [c.w, c]));
+const CORE = ALL.filter(c => c.core);
+const LOOK = DATA.look;
+
+/* ---------------- state & persistence ---------------- */
+const DEFAULT = () => ({ v: 1, cards: {}, xp: 0, days: [], best: {}, settings: { romaji: false, sound: true, newPerDay: 10, extra: false, english: true }, newToday: { d: "", n: 0 }, updatedAt: 0 });
+const LS = "n5jukugo:progress";
+function loadLocal() { try { const v = JSON.parse(localStorage.getItem(LS) || "null"); return v && v.v === 1 ? v : null; } catch (e) { return null; } }
+let S = Object.assign(DEFAULT(), loadLocal() || {});
+S.settings = Object.assign(DEFAULT().settings, S.settings);
+const sync = { ref: null, saving: false, again: false, timer: null, mode: "local" };
+function save() {
+  S.updatedAt = Date.now();
+  try { localStorage.setItem(LS, JSON.stringify(S)); } catch (e) {}
+  clearTimeout(sync.timer); sync.timer = setTimeout(pushRemote, 1200);
+}
+async function pushRemote() {
+  if (!sync.ref) return;
+  if (sync.saving) { sync.again = true; return; }
+  sync.saving = true;
+  try { await sync.ref.set(JSON.parse(JSON.stringify(S))); sync.mode = "account"; } catch (e) { sync.mode = "local"; }
+  sync.saving = false; renderFooter();
+  if (sync.again) { sync.again = false; pushRemote(); }
+}
+(async function connect() {
+  if (PWA) return;
+  try {
+    const [db, user] = await Promise.all([window.claude?.use?.("db"), window.claude?.use?.("user")]);
+    if (!db || !user) return;
+    const id = await user.id(); if (!id) return;
+    sync.ref = db.doc("data/users/" + id + "/progress-jukugo");
+    const snap = await sync.ref.get();
+    const remote = snap.exists ? snap.data() : null;
+    if (remote && remote.v === 1 && (remote.updatedAt || 0) > (S.updatedAt || 0)) {
+      S = Object.assign(DEFAULT(), JSON.parse(JSON.stringify(remote)));
+      S.settings = Object.assign(DEFAULT().settings, S.settings);
+      try { localStorage.setItem(LS, JSON.stringify(S)); } catch (e) {}
+      sync.mode = "account"; if (!current) render(); else renderBar();
+    } else if (S.updatedAt) await pushRemote();
+    else sync.mode = "account";
+    renderFooter();
+  } catch (e) {}
+})();
+
+/* ---------------- helpers ---------------- */
+const $ = (s, r = document) => r.querySelector(s);
+const esc = s => String(s).replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+const shuffle = a => { a = a.slice(); for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; };
+const pick = (a, n) => shuffle(a).slice(0, n);
+const dayStr = (d = new Date()) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+const now = () => Date.now();
+const MIN = 60e3, DAY = 864e5;
+const INTERVAL = [0, 10 * MIN, 1 * DAY, 3 * DAY, 7 * DAY, 16 * DAY, 35 * DAY];
+const STAGE_NAME = ["New", "Learning", "Learning", "Getting there", "合格 · Mastered", "合格 · Mastered", "合格 · Mastered"];
+const card = w => S.cards[w] || { s: 0, due: 0, r: 0, w: 0 };
+const stage = w => card(w).s;
+const mastered = w => stage(w) >= 4;
+const isDue = w => stage(w) > 0 && card(w).due <= now();
+const isKanji = ch => /[一-龯々]/.test(ch);
+const kanjiOf = w => [...w].filter(ch => isKanji(ch) && ch !== "々");
+const pool = () => S.settings.extra ? ALL : CORE;
+
+function streak() {
+  const set = new Set(S.days); let n = 0; const d = new Date();
+  if (!set.has(dayStr(d))) d.setDate(d.getDate() - 1);
+  while (set.has(dayStr(d))) { n++; d.setDate(d.getDate() - 1); }
+  return n;
+}
+function markToday() { const t = dayStr(); if (!S.days.includes(t)) { S.days.push(t); S.days = S.days.slice(-400); } }
+const level = () => Math.floor(S.xp / 250) + 1;
+function addXP(n, el) { S.xp += n; markToday(); if (el) floatXP(n, el); renderBar(); }
+function newLeft() { return S.newToday.d === dayStr() ? Math.max(0, S.settings.newPerDay - S.newToday.n) : S.settings.newPerDay; }
+function useNew() { if (S.newToday.d !== dayStr()) S.newToday = { d: dayStr(), n: 0 }; S.newToday.n++; }
+
+/* romaji, for the optional setting */
+const ROMA = { "きゃ":"kya","きゅ":"kyu","きょ":"kyo","しゃ":"sha","しゅ":"shu","しょ":"sho","ちゃ":"cha","ちゅ":"chu","ちょ":"cho","にゃ":"nya","にゅ":"nyu","にょ":"nyo","ひゃ":"hya","ひゅ":"hyu","ひょ":"hyo","みゃ":"mya","みゅ":"myu","みょ":"myo","りゃ":"rya","りゅ":"ryu","りょ":"ryo","ぎゃ":"gya","ぎゅ":"gyu","ぎょ":"gyo","じゃ":"ja","じゅ":"ju","じょ":"jo","びゃ":"bya","びゅ":"byu","びょ":"byo","ぴゃ":"pya","ぴゅ":"pyu","ぴょ":"pyo",
+  "あ":"a","い":"i","う":"u","え":"e","お":"o","か":"ka","き":"ki","く":"ku","け":"ke","こ":"ko","さ":"sa","し":"shi","す":"su","せ":"se","そ":"so","た":"ta","ち":"chi","つ":"tsu","て":"te","と":"to","な":"na","に":"ni","ぬ":"nu","ね":"ne","の":"no","は":"ha","ひ":"hi","ふ":"fu","へ":"he","ほ":"ho","ま":"ma","み":"mi","む":"mu","め":"me","も":"mo","や":"ya","ゆ":"yu","よ":"yo","ら":"ra","り":"ri","る":"ru","れ":"re","ろ":"ro","わ":"wa","を":"o","ん":"n","が":"ga","ぎ":"gi","ぐ":"gu","げ":"ge","ご":"go","ざ":"za","じ":"ji","ず":"zu","ぜ":"ze","ぞ":"zo","だ":"da","ぢ":"ji","づ":"zu","で":"de","ど":"do","ば":"ba","び":"bi","ぶ":"bu","べ":"be","ぼ":"bo","ぱ":"pa","ぴ":"pi","ぷ":"pu","ぺ":"pe","ぽ":"po" };
+function romaji(s) {
+  let out = "", dbl = false;
+  for (let i = 0; i < s.length; i++) {
+    if (s[i] === "っ") { dbl = true; continue; }
+    let r = ROMA[s.slice(i, i + 2)]; if (r) i++; else r = ROMA[s[i]] || s[i];
+    if (dbl) { r = (r[0] === "c" ? "t" : r[0]) + r; dbl = false; }
+    out += r;
+  }
+  return out;
+}
+
+/* ---------------- sound & celebrations ---------------- */
+let actx = null;
+function tone(seq) {
+  if (!S.settings.sound) return;
+  try {
+    actx = actx || new (window.AudioContext || window.webkitAudioContext)();
+    let t = actx.currentTime;
+    seq.forEach(([f, d, type = "sine", g = .12]) => {
+      const o = actx.createOscillator(), v = actx.createGain();
+      o.type = type; o.frequency.value = f; v.gain.setValueAtTime(g, t); v.gain.exponentialRampToValueAtTime(.0001, t + d);
+      o.connect(v); v.connect(actx.destination); o.start(t); o.stop(t + d); t += d * .7;
+    });
+  } catch (e) {}
+}
+const sfx = { ok: () => tone([[660, .09], [990, .14]]), no: () => tone([[220, .18, "triangle", .1]]), stamp: () => tone([[120, .12, "square", .08], [520, .1], [780, .18]]), done: () => tone([[523, .1], [659, .1], [784, .1], [1046, .24]]) };
+function floatXP(n, el) {
+  const d = document.createElement("div"); d.className = "xpfloat"; d.textContent = `+${n} XP`;
+  const r = el.getBoundingClientRect(); d.style.left = (r.left + r.width / 2 - 24) + "px"; d.style.top = (r.top - 8) + "px";
+  document.body.appendChild(d); setTimeout(() => d.remove(), 1000);
+}
+function hanamaru() {
+  const fx = document.createElement("div"); fx.className = "fx fade";
+  fx.innerHTML = `<svg class="hanamaru" viewBox="0 0 200 200" aria-hidden="true"><path d="M100 52c26 0 46 20 46 46s-20 48-46 48-46-20-46-46c0-24 18-44 42-46 22-2 40 14 42 36 2 20-12 38-32 40-18 2-34-10-36-28-1-15 10-28 25-29 12-1 22 8 22 20"/><path d="M100 20c18 0 22 22 8 30M152 34c14 12 4 32-12 30M182 92c4 18-16 28-28 18M168 152c-6 16-28 12-28-4M100 182c-18 0-22-22-8-30M48 166c-14-12-4-32 12-30M18 108c-4-18 16-28 28-18M32 48c6-16 28-12 28 4"/></svg>`;
+  document.body.appendChild(fx); setTimeout(() => fx.remove(), 1500);
+}
+function bigStamp(w) {
+  const fx = document.createElement("div"); fx.className = "fx fade";
+  fx.innerHTML = `<div style="display:grid;justify-items:center;gap:8px"><svg class="bigstamp" aria-hidden="true"><use href="#i-stamp"/></svg><div style="font-family:var(--kanji);font-size:2rem;font-weight:600;background:var(--sheet);padding:2px 14px;border-radius:10px">${esc(w)} 合格</div></div>`;
+  document.body.appendChild(fx); setTimeout(() => fx.remove(), 1500); sfx.stamp();
+}
+
+/* ---------------- spaced repetition ---------------- */
+function grade(w, g) {
+  const c = Object.assign({ s: 0, due: 0, r: 0, w: 0 }, S.cards[w]); const before = c.s;
+  if (g === 0) { c.s = Math.max(1, c.s - 2); c.w++; } else { c.s = Math.min(6, c.s + (g === 2 ? 2 : 1)); c.r++; }
+  c.due = now() + (g === 0 ? MIN : INTERVAL[c.s]); S.cards[w] = c;
+  return before < 4 && c.s >= 4;
+}
+function quizResult(w, ok) {
+  const c = Object.assign({ s: 0, due: 0, r: 0, w: 0 }, S.cards[w]);
+  if (ok) c.r++; else { c.w++; if (c.s > 0) { c.s = Math.max(1, c.s - 1); c.due = now(); } }
+  S.cards[w] = c;
+}
+function sessionQueue() {
+  const due = pool().filter(c => isDue(c.w)).sort((a, b) => card(a.w).due - card(b.w).due).map(c => c.w);
+  const fresh = pool().filter(c => stage(c.w) === 0).map(c => c.w).slice(0, newLeft());
+  return { due: due.slice(0, 30), fresh };
+}
+const quizPool = (need = 8) => { const seen = pool().filter(c => stage(c.w) > 0); return seen.length >= need ? seen : pool(); };
+
+/* ---------------- explanation of a word ---------------- */
+function partsHtml(c) {
+  if (c.special) return `<div class="note"><b class="trap">Special reading.</b> ${esc(c.w)} is read <b>${esc(c.r)}</b> as one word, not kanji by kanji.${c.note ? " " + esc(c.note) : ""}</div>`;
+  const ps = (c.parts || []).map(p => {
+    if (p.kana) return `<div class="part kana"><span class="pk" style="font-size:1.1rem">${esc(p.kana)}</span><small>kana</small></div>`;
+    const k = BYK[p.k];
+    const how = p.change ? `${esc(p.plain)} → ${esc(p.r)}<br>${esc(p.change)}` : (p.k === "々" ? "repeat mark" : p.kind === "on" ? "on reading" : "kun reading");
+    return `<div class="part"><span class="pk">${esc(p.k)}</span><span class="pr ${p.change ? "chg" : ""}">${esc(p.r)}</span><small>${how}</small>${k ? `<small>${esc(k.m1)}</small>` : ""}</div>`;
+  }).join("");
+  return `<div class="parts">${ps}</div>${c.note ? `<div class="note">${esc(c.note)}</div>` : ""}`;
+}
+function whyHtml(c, extra = "") {
+  return `<div class="why"><div class="head"><span class="w">${esc(c.w)}</span><span class="r">${esc(c.r)}${S.settings.romaji ? ` · ${romaji(c.r)}` : ""}</span><span class="m">${esc(c.m)}</span></div>${partsHtml(c)}${extra}</div>`;
+}
+
+/* ---------------- distractors for もんだい1 (reading) ---------------- */
+const VOICE = { "か":"が","き":"ぎ","く":"ぐ","け":"げ","こ":"ご","さ":"ざ","し":"じ","す":"ず","せ":"ぜ","そ":"ぞ","た":"だ","ち":"ぢ","つ":"づ","て":"で","と":"ど","は":"ば","ひ":"び","ふ":"ぶ","へ":"べ","ほ":"ぼ" };
+const UNVOICE = Object.fromEntries(Object.entries(VOICE).map(([a, b]) => [b, a]));
+const HALF = { "は":"ぱ","ひ":"ぴ","ふ":"ぷ","へ":"ぺ","ほ":"ぽ","ば":"ぱ","び":"ぴ","ぶ":"ぷ","べ":"ぺ","ぼ":"ぽ" };
+const UNHALF = { "ぱ":"は","ぴ":"ひ","ぷ":"ふ","ぺ":"へ","ぽ":"ほ" };
+function voiceVariants(s) {      // flip the voicing of the first kana: ひゃく → びゃく / ぴゃく
+  const a = s[0], out = [];
+  if (VOICE[a]) out.push(VOICE[a] + s.slice(1));
+  if (UNVOICE[a] && UNVOICE[a] !== "ぢ") out.push(UNVOICE[a] + s.slice(1));
+  if (HALF[a]) out.push(HALF[a] + s.slice(1));
+  if (UNHALF[a]) out.push(UNHALF[a] + s.slice(1), VOICE[UNHALF[a]] + s.slice(1));
+  return out.filter(x => !x.includes("ぢ") && !x.includes("づ"));
+}
+function lengthVariants(s) {     // こう ↔ こ, しゅう ↔ しゅ, small っ in or out
+  const out = [];
+  const m = s.match(/^(.*[こそとのほもよろごぞどぼぽうくすつぬふむゆるぐずぶぷょゅ])う(.*)$/);
+  if (m) out.push(m[1] + m[2]);
+  if (/[こそとほよごどぼょゅ]$/.test(s)) out.push(s + "う");
+  if (/っ$/.test(s)) out.push(s.slice(0, -1) + "く", s.slice(0, -1) + "つ", s.slice(0, -1) + "ち");
+  if (/[くちつ]$/.test(s) && s.length > 1) out.push(s.slice(0, -1) + "っ");
+  if (/ゅう$/.test(s)) out.push(s.slice(0, -2) + "ょう");
+  if (/ょう$/.test(s)) out.push(s.slice(0, -2) + "ゅう");
+  return out;
+}
+// one-kana readings that are only verb stems (分→わ of わける, 下→お of おろす) make silly traps
+const realReading = r => r.length > 1 || "ひびかきこめてとちみねたこえ".includes(r);
+function readingDistractors(c) {
+  const opts = new Set();
+  const add = parts => { const s = parts.join(""); if (s && s !== c.r && /^[ぁ-ゖー]+$/.test(s)) opts.add(s); };
+  const kanaParts = c.special ? null : (c.parts || []).map(p => p.kana ? p.kana : p.r);
+  if (kanaParts) {
+    const idx = (c.parts || []).map((p, i) => p.kana ? -1 : i).filter(i => i >= 0);
+    for (const i of idx) {
+      const p = c.parts[i];
+      // 1) undo or flip the sound change in this part
+      if (p.change && p.plain && p.plain !== p.r) { const a = kanaParts.slice(); a[i] = p.plain.replace(/[（(].*$/, ""); add(a); }
+      for (const v of voiceVariants(kanaParts[i])) { const a = kanaParts.slice(); a[i] = v; add(a); }
+      if (p.kind === "on") for (const v of lengthVariants(kanaParts[i])) { const a = kanaParts.slice(); a[i] = v; add(a); }
+      // 2) another reading of the same kanji (人: にん ↔ じん ↔ ひと)
+      const k = BYK[p.k];
+      if (k) for (const r of k.snd) if (r !== p.r && realReading(r)) { const a = kanaParts.slice(); a[i] = r; add(a); }
+    }
+  }
+  if (c.special || opts.size < 3) {   // read it kanji by kanji, the way a learner might guess
+    const ks = [...c.w];
+    for (let t = 0; t < 30 && opts.size < 8; t++) {
+      add(ks.map(ch => { const k = BYK[ch]; if (!k) return isKanji(ch) ? "" : ch; const rs = k.snd.filter(realReading); return rs[Math.floor(Math.random() * rs.length)] || ""; }));
+    }
+  }
+  // prefer one-step traps (closest to the right answer), the way the real test does
+  const close = [...opts].sort((a, b) => Math.abs(a.length - c.r.length) - Math.abs(b.length - c.r.length) || Math.random() - .5);
+  const chosen = shuffle(close.slice(0, 6)).slice(0, 3);
+  return chosen;
+}
+
+/* ---------------- distractors for もんだい2 (writing) ---------------- */
+// Real test pattern: a 2×2 grid. Either look-alike kanji (学校 / 宇校 / 学枚 / 宇枚) or the
+// neighbouring word (来月 / 今月 / 来週 / 今週).
+function writingOptions(c) {
+  const toks = [...c.w], kpos = toks.map((ch, i) => isKanji(ch) && ch !== "々" ? i : -1).filter(i => i >= 0);
+  const sub = (i, ch) => { const a = toks.slice(); a[i] = ch; return a.join(""); };
+  const grids = [];
+  // meaning grid: swap each kanji for one that makes another real word with the same partner
+  if (kpos.length === 2) {
+    const [i, j] = kpos;
+    const altI = ALL.map(x => [...x.w]).filter(t => t.length === toks.length && t[j] === toks[j] && t[i] !== toks[i] && isKanji(t[i]) && t.every((ch, n) => n === i || ch === toks[n])).map(t => t[i]);
+    const altJ = ALL.map(x => [...x.w]).filter(t => t.length === toks.length && t[i] === toks[i] && t[j] !== toks[j] && isKanji(t[j]) && t.every((ch, n) => n === j || ch === toks[n])).map(t => t[j]);
+    if (altI.length && altJ.length) { const a = pick(altI, 1)[0], b = pick(altJ, 1)[0]; grids.push({ kind: "word", opts: [sub(i, a), sub(j, b), (() => { const t = toks.slice(); t[i] = a; t[j] = b; return t.join(""); })()] }); }
+    const li = LOOK[toks[i]], lj = LOOK[toks[j]];
+    if (li && lj) { const a = pick([...li], 1)[0], b = pick([...lj], 1)[0]; grids.push({ kind: "look", opts: [sub(i, a), sub(j, b), (() => { const t = toks.slice(); t[i] = a; t[j] = b; return t.join(""); })()] }); }
+  }
+  if (!grids.length) {   // one kanji, or three: mix look-alikes and real neighbours
+    const pool = new Set();
+    for (const i of kpos) {
+      for (const l of LOOK[toks[i]] || "") pool.add(sub(i, l));
+      for (const x of ALL) { const t = [...x.w]; if (t.length === toks.length && x.w !== c.w && t.every((ch, n) => n === i || ch === toks[n])) pool.add(x.w); }
+    }
+    grids.push({ kind: "mix", opts: pick([...pool], 3) });
+  }
+  const g = grids[Math.floor(Math.random() * grids.length)];
+  // never offer another real word with the same reading: the sentence couldn't tell them apart
+  const opts = [...new Set(g.opts)].filter(o => o !== c.w && !(BYW[o] && BYW[o].r === c.r));
+  return { kind: g.kind, opts: shuffle([c.w, ...opts]) };
+}
+
+/* ---------------- views ---------------- */
+let current = null;
+function renderBar() { $("#streak-n").textContent = streak(); $("#level-pill").textContent = `Lv ${level()} · ${S.xp} XP`; }
+function renderFooter() {
+  const f = $("#sync-note");
+  if (f) f.textContent = PWA ? "Progress is saved on this device. To move it, use Settings → Back up, then Restore on the other device."
+    : sync.mode === "account" ? "Progress is saved to your Claude account, so it follows you between devices." : "Progress is saved in this browser.";
+}
+function render() {
+  current = null; stopTimers(); renderBar();
+  const P = pool(), m = P.filter(c => mastered(c.w)).length;
+  const { due, fresh } = sessionQueue(), total = due.length + fresh.length;
+  const unseen = P.filter(c => stage(c.w) === 0).length;
+  const xpIn = S.xp % 250, best = S.best || {};
+  const fam = KANJI.map(k => ({ k, n: ALL.filter(c => c.w.includes(k.k)).length })).filter(x => x.n);
+  $("#view").innerHTML = `
+    <section class="hero">
+      <div><h1>How N5 kanji team up.</h1>
+        <p>${CORE.length} two-kanji words that N5 kanji questions are built from: what they mean, how they're read, and the traps the test sets.</p></div>
+      <div class="tally"><div class="lbl">合格 · Mastered</div><div class="big">${m}<span> / ${P.length}</span></div></div>
+    </section>
+    <div class="levelbar"><span>Level <b>${level()}</b></span><div class="track"><div class="fill" style="width:${xpIn / 2.5}%"></div></div><span>${xpIn}/250 XP</span></div>
+    <section class="today"><div>
+        <h2>${total ? "Today's words" : "All caught up"}</h2>
+        <p>${total ? `${due.length} to review · ${fresh.length} new` : unseen ? `Today's new words are done. ${unseen} still to meet, or try an exam round below.` : "Nothing is due right now. Try an exam round below."}</p></div>
+      ${total ? `<button class="cta" id="start-flash">Start</button>` : unseen ? `<button class="cta" id="more-new">Learn 5 more</button>` : ""}
+    </section>
+    <div class="section-h"><h2>Exam rounds <span class="exam-tag">JLPT format</span></h2><span class="hint">Mistakes send the word back for review.</span></div>
+    <div class="games">
+      <button class="game" data-game="read"><span class="gk">学校 → ?</span><b>もんだい1 · Read it</b><span>The word in a sentence; pick its reading. Traps: がくこう, はんふん, びゃくにん.${best.read ? ` <span class="best">Best ${best.read}/10</span>` : ""}</span></button>
+      <button class="game" data-game="write"><span class="gk">がっこう → ?</span><b>もんだい2 · Write it</b><span>Pick the right kanji: look-alikes (学枚, 公社) and neighbour words (今月 or 来月?).${best.write ? ` <span class="best">Best ${best.write}/10</span>` : ""}</span></button>
+      <button class="game" data-game="meaning"><span class="gk">先 + 生 = ?</span><b>Meaning</b><span>What does the pair mean? Wrong choices share a kanji, so the other half matters.${best.meaning ? ` <span class="best">Best ${best.meaning}/10</span>` : ""}</span></button>
+      <button class="game" data-game="mock"><span class="gk">15問</span><b>Mini mock</b><span>Mixed reading and writing questions, no hints until the end, like the real paper.${best.mock ? ` <span class="best">Best ${best.mock}/15</span>` : ""}</span></button>
+    </div>
+    <div class="section-h"><h2>Kanji families</h2><span class="hint">Tap a kanji to see every word it builds.</span></div>
+    <div class="fam-grid">${fam.map(({ k, n }) => {
+      const ws = ALL.filter(c => c.w.includes(k.k) && c.core), ms = ws.filter(c => mastered(c.w)).length;
+      const s = !ws.length ? 0 : ms === ws.length ? 4 : ws.some(c => stage(c.w) > 0) ? 2 : 0;
+      return `<button class="tile s${s}" data-k="${k.k}" aria-label="${k.k}: ${n} words"><span class="k">${k.k}</span><span class="n">${n}</span></button>`; }).join("")}</div>
+    <footer><span id="sync-note"></span><span>Readings and sound changes match the compound list in Asobiba. Question formats follow the official JLPT N5 sample paper (jlpt.jp).</span></footer>`;
+  renderFooter();
+  $("#start-flash")?.addEventListener("click", startFlash);
+  $("#more-new")?.addEventListener("click", () => { if (S.newToday.d !== dayStr()) S.newToday = { d: dayStr(), n: 0 }; S.newToday.n -= 5; save(); startFlash(); });
+  document.querySelectorAll(".game").forEach(b => b.addEventListener("click", () => startQuiz(b.dataset.game)));
+  document.querySelectorAll(".fam-grid .tile").forEach(b => b.addEventListener("click", () => openFamily(b.dataset.k)));
+}
+
+/* ---------------- sheets ---------------- */
+function openOverlay(html, onMount) {
+  const root = $("#overlay-root");
+  root.innerHTML = `<div class="overlay" id="ov"><div class="sheet" role="dialog" aria-modal="true">${html}</div></div>`;
+  const close = () => { root.innerHTML = ""; document.removeEventListener("keydown", onKey); };
+  const onKey = e => { if (e.key === "Escape") close(); };
+  document.addEventListener("keydown", onKey);
+  $("#ov").addEventListener("click", e => { if (e.target.id === "ov") close(); });
+  root.querySelectorAll("[data-close]").forEach(b => b.addEventListener("click", close));
+  onMount && onMount(close);
+}
+function openFamily(ch) {
+  const k = BYK[ch];
+  const ws = ALL.filter(c => c.w.includes(ch)).sort((a, b) => (b.core - a.core) || a.w.length - b.w.length);
+  const readingIn = c => { const p = (c.parts || []).find(p => p.k === ch); return p ? p.r : ""; };
+  const groups = {};
+  ws.forEach(c => { const r = c.special ? "special" : readingIn(c) || "—"; (groups[r] = groups[r] || []).push(c); });
+  const order = Object.keys(groups).sort((a, b) => (a === "special") - (b === "special") || groups[b].length - groups[a].length);
+  openOverlay(`
+    <div class="sheet-h"><h2><span style="font-family:var(--kanji);font-size:1.8rem">${esc(ch)}</span> · ${esc(k.m)}</h2><button class="icon-btn" data-close aria-label="Close"><svg><use href="#i-close"/></svg></button></div>
+    <p class="trapnote" style="margin:0">${ws.length} words. Grouped by how ${esc(ch)} is read inside them; <b style="color:var(--gold)">N5</b> marks the exam core.</p>
+    ${order.map(r => `<div><div class="q-label" style="text-align:left;margin:4px 0">${r === "special" ? "Special readings" : `read <span style="font-family:var(--kanji);font-size:1rem;text-transform:none">${esc(r)}</span>`}</div>
+      <div class="fam-list">${groups[r].map(c => `<div class="fam-row"><span class="w">${[...c.w].map(x => x === ch ? `<mark>${x}</mark>` : esc(x)).join("")}</span><span><span class="r">${esc(c.r)}</span>${c.core ? `<span class="core">N5</span>` : ""}<br><span class="m">${esc(c.m)}</span></span></div>`).join("")}</div></div>`).join("")}`);
+}
+function openSettings() {
+  const sw = (id, on, label, sub) => `<div class="setrow"><div><b>${label}</b><div style="font-size:.82rem;color:var(--muted)">${sub}</div></div><button class="switch" id="${id}" role="switch" aria-checked="${on}" aria-label="${label}"></button></div>`;
+  openOverlay(`
+    <div class="sheet-h"><h2>Settings</h2><button class="icon-btn" data-close aria-label="Close"><svg><use href="#i-close"/></svg></button></div>
+    ${sw("set-extra", S.settings.extra, "Include extra words", `Adds ${ALL.length - CORE.length} less common compounds (校門, 白鳥, 馬力…) to practice and rounds.`)}
+    ${sw("set-english", S.settings.english, "English under sentences", "Shows a translation under each exam sentence after you answer.")}
+    ${sw("set-romaji", S.settings.romaji, "Show romaji", "Adds romaji next to readings in explanations.")}
+    ${sw("set-sound", S.settings.sound, "Sound effects", "Short chimes for right answers and stamps.")}
+    <div class="setrow"><div><b>New words per day</b><div style="font-size:.82rem;color:var(--muted)">How many unseen words each day's practice adds.</div></div>
+      <div class="seg" role="group" aria-label="New words per day">${[5, 10, 15, 20].map(n => `<button data-n="${n}" aria-pressed="${S.settings.newPerDay === n}">${n}</button>`).join("")}</div></div>
+    <div class="setrow"><div><b>Back up progress</b><div style="font-size:.82rem;color:var(--muted)">Saves a small file you can restore here or in the other version of this app.</div></div><button class="ghost" id="backup">Back up</button></div>
+    <div class="setrow"><div><b>Restore from a backup</b><div style="font-size:.82rem;color:var(--muted)" id="restore-note">Replaces your current progress with the file's.</div></div>
+      <button class="ghost" id="restore">Restore</button><input type="file" id="restore-file" accept=".json,application/json" hidden></div>
+    <div class="setrow"><div><b>Reset progress</b><div style="font-size:.82rem;color:var(--muted)">Clears stages, XP and streak. Can't be undone.</div></div><button class="ghost danger" id="reset">Reset</button></div>`, close => {
+    const tog = (id, key, rerender) => $(id).addEventListener("click", e => { S.settings[key] = !S.settings[key]; e.currentTarget.setAttribute("aria-checked", S.settings[key]); save(); if (rerender && !current) render(); });
+    tog("#set-extra", "extra", true); tog("#set-english", "english"); tog("#set-romaji", "romaji"); tog("#set-sound", "sound");
+    document.querySelectorAll(".seg button").forEach(b => b.addEventListener("click", () => { S.settings.newPerDay = +b.dataset.n; document.querySelectorAll(".seg button").forEach(x => x.setAttribute("aria-pressed", x === b)); save(); if (!current) render(); }));
+    $("#backup").addEventListener("click", backupProgress);
+    $("#restore").addEventListener("click", () => $("#restore-file").click());
+    $("#restore-file").addEventListener("change", e => restoreProgress(e.target.files[0], close));
+    $("#reset").addEventListener("click", e => { const b = e.currentTarget; if (b.dataset.armed) { S = DEFAULT(); save(); close(); render(); return; } b.dataset.armed = "1"; b.textContent = "Tap again to reset"; });
+  });
+}
+const backupName = () => `n5-jukugo-progress-${dayStr()}.json`;
+async function backupProgress() {
+  const text = JSON.stringify(Object.assign({ app: "n5-jukugo" }, S)), btn = $("#backup");
+  try {
+    if (!PWA) {
+      const dl = await window.claude?.use?.("downloads");
+      if (!dl) { btn.textContent = "Not available here"; btn.disabled = true; return; }
+      await dl.save({ filename: backupName(), data: text }); btn.textContent = "Saved"; return;
+    }
+    const file = new File([text], backupName(), { type: "application/json" });
+    if (navigator.canShare && navigator.canShare({ files: [file] })) await navigator.share({ files: [file], title: "N5 Jukugo progress" });
+    else { const a = document.createElement("a"); a.href = URL.createObjectURL(file); a.download = backupName(); document.body.appendChild(a); a.click(); a.remove(); }
+    btn.textContent = "Saved";
+  } catch (e) { if (e && (e.code === "declined" || e.name === "AbortError")) return; btn.textContent = "Couldn't save"; }
+}
+function restoreProgress(file, close) {
+  if (!file) return;
+  const note = $("#restore-note"), r = new FileReader();
+  r.onload = () => {
+    try {
+      const d = JSON.parse(r.result);
+      if (!d || d.v !== 1 || typeof d.cards !== "object" || (d.app && d.app !== "n5-jukugo")) throw new Error("format");
+      const known = Object.keys(d.cards).filter(w => BYW[w]).length;
+      S = Object.assign(DEFAULT(), d); delete S.app; S.settings = Object.assign(DEFAULT().settings, S.settings);
+      save(); close(); render(); toast(`Restored progress for ${known} words`);
+    } catch (e) { note.textContent = "That file isn't a progress backup from this app."; note.style.color = "var(--bad)"; }
+  };
+  r.readAsText(file);
+}
+function toast(msg) {
+  const t = document.createElement("div"); t.setAttribute("role", "status");
+  t.style.cssText = "position:fixed;left:50%;bottom:calc(70px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--ink);color:var(--paper);padding:8px 16px;border-radius:999px;font-weight:700;z-index:70";
+  t.textContent = msg; document.body.appendChild(t); setTimeout(() => t.remove(), 2600);
+}
+$("#settings-btn").addEventListener("click", openSettings);
+$("#home-btn").addEventListener("click", () => render());
+
+/* ---------------- stage chrome ---------------- */
+let timers = [];
+const stopTimers = () => { timers.forEach(clearTimeout); timers = []; document.onkeydown = null; };
+function stageShell(inner) {
+  stopTimers();
+  $("#view").innerHTML = `<section class="stage">
+    <div class="stage-top"><button class="ghost" id="quit" style="padding:6px 12px">Quit</button><div class="progress" id="prog"><div class="fill" style="width:0%"></div></div><span class="counter" id="ctr"></span></div>
+    <div class="combo" id="combo" aria-live="polite"></div>${inner}</section>`;
+  $("#quit").addEventListener("click", () => { save(); render(); });
+  window.scrollTo({ top: 0 });
+}
+const setProg = (p, txt) => { $("#prog .fill").style.width = Math.min(100, p * 100) + "%"; $("#ctr").textContent = txt; };
+function sentenceHtml(c, mode, showEn) {
+  const s = c.sentence; if (!s) return "";
+  const target = mode === "write" ? c.r : c.w;
+  const [a, b] = s.split("{}");
+  return `<div class="sentence">${esc(a)}<u>${esc(target)}</u>${esc(b || "")}${showEn && S.settings.english && c.en ? `<span class="en">${esc(c.en)}</span>` : ""}</div>`;
+}
+
+/* ---------------- flashcards ---------------- */
+function startFlash() {
+  const { due, fresh } = sessionQueue();
+  const queue = [...due, ...fresh].map(w => ({ w, isNew: stage(w) === 0 }));
+  if (!queue.length) return;
+  current = { kind: "flash", queue, done: 0, total: queue.length, right: 0, missed: new Set(), xp: 0, mastered: [] };
+  stageShell(`<div class="q-label" id="fl-label"></div><div class="square word"><span class="k" id="fl-w"></span></div>
+    <div id="fl-sent"></div><div id="fl-back" hidden style="width:100%;display:grid;justify-items:center"></div>
+    <div class="nextrow" id="fl-reveal-row"><button class="cta" id="fl-reveal">Show reading <span style="opacity:.6;font-weight:500">· space</span></button></div>
+    <div class="grades" id="fl-grades" hidden><button class="grade again" data-g="0">Again<small>soon</small></button><button class="grade good" data-g="1">Good<small id="g1"></small></button><button class="grade easy" data-g="2">Easy<small id="g2"></small></button></div>`);
+  $("#fl-reveal").addEventListener("click", reveal);
+  document.querySelectorAll(".grade").forEach(b => b.addEventListener("click", () => answerFlash(+b.dataset.g, b)));
+  document.onkeydown = e => {
+    if (e.key === " ") { e.preventDefault(); if ($("#fl-back").hidden) reveal(); }
+    else if (!$("#fl-grades").hidden && ["1", "2", "3"].includes(e.key)) answerFlash(+e.key - 1, document.querySelector(`.grade[data-g="${+e.key - 1}"]`));
+  };
+  showFlash();
+}
+function showFlash() {
+  const g = current, item = g.queue[0]; if (!item) return endSession();
+  setProg(g.done / g.total, `${g.done}/${g.total}`);
+  const c = BYW[item.w];
+  $("#fl-label").textContent = item.isNew ? "New word" : "Review · how is it read?";
+  $("#fl-w").textContent = c.w;
+  $("#fl-sent").innerHTML = sentenceHtml(c, "read", false);
+  $("#fl-back").hidden = true; $("#fl-grades").hidden = true; $("#fl-reveal-row").hidden = false;
+  const cd = card(item.w); $("#g1").textContent = fmtDur(INTERVAL[Math.min(6, cd.s + 1)]); $("#g2").textContent = fmtDur(INTERVAL[Math.min(6, cd.s + 2)]);
+  if (item.isNew) reveal();
+}
+function reveal() {
+  const c = BYW[current.queue[0].w];
+  $("#fl-sent").innerHTML = sentenceHtml(c, "read", true);
+  $("#fl-back").innerHTML = whyHtml(c); $("#fl-back").hidden = false;
+  $("#fl-reveal-row").hidden = true; $("#fl-grades").hidden = false;
+}
+function answerFlash(gr, btn) {
+  document.activeElement?.blur?.();
+  const cur = current, item = cur.queue.shift();
+  if (item.isNew && !item.counted) { useNew(); item.counted = true; }
+  const just = grade(item.w, gr);
+  if (gr === 0) { cur.missed.add(item.w); sfx.no(); cur.queue.splice(Math.min(cur.queue.length, 3), 0, Object.assign(item, { isNew: false })); }
+  else { cur.done++; cur.right++; sfx.ok(); const xp = gr === 2 ? 10 : 8; cur.xp += xp; addXP(xp, btn); }
+  if (just) { cur.mastered.push(item.w); addXP(25); setTimeout(() => bigStamp(item.w), 150); }
+  save(); showFlash();
+}
+function fmtDur(ms) { if (ms < 60 * MIN) return Math.max(1, Math.round(ms / MIN)) + " min"; if (ms < DAY) return Math.round(ms / (60 * MIN)) + " h"; return Math.round(ms / DAY) + " days"; }
+
+/* ---------------- exam rounds ---------------- */
+function makeQ(kind, c, P) {
+  if (kind === "read") {
+    const ds = readingDistractors(c);
+    if (ds.length < 3) return null;
+    return { kind, c, label: "もんだい1 · How is the underlined word read?", opts: shuffle([c.r, ...ds]), answer: c.r, optClass: "kana" };
+  }
+  if (kind === "write") {
+    const { kind: why, opts } = writingOptions(c);
+    if (new Set(opts).size < 4) return null;
+    return { kind, c, why, label: "もんだい2 · How is the underlined word written?", opts, answer: c.w, optClass: "kw" };
+  }
+  // meaning: either direction, distractors share a kanji when possible
+  const ks = kanjiOf(c.w);
+  const same = P.concat(ALL).filter(x => x.w !== c.w && x.m !== c.m && kanjiOf(x.w).some(k => ks.includes(k)));
+  const others = P.filter(x => x.w !== c.w && x.m !== c.m);
+  const ds = [...new Map(shuffle(same).concat(shuffle(others)).map(x => [x.w, x])).values()].filter(x => x.m !== c.m).slice(0, 3);
+  if (Math.random() < .5) return { kind, c, label: "What does this word mean?", prompt: "word", opts: shuffle([c, ...ds]).map(x => x.m), answer: c.m, optClass: "" };
+  return { kind, c, label: "Which word means…", prompt: "meaning", opts: shuffle([c, ...ds]).map(x => x.w), answer: c.w, optClass: "kw" };
+}
+function buildRound(type) {
+  const P = quizPool().filter(c => type === "meaning" || c.sentence);
+  const n = type === "mock" ? 15 : 10, qs = [];
+  for (const c of shuffle(P)) {
+    if (qs.length >= n) break;
+    const kind = type === "mock" ? (qs.length < 8 ? "read" : "write") : type;
+    const q = makeQ(kind, c, P); if (q) qs.push(q);
+  }
+  return qs;
+}
+function startQuiz(type) {
+  const qs = buildRound(type);
+  current = { kind: "quiz", type, qs, i: 0, right: 0, combo: 0, best: 0, xp: 0, missed: new Set(), log: [] };
+  stageShell(`<div class="q-label" id="q-label"></div><div id="q-prompt" style="width:100%;display:grid;justify-items:center;gap:12px"></div><div class="options" id="q-opts"></div><div class="feedback" id="q-fb" aria-live="polite"></div><div id="q-why" style="width:100%;display:grid;justify-items:center"></div><div class="nextrow" id="q-next"></div>`);
+  showQ();
+}
+function showQ() {
+  const g = current, q = g.qs[g.i]; if (!q) return endSession();
+  setProg(g.i / g.qs.length, `${g.i + 1}/${g.qs.length}`);
+  $("#q-label").textContent = q.label;
+  if (q.kind === "read" || q.kind === "write") $("#q-prompt").innerHTML = sentenceHtml(q.c, q.kind, false);
+  else if (q.prompt === "word") $("#q-prompt").innerHTML = `<div class="square word"><span class="k">${esc(q.c.w)}</span></div>`;
+  else $("#q-prompt").innerHTML = `<div class="square text"><span class="t">${esc(q.c.m)}</span></div>`;
+  $("#q-opts").innerHTML = q.opts.map((o, i) => `<button class="opt ${q.optClass}" data-i="${i}"><span class="n">${i + 1}</span>${esc(o)}</button>`).join("");
+  $("#q-fb").textContent = ""; $("#q-fb").className = "feedback"; $("#q-why").innerHTML = ""; $("#q-next").innerHTML = "";
+  document.querySelectorAll("#q-opts .opt").forEach(b => b.addEventListener("click", () => answerQ(+b.dataset.i)));
+  document.onkeydown = e => {
+    if (["1", "2", "3", "4"].includes(e.key) && !g.answered) answerQ(+e.key - 1);
+    else if ((e.key === "Enter" || e.key === " ") && g.answered) { e.preventDefault(); nextQ(); }
+  };
+  g.answered = false;
+}
+function trapExplain(q, chosen) {
+  if (q.kind === "read") {
+    const parts = (q.c.parts || []).filter(p => p.change);
+    if (q.c.special) return `This word has a special reading; learn it whole.`;
+    if (parts.length) return `Watch the sound change: ${parts.map(p => `${p.k} ${p.plain} → ${p.r}`).join(", ")}.`;
+    return `No sound change here, but each kanji has several readings. Here it's ${(q.c.parts || []).filter(p => p.k).map(p => `${p.k} ${p.r}`).join(" + ")}.`;
+  }
+  if (q.kind === "write") {
+    if (chosen && BYW[chosen]) return `${chosen} is a real word too, but it's read ${BYW[chosen].r} (${BYW[chosen].m}). The sentence says ${q.c.r}.`;
+    return q.why === "word" ? `The wrong choices are real neighbour words: one kanji changes the meaning.` : `The wrong choices swap in look-alike kanji. Check each part's shape.`;
+  }
+  return "";
+}
+function answerQ(i) {
+  const g = current, q = g.qs[g.i]; if (g.answered) return; g.answered = true;
+  const right = q.opts.indexOf(q.answer), ok = i === right, mock = g.type === "mock";
+  const btns = document.querySelectorAll("#q-opts .opt"); btns.forEach(b => b.disabled = true);
+  quizResult(q.c.w, ok); g.log.push({ q, chosen: q.opts[i], ok });
+  if (mock) {                       // like the paper: no feedback until the end
+    btns[i].style.borderColor = "var(--ink)"; if (ok) g.right++; else g.missed.add(q.c.w);
+    save(); timers.push(setTimeout(nextQ, 350)); return;
+  }
+  btns[right].classList.add("right");
+  if (ok) {
+    g.right++; g.combo++; g.best = Math.max(g.best, g.combo);
+    const xp = 10 + (g.combo >= 3 ? 5 : 0); g.xp += xp; addXP(xp, btns[i]); sfx.ok();
+    $("#q-fb").className = "feedback ok"; $("#q-fb").textContent = `正解! ${q.c.w} · ${q.c.r} · ${q.c.m}`;
+    $("#combo").textContent = g.combo >= 2 ? `${g.combo} in a row` : "";
+    if (g.combo % 5 === 0) hanamaru();
+  } else {
+    btns[i].classList.add("wrong"); g.combo = 0; g.missed.add(q.c.w); sfx.no(); $("#combo").textContent = "";
+    $("#q-fb").className = "feedback no"; $("#q-fb").textContent = trapExplain(q, q.opts[i]);
+  }
+  if (q.kind !== "meaning") $("#q-prompt").innerHTML = sentenceHtml(q.c, "read", true);
+  $("#q-why").innerHTML = whyHtml(q.c);
+  $("#q-next").innerHTML = `<button class="cta" id="q-go">Next</button>`;
+  $("#q-go").addEventListener("click", nextQ); if (!ok) $("#q-go").focus();
+  save();
+}
+function nextQ() { stopTimers(); current.i++; showQ(); }
+
+/* ---------------- end of a session ---------------- */
+function endSession() {
+  const g = current; stopTimers();
+  let title, s1, s2, s3, extra = "";
+  if (g.kind === "flash") {
+    title = g.mastered.length ? "合格!" : "お疲れさま!";
+    s1 = [g.right, "words done"]; s2 = [g.missed.size, "needed another look"]; s3 = [g.xp, "XP"];
+    if (g.mastered.length) extra = `<p>Newly mastered: <b style="font-family:var(--kanji);font-size:1.2rem">${g.mastered.join("、")}</b></p>`;
+  } else {
+    const n = g.qs.length;
+    if (g.type === "mock") { const xp = g.right * 10; addXP(xp); g.xp = xp; }
+    if (!S.best) S.best = {};
+    const isBest = g.right > (S.best[g.type] || 0); if (isBest) S.best[g.type] = g.right;
+    title = g.right === n ? "満点! Perfect" : g.right >= n * .7 ? "よくできました" : "もう一度!";
+    s1 = [`${g.right}/${n}`, "correct"]; s2 = g.type === "mock" ? [Math.round(100 * g.right / n) + "%", "score"] : [g.best, "best streak"]; s3 = [g.xp, "XP"];
+    if (g.type === "mock") extra = `<div style="width:100%;text-align:left;display:grid;gap:8px">${g.log.map((l, i) => `
+      <div class="fam-row" style="grid-template-columns:2em minmax(0,1fr)"><b style="color:${l.ok ? "var(--ok)" : "var(--bad)"}">${l.ok ? "○" : "×"}</b>
+      <span><span class="w" style="font-size:1.15rem">${esc(l.q.c.w)}</span> <span class="r">${esc(l.q.c.r)}</span> <span class="m">· ${esc(l.q.c.m)}</span>${l.ok ? "" : `<br><span class="m">You chose ${esc(l.chosen)}. ${esc(trapExplain(l.q, l.chosen))}</span>`}</span></div>`).join("")}</div>`;
+  }
+  markToday(); save();
+  if (g.kind !== "flash" || g.right) sfx.done();
+  if ((g.kind === "quiz" && g.right === g.qs.length) || (g.kind === "flash" && g.mastered.length)) setTimeout(hanamaru, 200);
+  const missed = [...g.missed];
+  $("#view").innerHTML = `<section class="stage"><div class="summary">
+    <h2>${title}</h2>
+    <div class="stats3"><div><b>${s1[0]}</b><span>${s1[1]}</span></div><div><b>${s2[0]}</b><span>${s2[1]}</span></div><div><b>${s3[0]}</b><span>${s3[1]}</span></div></div>
+    ${extra}
+    ${missed.length && g.type !== "mock" ? `<div><div class="q-label" style="margin-bottom:6px">Review these</div><div class="missed">${missed.map(w => `<button data-w="${esc(w)}" style="width:auto;padding:0 8px">${esc(w)}</button>`).join("")}</div></div>` : ""}
+    <div class="nextrow"><button class="cta" id="again">Play again</button><button class="ghost" id="home">Home</button></div></div></section>`;
+  current = null;
+  $("#again").addEventListener("click", g.kind === "flash" ? (sessionQueue().due.length + sessionQueue().fresh.length ? startFlash : () => startQuiz("read")) : () => startQuiz(g.type));
+  if (g.kind === "flash" && !(sessionQueue().due.length + sessionQueue().fresh.length)) $("#again").textContent = "Try もんだい1";
+  $("#home").addEventListener("click", render);
+  document.querySelectorAll(".missed button").forEach(b => b.addEventListener("click", () => openOverlay(`<div class="sheet-h"><h2>${esc(b.dataset.w)}</h2><button class="icon-btn" data-close aria-label="Close"><svg><use href="#i-close"/></svg></button></div>${whyHtml(BYW[b.dataset.w])}${sentenceHtml(BYW[b.dataset.w], "read", true)}`)));
+  renderBar();
+}
+
+render();
+</script>
+<style>
+.n5hub-back{position:fixed;z-index:9999;left:calc(12px + env(safe-area-inset-left,0px));bottom:calc(12px + env(safe-area-inset-bottom,0px));
+display:inline-flex;align-items:center;gap:6px;padding:7px 14px 7px 10px;border-radius:999px;text-decoration:none;
+font:700 13px/1 "Zen Kaku Gothic New","Hiragino Sans",system-ui,sans-serif;
+background:var(--ink,#1d2220);color:var(--paper,#f5f6f3);box-shadow:0 4px 14px rgba(0,0,0,.18);opacity:.92}
+.n5hub-back:hover,.n5hub-back:focus-visible{opacity:1}
+.n5hub-back:focus-visible{outline:2px solid var(--hanko,#c43d2b);outline-offset:2px}
+.n5hub-back b{font-family:"Klee One","Hiragino Mincho ProN",serif;font-weight:600;font-size:15px}
+body{padding-bottom:56px}
+</style>
+<a class="n5hub-back" href="index.html" aria-label="Back to all exercises">&#8592; <b>道場</b> All exercises</a>
+
+</body></html>

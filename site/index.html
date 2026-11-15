@@ -116,7 +116,7 @@ footer { margin-top: 40px; font-size: .8rem; color: var(--muted); display: grid;
 <main class="wrap">
   <section class="hero">
     <h1>Every N5 exercise, one door.</h1>
-    <p>Eight practice apps for the JLPT N5: kanji, vocabulary, adjective forms, counters, dates and listening. Pick one below; the button in the bottom corner of each exercise brings you back here.</p>
+    <p>Nine practice apps for the JLPT N5: kanji, kanji compounds, vocabulary, adjective forms, counters, dates and listening. Pick one below; the button in the bottom corner of each exercise brings you back here.</p>
     <a class="resume" id="resume" href="kanji.html" data-app="kanji">
       <span class="gk" id="resume-gk">漢</span>
       <span><small id="resume-lbl">Start here</small><b id="resume-name">N5 Kanji Renshū</b></span>
@@ -135,6 +135,8 @@ footer { margin-top: 40px; font-size: .8rem; color: var(--muted); display: grid;
 const APPS = [
   { shelf: "chars", id: "kanji", href: "kanji.html", glyph: "漢", name: "Kanji Renshū", ja: "漢字練習",
     what: "Spaced-repetition flashcards, meaning and reading quizzes, a speed round and pairs for all 110 N5 kanji.", scope: "110 kanji" },
+  { shelf: "chars", id: "jukugo", href: "jukugo.html", glyph: "熟", name: "Jukugo", ja: "熟語",
+    what: "How kanji team up: two-kanji words in JLPT format. Read it (もんだい1), write it (もんだい2), meanings, a mini mock and kanji families.", scope: "128 words" },
   { shelf: "chars", id: "asobiba", href: "asobiba.html", glyph: "遊", name: "Asobiba", ja: "遊び場",
     what: "Hands-on games built for iPad: write kanji with your finger, sort words, match cards, build words and switch readings.", scope: "5 games" },
   { shelf: "words", id: "kotoba", href: "kotoba.html", glyph: "言", name: "Kotoba Renshū", ja: "言葉練習",
@@ -173,6 +175,7 @@ function progress(id) {
   if (id === "kanji") return srs("n5kanji:progress", 110);
   if (id === "kotoba") return srs("n5vocab:progress", 667);
   if (id === "keiyoshi") return srs("n5adj:progress", 80);
+  if (id === "jukugo") return srs("n5jukugo:progress", 128);
   if (id === "asobiba") {
     const b = read("asobiba:best"); const n = b ? Object.keys(b).length : 0;
     return n ? { text: `${Math.min(n, 5)} of 5 games played`, frac: Math.min(n, 5) / 5, full: n >= 5 } : null;
