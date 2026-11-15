@@ -1,0 +1,29 @@
+{
+  "name": "N5 Renshū Dōjō",
+  "short_name": "N5 Dōjō",
+  "lang": "ja",
+  "description": "JLPT N5 practice: kanji, words, adjectives, counters, dates and listening. Works offline.",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#f5f6f3",
+  "theme_color": "#f5f6f3",
+  "icons": [
+    {
+      "src": "icons/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "icons/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    },
+    {
+      "src": "icons/maskable-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ]
+}

@@ -1,0 +1,689 @@
+<!doctype html><html lang="ja"><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style><meta name="theme-color" content="#f5f6f3" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#141816" media="(prefers-color-scheme: dark)">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="N5 Dōjō">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" type="image/png" href="favicon.png">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<link rel="stylesheet" href="fonts/fonts.css">
+<script>if ("serviceWorker" in navigator) addEventListener("load", () => navigator.serviceWorker.register("./sw.js").catch(() => {}));</script>
+</head><body>
+<title>N5 Listening Pilot</title>
+<style>
+/* Layout: one exam-booklet column; a sticky control bar; each question is a booklet panel ending in an answer-sheet bubble row. */
+:root {
+  --paper: #f4f6f9;
+  --sheet: #ffffff;
+  --ink: #18212d;
+  --muted: #586374;
+  --rule: #d6dbe3;
+  --accent: #2a4a7b;
+  --accent-soft: #e6ecf6;
+  --omr: #c25a7c;
+  --omr-soft: #fbeef2;
+  --ok: #2c7a4d;
+  --ok-soft: #e5f3ea;
+  --bad: #b0413a;
+  --bad-soft: #f9e9e7;
+  --bread: #d8a05c;
+  --water: #a9d0ec;
+  --milk: #ffffff;
+  --display: "Shippori Mincho B1", "Hiragino Mincho ProN", "Yu Mincho", serif;
+  --body: "Zen Kaku Gothic New", "Hiragino Sans", "Yu Gothic", "Noto Sans JP", system-ui, sans-serif;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --paper: #11151b; --sheet: #19202a; --ink: #e7eaf0; --muted: #9ba5b4; --rule: #2d3643;
+    --accent: #93b2e6; --accent-soft: #223149; --omr: #e690ad; --omr-soft: #3a2430;
+    --ok: #74c894; --ok-soft: #1c3426; --bad: #ec8d86; --bad-soft: #3b2120;
+    --bread: #c88d4c; --water: #5d8db3; --milk: #dde3ea; color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --paper: #11151b; --sheet: #19202a; --ink: #e7eaf0; --muted: #9ba5b4; --rule: #2d3643;
+  --accent: #93b2e6; --accent-soft: #223149; --omr: #e690ad; --omr-soft: #3a2430;
+  --ok: #74c894; --ok-soft: #1c3426; --bad: #ec8d86; --bad-soft: #3b2120;
+  --bread: #c88d4c; --water: #5d8db3; --milk: #dde3ea; color-scheme: dark;
+}
+* { box-sizing: border-box; }
+body { background: var(--paper); color: var(--ink); font-family: var(--body); font-size: 16px; line-height: 1.65; }
+.wrap { max-width: 760px; margin: 0 auto; padding-inline: 16px; padding-block: 0 64px; }
+h1, h2, h3 { text-wrap: balance; margin: 0; }
+button, select { font: inherit; color: inherit; }
+button:focus-visible, select:focus-visible, summary:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+/* control bar */
+.bar { position: sticky; top: env(safe-area-inset-top, 0px); z-index: 5; background: var(--paper); border-bottom: 1px solid var(--rule); }
+.bar-in { max-width: 760px; margin: 0 auto; padding: 10px 16px; display: flex; flex-wrap: wrap; gap: 10px 16px; align-items: center; }
+.brand { font-family: var(--display); font-weight: 800; font-size: 1.15rem; letter-spacing: .02em; margin-right: auto; }
+.brand small { font-family: var(--body); font-weight: 500; font-size: .75rem; color: var(--muted); margin-left: 6px; letter-spacing: .06em; text-transform: uppercase; }
+.score { font-variant-numeric: tabular-nums; font-weight: 700; padding: 3px 10px; border-radius: 999px; background: var(--accent-soft); color: var(--accent); font-size: .9rem; }
+.seg { display: inline-flex; border: 1px solid var(--rule); border-radius: 8px; overflow: hidden; }
+.seg button { border: 0; background: transparent; padding: 5px 12px; font-size: .85rem; cursor: pointer; }
+.seg button[aria-pressed="true"] { background: var(--accent); color: var(--sheet); }
+.speed { display: inline-flex; align-items: center; gap: 6px; font-size: .85rem; color: var(--muted); }
+.speed select { border: 1px solid var(--rule); background: var(--sheet); border-radius: 8px; padding: 4px 8px; }
+
+/* intro */
+.intro { padding-block: 28px 8px; display: grid; gap: 10px; }
+.intro .kicker { font-size: .75rem; letter-spacing: .12em; text-transform: uppercase; color: var(--muted); }
+.intro h1 { font-family: var(--display); font-size: clamp(1.7rem, 5vw, 2.3rem); font-weight: 800; line-height: 1.25; }
+.intro p { margin: 0; color: var(--muted); max-width: 62ch; }
+
+/* voices panel */
+details.voices { margin-top: 18px; background: var(--sheet); border: 1px solid var(--rule); border-radius: 10px; }
+details.voices summary { cursor: pointer; padding: 12px 16px; font-weight: 700; list-style: none; display: flex; justify-content: space-between; gap: 12px; }
+details.voices summary::-webkit-details-marker { display: none; }
+details.voices summary .state { font-weight: 500; font-size: .85rem; color: var(--muted); }
+.voices-body { padding: 0 16px 16px; display: grid; gap: 12px; }
+.voice-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); gap: 10px; }
+.voice-grid label { display: grid; gap: 4px; font-size: .8rem; color: var(--muted); }
+.voice-grid select { width: 100%; min-width: 0; border: 1px solid var(--rule); background: var(--paper); border-radius: 8px; padding: 6px 8px; font-size: .9rem; color: var(--ink); }
+.notice { border-radius: 8px; padding: 10px 12px; font-size: .9rem; background: var(--bad-soft); color: var(--ink); border: 1px solid var(--bad); }
+.notice b { color: var(--bad); }
+.notice.tip { background: var(--accent-soft); border-color: var(--accent); }
+.notice.tip b { color: var(--accent); }
+
+/* sections */
+.mondai { margin-top: 40px; }
+.mondai-head { display: grid; grid-template-columns: auto 1fr; gap: 14px; align-items: start; padding-bottom: 12px; border-bottom: 2px solid var(--ink); }
+.mbox { font-family: var(--display); font-weight: 800; font-size: 1.05rem; border: 2px solid var(--ink); padding: 2px 10px; white-space: nowrap; }
+.mondai-head h2 { font-size: 1.05rem; font-weight: 700; }
+.mondai-head .en { font-size: .85rem; color: var(--muted); }
+.instr { margin-top: 6px; display: flex; flex-wrap: wrap; gap: 8px; align-items: center; font-size: .85rem; color: var(--muted); }
+.instr p { margin: 0; flex: 1 1 280px; min-width: 0; }
+
+/* question panel */
+.q { margin-top: 18px; background: var(--sheet); border: 1px solid var(--rule); border-radius: 12px; padding: 18px; display: grid; gap: 16px; }
+.q-top { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; justify-content: space-between; }
+.qnum { font-family: var(--display); font-weight: 800; font-size: 1.2rem; }
+.qnum span { font-family: var(--body); font-size: .8rem; font-weight: 500; color: var(--muted); margin-left: 8px; }
+.play { display: inline-flex; align-items: center; gap: 8px; border: 0; border-radius: 999px; padding: 8px 16px 8px 12px; background: var(--accent); color: var(--sheet); font-weight: 700; cursor: pointer; }
+.play svg { width: 18px; height: 18px; fill: currentColor; }
+.play[disabled] { opacity: .45; cursor: not-allowed; }
+.play.playing { background: var(--omr); }
+.status { font-size: .8rem; color: var(--muted); font-variant-numeric: tabular-nums; min-height: 1.2em; }
+
+/* choices */
+.tiles { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+.tile { position: relative; border: 1px solid var(--rule); border-radius: 10px; background: var(--paper); padding: 26px 10px 12px; display: grid; gap: 6px; justify-items: center; cursor: pointer; text-align: center; }
+.tile:hover { border-color: var(--accent); }
+.tile .n { position: absolute; top: 6px; left: 10px; font-weight: 700; font-size: .9rem; color: var(--muted); }
+.tile .row { display: flex; gap: 2px; justify-content: center; flex-wrap: wrap; }
+.tile svg.ico { width: 30px; height: 30px; }
+.tile svg.clock { width: 100px; height: 100px; max-width: 100%; }
+.texts { display: grid; gap: 8px; }
+.text-choice { border: 1px solid var(--rule); border-radius: 10px; background: var(--paper); padding: 10px 14px; display: flex; gap: 14px; align-items: baseline; cursor: pointer; text-align: left; font-size: 1.05rem; font-variant-numeric: tabular-nums; }
+.text-choice:hover { border-color: var(--accent); }
+.text-choice .n { font-weight: 700; color: var(--muted); min-width: 1ch; }
+.scene { display: flex; justify-content: center; background: var(--paper); border: 1px solid var(--rule); border-radius: 10px; padding: 10px; }
+.scene svg { width: 100%; max-width: 360px; height: auto; }
+.audio-only { font-size: .9rem; color: var(--muted); background: var(--paper); border: 1px dashed var(--rule); border-radius: 10px; padding: 12px 14px; }
+
+/* answer-sheet bubbles */
+.sheet { display: flex; flex-wrap: wrap; gap: 10px 14px; align-items: center; padding-top: 12px; border-top: 1px dashed var(--rule); }
+.sheet .lbl { font-size: .75rem; letter-spacing: .1em; text-transform: uppercase; color: var(--omr); font-weight: 700; margin-right: 4px; }
+.bubble { width: 46px; height: 32px; border-radius: 50%; border: 2px solid var(--omr); background: var(--omr-soft); color: var(--omr); font-weight: 700; cursor: pointer; display: grid; place-items: center; font-variant-numeric: tabular-nums; }
+.bubble:hover { background: var(--sheet); }
+.bubble.chosen { background: var(--ink); color: var(--sheet); border-color: var(--ink); }
+.bubble.right { box-shadow: 0 0 0 3px var(--ok); }
+.answered .bubble, .answered .tile, .answered .text-choice { cursor: default; }
+.tile.right, .text-choice.right { border-color: var(--ok); background: var(--ok-soft); }
+.tile.wrong, .text-choice.wrong { border-color: var(--bad); background: var(--bad-soft); }
+
+/* feedback */
+.feedback { display: grid; gap: 12px; }
+.verdict { font-weight: 700; display: flex; gap: 8px; align-items: center; }
+.verdict.ok { color: var(--ok); }
+.verdict.no { color: var(--bad); }
+.explain { margin: 0; max-width: 64ch; }
+.tx { border: 1px solid var(--rule); border-radius: 10px; overflow: hidden; }
+.tx-head { display: flex; justify-content: space-between; align-items: center; gap: 10px; padding: 8px 12px; background: var(--paper); font-size: .8rem; color: var(--muted); letter-spacing: .06em; text-transform: uppercase; font-weight: 700; }
+.tx-head button { border: 1px solid var(--rule); background: var(--sheet); border-radius: 6px; padding: 2px 8px; font-size: .78rem; cursor: pointer; text-transform: none; letter-spacing: 0; }
+.tx ol { list-style: none; margin: 0; padding: 6px 0; }
+.tx li { display: grid; grid-template-columns: 2.2em minmax(0, 1fr); gap: 8px; padding: 5px 12px; }
+.tx .who { font-size: .8rem; font-weight: 700; color: var(--muted); padding-top: 2px; }
+.tx .who.M { color: var(--accent); }
+.tx .who.F { color: var(--omr); }
+.tx .ja { font-size: 1rem; }
+.tx .en { font-size: .82rem; color: var(--muted); }
+.tx.hide-en .en { display: none; }
+
+/* results */
+.results { margin-top: 44px; background: var(--sheet); border: 2px solid var(--ink); border-radius: 12px; padding: 20px; display: grid; gap: 14px; }
+.results h2 { font-family: var(--display); font-weight: 800; font-size: 1.3rem; }
+.breakdown { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px; }
+.cell { border: 1px solid var(--rule); border-radius: 10px; padding: 10px 12px; background: var(--paper); }
+.cell .k { font-size: .78rem; color: var(--muted); }
+.cell .v { font-size: 1.3rem; font-weight: 700; font-variant-numeric: tabular-nums; }
+.results p { margin: 0; color: var(--muted); max-width: 64ch; }
+.ghost { border: 1px solid var(--rule); background: var(--sheet); border-radius: 999px; padding: 4px 12px; font-size: .85rem; font-weight: 700; cursor: pointer; }
+.ghost:hover { border-color: var(--accent); }
+.copy.alt { background: var(--sheet); color: var(--accent); border: 2px solid var(--accent); }
+.history { font-size: .9rem; color: var(--muted); font-variant-numeric: tabular-nums; }
+.history b { color: var(--ink); }
+.toast { position: fixed; left: 50%; bottom: calc(18px + env(safe-area-inset-bottom, 0px)); transform: translateX(-50%); background: var(--ink); color: var(--sheet); padding: 8px 16px; border-radius: 999px; font-weight: 700; font-size: .9rem; z-index: 10; }
+.copy { justify-self: start; border: 0; border-radius: 8px; background: var(--accent); color: var(--sheet); font-weight: 700; padding: 9px 16px; cursor: pointer; }
+.copy-out { width: 100%; min-height: 90px; border: 1px solid var(--rule); border-radius: 8px; background: var(--paper); color: var(--ink); padding: 10px; font: .85rem/1.5 var(--body); }
+
+/* svg tokens */
+.ico .stroke, .scene .stroke { fill: none; stroke: var(--ink); stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+.ico .bread { fill: var(--bread); stroke: var(--ink); stroke-width: 2; stroke-linejoin: round; }
+.ico .water { fill: var(--water); stroke: var(--ink); stroke-width: 2; stroke-linejoin: round; }
+.ico .milk { fill: var(--milk); stroke: var(--ink); stroke-width: 2; stroke-linejoin: round; }
+.ico .band { fill: var(--accent); }
+.clock .face { fill: var(--sheet); stroke: var(--ink); stroke-width: 3; }
+.clock .tick { stroke: var(--ink); stroke-width: 2; stroke-linecap: round; }
+.clock .hand { stroke: var(--ink); stroke-linecap: round; }
+.clock .hour { stroke-width: 4.5; }
+.clock .min { stroke-width: 2.6; }
+.clock .pin { fill: var(--ink); }
+.scene .fill-a { fill: var(--accent-soft); stroke: var(--ink); stroke-width: 2; }
+.scene .fill-b { fill: var(--omr-soft); stroke: var(--ink); stroke-width: 2; }
+.scene .fill-s { fill: var(--sheet); stroke: var(--ink); stroke-width: 2; }
+.scene .fill-ink { fill: var(--ink); }
+.scene .pen { stroke: var(--accent); stroke-width: 5; stroke-linecap: round; }
+.scene .arrow { fill: var(--omr); }
+@media (prefers-reduced-motion: no-preference) {
+  .play.playing svg { animation: pulse 1s ease-in-out infinite; }
+  @keyframes pulse { 50% { opacity: .35; } }
+}
+@media (max-width: 520px) {
+  .q { padding: 14px; }
+  .sheet .lbl { flex-basis: 100%; }
+  .bubble { width: 44px; }
+  .mondai-head { grid-template-columns: 1fr; gap: 8px; }
+  .mbox { justify-self: start; }
+}
+</style>
+
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <symbol id="i-bread" viewBox="0 0 40 40"><path style="fill:var(--bread);stroke:var(--ink);stroke-width:2;stroke-linejoin:round;stroke-linecap:round" d="M5 24c0-9 7-14 15-14s15 5 15 14v6a3 3 0 0 1-3 3H8a3 3 0 0 1-3-3z"/><path style="fill:none;stroke:var(--ink);stroke-width:2;stroke-linejoin:round;stroke-linecap:round" d="M13 15l3 5M20 13l3 5M27 15l3 5"/></symbol>
+  <symbol id="i-water" viewBox="0 0 40 40"><rect style="fill:var(--water);stroke:var(--ink);stroke-width:2;stroke-linejoin:round;stroke-linecap:round" x="16.5" y="2.5" width="7" height="4" rx="1"/><path style="fill:var(--water);stroke:var(--ink);stroke-width:2;stroke-linejoin:round;stroke-linecap:round" d="M17 7h6v3l3 3v22a3 3 0 0 1-3 3h-6a3 3 0 0 1-3-3V13l3-3z"/><rect style="fill:var(--accent)" x="14.5" y="20" width="11" height="6"/></symbol>
+  <symbol id="i-milk" viewBox="0 0 40 40"><path style="fill:var(--milk);stroke:var(--ink);stroke-width:2;stroke-linejoin:round;stroke-linecap:round" d="M11 15l4-9h10l4 9v20a2 2 0 0 1-2 2H13a2 2 0 0 1-2-2z"/><path style="fill:none;stroke:var(--ink);stroke-width:2;stroke-linejoin:round;stroke-linecap:round" d="M11 15h18M15 6l5 9 5-9"/><rect style="fill:var(--accent)" x="11" y="22" width="18" height="5"/></symbol>
+  <symbol id="i-play" viewBox="0 0 24 24"><path d="M8 5.5v13a1 1 0 0 0 1.5.86l10.5-6.5a1 1 0 0 0 0-1.72L9.5 4.64A1 1 0 0 0 8 5.5z"/></symbol>
+  <symbol id="i-stop" viewBox="0 0 24 24"><rect x="6.5" y="6.5" width="11" height="11" rx="1.5"/></symbol>
+</svg>
+
+<header class="bar">
+  <div class="bar-in">
+    <div class="brand">N5 聴解 <small>Listening pilot</small></div>
+    <div class="score" id="score" aria-live="polite">0 / 6</div>
+    <button class="ghost" id="new-exam-top">New exam</button>
+    <div class="seg" role="group" aria-label="Mode">
+      <button id="m-practice" aria-pressed="true">Practice</button>
+      <button id="m-exam" aria-pressed="false">Exam rules</button>
+    </div>
+    <label class="speed">Speed
+      <select id="rate">
+        <option value="0.85">Slower · 0.85×</option>
+        <option value="1" selected>Normal · 1×</option>
+        <option value="1.15">Faster · 1.15×</option>
+      </select>
+    </label>
+  </div>
+</header>
+
+<div class="wrap">
+  <section class="intro">
+    <div class="kicker">Pilot set · 6 questions · all four question types</div>
+    <h1>N5 Listening Pilot</h1>
+    <p>Press play, listen, then mark your answer on the answer-sheet bubbles. The transcript and explanation appear after you answer. In <b>Exam rules</b> mode each clip plays only once, at normal speed, like the real test.</p>
+    <details class="voices" id="voices" open>
+      <summary>Voices <span class="state" id="voice-state">もち子さん · 青山龍星</span></summary>
+      <div class="voices-body">
+        <div class="notice" id="no-voice" hidden></div>
+        <p style="margin:0;color:var(--muted);font-size:.9rem;max-width:62ch">Recorded on your Mac with VOICEVOX: もち子さん for the woman and the narrator, 青山龍星 for the man. The audio is built into this page, so it sounds the same in any browser and on your phone.</p>
+        <p style="margin:0;color:var(--muted);font-size:.8rem">Voices: VOICEVOX:もち子さん, VOICEVOX:青山龍星</p>
+        <div><button class="play" id="test-voices"><svg><use href="#i-play"/></svg><span>Test the voices</span></button></div>
+      </div>
+    </details>
+  </section>
+
+  <div id="sections"></div>
+
+  <section class="results" id="results">
+    <h2>Pilot results</h2>
+    <div class="breakdown" id="breakdown"></div>
+    <p>When you're done, copy this summary and paste it into the chat, along with how the voices sounded. That tells me what to change before building the full mock tests.</p>
+    <div class="history" id="history" hidden></div>
+    <div style="display:flex;gap:10px;flex-wrap:wrap"><button class="copy" id="copy">Copy my results</button><button class="copy alt" id="new-exam">Start a new exam</button></div>
+    <textarea class="copy-out" id="copy-out" readonly hidden aria-label="Results summary"></textarea>
+  </section>
+</div>
+
+<script>
+/* ---------------- content ---------------- */
+const SECTIONS = [
+  { mondai: 1, title: "課題理解", en: "Task-based comprehension",
+    instr: "もんだい1では、はじめに しつもんを きいて ください。それから はなしを きいて、もんだいようしの 1から4の なかから、いちばん いい ものを 一つ えらんで ください。",
+    instrEn: "Listen to the question first, then the conversation. Choose the best answer from 1–4." },
+  { mondai: 2, title: "ポイント理解", en: "Key-point comprehension",
+    instr: "もんだい2では、はじめに しつもんを きいて ください。それから はなしを きいて、もんだいようしの 1から4の なかから、いちばん いい ものを 一つ えらんで ください。",
+    instrEn: "Listen to the question, read the choices during the pause, then listen for the one detail that answers it." },
+  { mondai: 3, title: "発話表現", en: "Verbal expressions",
+    instr: "もんだい3では、えを みながら しつもんを きいて ください。やじるしの 人は なんと いいますか。1から3の なかから、いちばん いい ものを 一つ えらんで ください。",
+    instrEn: "Look at the picture. What does the person marked with the arrow say? Choose from 1–3 (spoken only)." },
+  { mondai: 4, title: "即時応答", en: "Quick response",
+    instr: "もんだい4は、えなどが ありません。ぶんを きいて、1から3の なかから、いちばん いい へんじを 一つ えらんで ください。",
+    instrEn: "No pictures. Listen to the sentence and choose the best reply from 1–3 (spoken only)." },
+];
+
+const SCENE_PEN = `<svg viewBox="0 0 340 190" role="img" aria-label="Two friends at a table. The person on the left, marked with an arrow, is thinking about the pen next to the friend on the right.">
+  <rect class="fill-s" x="40" y="128" width="260" height="14" rx="3"/>
+  <path class="stroke" d="M70 142v38M270 142v38"/>
+  <circle class="fill-a" cx="95" cy="78" r="20"/>
+  <path class="fill-a" d="M65 128c0-20 13-30 30-30s30 10 30 30z"/>
+  <circle class="fill-b" cx="245" cy="78" r="20"/>
+  <path class="fill-b" d="M215 128c0-20 13-30 30-30s30 10 30 30z"/>
+  <line class="pen" x1="196" y1="122" x2="226" y2="114"/>
+  <circle class="fill-ink" cx="228" cy="113.5" r="2.5"/>
+  <ellipse class="fill-s" cx="165" cy="38" rx="38" ry="22"/>
+  <circle class="fill-s" cx="128" cy="62" r="5"/>
+  <circle class="fill-s" cx="117" cy="70" r="3"/>
+  <line class="pen" x1="148" y1="44" x2="180" y2="32"/>
+  <circle class="fill-ink" cx="182" cy="31" r="2.5"/>
+  <path class="arrow" d="M89 8h12v20h9l-15 18-15-18h9z"/>
+</svg>`;
+
+const QUESTIONS = [
+  { id: "q1", mondai: 1, num: "1ばん", kind: "tiles", answer: 1,
+    tiles: [ [["bread",3],["milk",1]], [["bread",3],["water",2]], [["bread",2],["water",3]], [["bread",3],["milk",1],["water",2]] ],
+    lines: [
+      { s:"N", ja:"1ばん。いえで、おんなの 人と おとこの 人が はなして います。おとこの 人は なにを 買いますか。", say:"いちばん。いえで、おんなのひとと おとこのひとが はなして います。おとこのひとは なにを かいますか。", en:"Number 1. At home, a woman and a man are talking. What will the man buy?" },
+      { s:"F", ja:"すみません、駅の 前の 店で パンを 三つ 買って きて ください。", say:"すみません、えきの まえの みせで パンを みっつ かって きて ください。", en:"Excuse me, could you go buy three pieces of bread at the shop in front of the station?" },
+      { s:"M", ja:"はい。ぎゅうにゅうも 買いますか。", say:"はい。ぎゅうにゅうも かいますか。", en:"Sure. Should I buy milk too?" },
+      { s:"F", ja:"ぎゅうにゅうは まだ ありますから、いいです。あ、それから、水を 二本 おねがいします。", say:"ぎゅうにゅうは まだ ありますから、いいです。あ、それから、みずを にほん おねがいします。", en:"We still have milk, so no need. Oh, and two bottles of water, please." },
+      { s:"M", ja:"わかりました。パン 三つと 水 二本ですね。", say:"わかりました。パン みっつと みず にほんですね。", en:"Got it. Three pieces of bread and two bottles of water, right?" },
+      { s:"F", ja:"はい、おねがいします。", en:"Yes, please." },
+      { pause: 900 },
+      { s:"N", ja:"おとこの 人は なにを 買いますか。", say:"おとこのひとは なにを かいますか。", en:"What will the man buy?" },
+    ],
+    explain: "He offers to buy milk, but she says <b>まだ ありますから、いいです</b> (we still have some, so no need). いいです here is a polite \"no thanks\", a common N5 trap. Then she adds water: <b>二本</b> (にほん), counted with the long-object counter." },
+
+  { id: "q2", mondai: 1, num: "2ばん", kind: "clocks", answer: 2,
+    clocks: [[1,30],[2,0],[2,15],[2,30]],
+    lines: [
+      { s:"N", ja:"2ばん。おとこの 人と おんなの 人が はなして います。二人は あした 何時に あいますか。", say:"にばん。おとこのひとと おんなのひとが はなして います。ふたりは あした なんじに あいますか。", en:"Number 2. A man and a woman are talking. What time will the two of them meet tomorrow?" },
+      { s:"M", ja:"あした、いっしょに えいがを 見に 行きませんか。", say:"あした、いっしょに えいがを みに いきませんか。", en:"Would you like to go see a movie together tomorrow?" },
+      { s:"F", ja:"いいですね。何時に あいましょうか。", say:"いいですね。なんじに あいましょうか。", en:"Sounds good. What time shall we meet?" },
+      { s:"M", ja:"えいがは 二時半からですから、二時に 駅で あいましょう。", say:"えいがは にじはんからですから、にじに えきで あいましょう。", en:"The movie starts at 2:30, so let's meet at the station at 2:00." },
+      { s:"F", ja:"すみません、わたしは 一時半まで しごとが あります。二時は ちょっと…。", say:"すみません、わたしは いちじはんまで しごとが あります。にじは ちょっと。", en:"Sorry, I have work until 1:30. 2:00 is a bit…" },
+      { s:"M", ja:"じゃあ、二時十五分は どうですか。", say:"じゃあ、にじ じゅうごふんは どうですか。", en:"Then how about 2:15?" },
+      { s:"F", ja:"はい、だいじょうぶです。", en:"Yes, that's fine." },
+      { pause: 900 },
+      { s:"N", ja:"二人は あした 何時に あいますか。", say:"ふたりは あした なんじに あいますか。", en:"What time will the two of them meet tomorrow?" },
+    ],
+    explain: "2:00 is his first suggestion, but she turns it down with <b>二時は ちょっと…</b> (\"2:00 is a bit…\"), the soft Japanese way of saying no. They settle on <b>二時十五分</b> (2:15). 2:30 is when the movie starts, and 1:30 is when her work ends. In 問題1 the first plan is usually not the answer." },
+
+  { id: "q3", mondai: 2, num: "1ばん", kind: "texts", answer: 2,
+    texts: ["800えん", "1,500えん", "1,600えん", "3,000えん"],
+    lines: [
+      { s:"N", ja:"1ばん。店で おんなの 人と 店の 人が はなして います。おんなの 人は ぜんぶで いくら はらいましたか。", say:"いちばん。みせで おんなのひとと みせのひとが はなして います。おんなのひとは ぜんぶで いくら はらいましたか。", en:"Number 1. A woman and a shop clerk are talking in a store. How much did the woman pay in total?" },
+      { pause: 5000, readTime: true },
+      { s:"F", ja:"すみません、この あかい かさは いくらですか。", en:"Excuse me, how much is this red umbrella?" },
+      { s:"M", ja:"それは 千五百円です。", say:"それは せんごひゃくえんです。", en:"That one is 1,500 yen." },
+      { s:"F", ja:"うーん、ちょっと 高いですね。その 白い かさは？", say:"うーん、ちょっと たかいですね。その しろい かさは？", en:"Hmm, that's a little expensive. What about that white umbrella?" },
+      { s:"M", ja:"白いのは 八百円です。", say:"しろいのは はっぴゃくえんです。", en:"The white one is 800 yen." },
+      { s:"F", ja:"じゃあ、白いのを 二本 ください。", say:"じゃあ、しろいのを にほん ください。", en:"Then I'll take two of the white ones." },
+      { s:"M", ja:"はい、ありがとうございます。", en:"Certainly, thank you." },
+      { pause: 900 },
+      { s:"N", ja:"おんなの 人は ぜんぶで いくら はらいましたか。", say:"おんなのひとは ぜんぶで いくら はらいましたか。", en:"How much did the woman pay in total?" },
+    ],
+    explain: "One white umbrella is <b>八百円</b> (はっぴゃくえん, 800 yen), and she asks for <b>二本</b> (two; umbrellas use the long-object counter). 800 × 2 = <b>1,600 yen</b>. 1,500 yen is the red umbrella she didn't buy, and 3,000 yen would be two red ones. Listen for <b>ぜんぶで</b> (in total): it means you'll need to add things up." },
+
+  { id: "q4", mondai: 2, num: "2ばん", kind: "texts", answer: 2,
+    texts: ["7がつ 4か", "7がつ 20か", "8がつ 4か", "8がつ 20か"],
+    lines: [
+      { s:"N", ja:"2ばん。おんなの 人と おとこの 学生が はなして います。おとこの 学生は いつ 国へ かえりますか。", say:"にばん。おんなのひとと おとこの がくせいが はなして います。おとこの がくせいは いつ くにへ かえりますか。", en:"Number 2. A woman and a male student are talking. When will the student go back to his country?" },
+      { pause: 5000, readTime: true },
+      { s:"F", ja:"リーさん、なつやすみに 国へ かえりますか。", say:"リーさん、なつやすみに くにへ かえりますか。", en:"Lee, are you going back to your country for summer vacation?" },
+      { s:"M", ja:"はい。はじめは 七月二十日に かえりたかったですが、テストが ありますから、八月四日に かえります。", say:"はい。はじめは しちがつ はつかに かえりたかったですが、テストが ありますから、はちがつ よっかに かえります。", en:"Yes. At first I wanted to go back on July 20th, but I have a test, so I'll go back on August 4th." },
+      { s:"F", ja:"そうですか。日本へは いつ 来ますか。", say:"そうですか。にほんへは いつ きますか。", en:"I see. When will you come back to Japan?" },
+      { s:"M", ja:"八月二十日に 来ます。", say:"はちがつ はつかに きます。", en:"I'll come on August 20th." },
+      { pause: 900 },
+      { s:"N", ja:"おとこの 学生は いつ 国へ かえりますか。", say:"おとこの がくせいは いつ くにへ かえりますか。", en:"When will the student go back to his country?" },
+    ],
+    explain: "<b>〜たかったですが</b> (wanted to…, but) means the first plan, July 20th, changed. He goes home on <b>八月四日</b> (はちがつ よっか). August 20th is when he comes <i>back to Japan</i>. This one drills the dates from your counters deck: <b>はつか</b> (20th) and <b>よっか</b> (4th)." },
+
+  { id: "q5", mondai: 3, num: "1ばん", kind: "scene", answer: 2, nChoices: 3, scene: SCENE_PEN,
+    lines: [
+      { s:"N", ja:"1ばん。ともだちの ペンを かりたいです。なんと いいますか。", say:"いちばん。ともだちの ペンを かりたいです。なんと いいますか。", en:"Number 1. You want to borrow your friend's pen. What do you say?" },
+      { pause: 700 },
+      { s:"N", ja:"1　ペンを かりて ください。", say:"いち。ペンを かりて ください。", en:"1. Please borrow a pen." },
+      { s:"N", ja:"2　ペンを かしましょうか。", say:"に。ペンを かしましょうか。", en:"2. Shall I lend you a pen?" },
+      { s:"N", ja:"3　ペンを かして ください。", say:"さん。ペンを かして ください。", en:"3. Please lend me your pen." },
+    ],
+    explain: "<b>かす</b> = to lend; <b>かりる</b> = to borrow. <b>〜て ください</b> asks the <i>other</i> person to do something, so you ask your friend to lend: <b>かして ください</b>. Choice 1 asks them to borrow something, and choice 2 offers to lend <i>your</i> pen. Mixing up かす and かりる is one of the most common N5 traps." },
+
+  { id: "q6", mondai: 4, num: "1ばん", kind: "audio", answer: 1, nChoices: 3,
+    lines: [
+      { s:"N", ja:"1ばん。", say:"いちばん。", en:"Number 1." },
+      { s:"F", ja:"おさきに しつれいします。", en:"Excuse me for leaving before you." },
+      { pause: 600 },
+      { s:"M", ja:"1　いってらっしゃい。", say:"いち。いってらっしゃい。", en:"1. See you later. (to someone leaving home)" },
+      { s:"M", ja:"2　おつかれさまでした。", say:"に。おつかれさまでした。", en:"2. Thanks for your hard work." },
+      { s:"M", ja:"3　いただきます。", say:"さん。いただきます。", en:"3. (said before eating)" },
+    ],
+    explain: "<b>おさきに しつれいします</b> is what you say when leaving work before your coworkers. The set reply is <b>おつかれさまでした</b>. いってらっしゃい is for someone leaving home who will come back, and いただきます is said before eating. 問題4 is mostly these set phrases, so they're worth memorizing as pairs." },
+];
+
+/* ---------------- state ---------------- */
+const state = { mode: "practice", rate: 0.9, answers: {}, played: {}, showEn: true, perm: {}, examNo: 1 };
+// A new exam reshuffles the printed choices of 問題1 and 問題2. Spoken choices (問題3, 4) and the
+// question numbers are in the recordings, so those stay in place.
+const SHUFFLABLE = { tiles: "tiles", clocks: "clocks", texts: "texts" };
+function shuffleChoices() {
+  QUESTIONS.forEach(q => {
+    const key = SHUFFLABLE[q.kind];
+    if (!key) { delete state.perm[q.id]; return; }
+    const prev = state.perm[q.id] ? state.perm[q.id].join() : null;
+    let order;
+    do {
+      order = q[key].map((_, i) => i);
+      for (let i = order.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [order[i], order[j]] = [order[j], order[i]]; }
+    } while (order.join() === prev);   // always a different layout from the last exam
+    state.perm[q.id] = order;
+  });
+}
+const orderOf = q => state.perm[q.id] || q[SHUFFLABLE[q.kind]].map((_, i) => i);
+const shownAnswer = q => state.perm[q.id] ? state.perm[q.id].indexOf(q.answer) : q.answer;
+const store = {
+  get(k, d) { try { const v = localStorage.getItem("n5pilot:" + k); return v === null ? d : JSON.parse(v); } catch (e) { return d; } },
+  set(k, v) { try { localStorage.setItem("n5pilot:" + k, JSON.stringify(v)); } catch (e) {} },
+};
+state.mode = store.get("mode", "practice");
+state.rate = store.get("rate", 0.9);
+
+/* ---------------- helpers ---------------- */
+const $ = (s, r = document) => r.querySelector(s);
+const esc = s => s.replace(/[&<>"]/g, c => ({ "&":"&amp;", "<":"&lt;", ">":"&gt;", '"':"&quot;" }[c]));
+const ico = (kind) => `<svg class="ico" aria-hidden="true"><use href="#i-${kind}"/></svg>`;
+const NAMES = { bread: "bread", water: "bottle of water", milk: "carton of milk" };
+const PLURAL = { bread: "bread", water: "bottles of water", milk: "cartons of milk" };
+
+function clockSVG(h, m) {
+  let s = `<svg viewBox="0 0 100 100" class="clock" role="img" aria-label="${h}:${String(m).padStart(2, "0")}"><circle cx="50" cy="50" r="44" class="face"/>`;
+  for (let i = 0; i < 12; i++) {
+    const a = i * Math.PI / 6, r1 = i % 3 === 0 ? 33 : 37;
+    s += `<line class="tick" x1="${(50 + r1 * Math.sin(a)).toFixed(2)}" y1="${(50 - r1 * Math.cos(a)).toFixed(2)}" x2="${(50 + 40 * Math.sin(a)).toFixed(2)}" y2="${(50 - 40 * Math.cos(a)).toFixed(2)}"/>`;
+  }
+  const ha = ((h % 12) + m / 60) * Math.PI / 6, ma = m * Math.PI / 30;
+  s += `<line class="hand hour" x1="50" y1="50" x2="${(50 + 20 * Math.sin(ha)).toFixed(2)}" y2="${(50 - 20 * Math.cos(ha)).toFixed(2)}"/>`;
+  s += `<line class="hand min" x1="50" y1="50" x2="${(50 + 31 * Math.sin(ma)).toFixed(2)}" y2="${(50 - 31 * Math.cos(ma)).toFixed(2)}"/>`;
+  return s + `<circle class="pin" cx="50" cy="50" r="3"/></svg>`;
+}
+
+/* ---------------- audio ---------------- */
+// Recorded with Kyoko (Enhanced) and Otoya (Enhanced); one MP3 per question with the exam pauses built in.
+const RATES = [0.85, 1, 1.15];
+if (!RATES.includes(state.rate)) state.rate = 1;
+const player = new Audio();
+player.preload = "auto";
+player.preservesPitch = true; player.webkitPreservesPitch = true;
+let current = null;
+const fmt = t => `${Math.floor(t / 60)}:${String(Math.floor(t % 60)).padStart(2, "0")}`;
+const playRate = () => state.mode === "exam" ? 1 : state.rate;
+function finish(ok) { if (!current) return; const c = current; current = null; c.onEnd && c.onEnd(ok); }
+function stopAll() { player.pause(); finish(false); }
+function audioProblem() {
+  const n = $("#no-voice");
+  n.hidden = false;
+  n.innerHTML = "<b>The audio didn't load.</b> Check your connection and reload the page. The transcripts still appear after you answer.";
+}
+function playClip(key, hooks) {
+  stopAll();
+  current = hooks;
+  player.src = `audio/${key}.mp3`;
+  player.defaultPlaybackRate = player.playbackRate = playRate();
+  const p = player.play();
+  if (p && p.catch) p.catch(() => { if (current === hooks) { finish(false); audioProblem(); } });
+}
+player.addEventListener("loadedmetadata", () => { player.playbackRate = playRate(); });
+player.addEventListener("timeupdate", () => {
+  if (current && current.onStatus && isFinite(player.duration)) current.onStatus(`${fmt(player.currentTime)} / ${fmt(player.duration)}`);
+});
+player.addEventListener("ended", () => finish(true));
+player.addEventListener("error", () => { if (current) { finish(false); audioProblem(); } });
+
+/* ---------------- render ---------------- */
+function choiceCount(q) { return q.nChoices || 4; }
+
+function renderQuestion(q) {
+  let body = "";
+  if (q.kind === "tiles") {
+    body = `<div class="tiles">` + orderOf(q).map((orig, i) => {
+      const set = q.tiles[orig];
+      const label = set.map(([k, c]) => `${c} ${c > 1 ? PLURAL[k] : NAMES[k]}`).join(", ");
+      return `<button class="tile" data-i="${i}" aria-label="Choice ${i + 1}: ${label}"><span class="n">${i + 1}</span>` +
+        set.map(([k, c]) => `<span class="row">${ico(k).repeat(c)}</span>`).join("") + `</button>`;
+    }).join("") + `</div>`;
+  } else if (q.kind === "clocks") {
+    body = `<div class="tiles">` + orderOf(q).map(orig => q.clocks[orig]).map(([h, m], i) =>
+      `<button class="tile" data-i="${i}" aria-label="Choice ${i + 1}: ${h}:${String(m).padStart(2, "0")}"><span class="n">${i + 1}</span>${clockSVG(h, m)}</button>`).join("") + `</div>`;
+  } else if (q.kind === "texts") {
+    body = `<div class="texts">` + orderOf(q).map(orig => q.texts[orig]).map((t, i) =>
+      `<button class="text-choice" data-i="${i}"><span class="n">${i + 1}</span><span>${esc(t)}</span></button>`).join("") + `</div>`;
+  } else if (q.kind === "scene") {
+    body = `<div class="scene">${q.scene}</div><div class="audio-only">The three choices are spoken only, as in the real test. Listen, then mark 1, 2 or 3.</div>`;
+  } else {
+    body = `<div class="audio-only">No picture and no printed choices. Listen to the line and the three replies, then mark 1, 2 or 3.</div>`;
+  }
+  const bubbles = Array.from({ length: choiceCount(q) }, (_, i) =>
+    `<button class="bubble" data-i="${i}" aria-label="Answer ${i + 1}">${i + 1}</button>`).join("");
+  const sec = SECTIONS.find(s => s.mondai === q.mondai);
+  return `<article class="q" id="${q.id}">
+    <div class="q-top">
+      <div class="qnum">${q.num}<span>もんだい${q.mondai} · ${sec.en}</span></div>
+      <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap">
+        <span class="status" data-role="status"></span>
+        <button class="play" data-role="play"><svg><use href="#i-play"/></svg><span>Play</span></button>
+      </div>
+    </div>
+    ${body}
+    <div class="sheet"><span class="lbl">Answer sheet</span>${bubbles}</div>
+    <div class="feedback" data-role="feedback" hidden></div>
+  </article>`;
+}
+
+function renderAll() {
+  $("#sections").innerHTML = SECTIONS.map(sec => `
+    <section class="mondai" id="mondai${sec.mondai}">
+      <div class="mondai-head">
+        <div class="mbox">もんだい${sec.mondai}</div>
+        <div>
+          <h2>${sec.title} <span class="en">· ${sec.en}</span></h2>
+          <div class="instr"><p>${esc(sec.instr)}<br><span class="en">${esc(sec.instrEn)}</span></p>
+            <button class="play" data-instr="${sec.mondai}" style="padding:5px 12px 5px 9px;font-size:.8rem"><svg><use href="#i-play"/></svg><span>Instructions</span></button>
+          </div>
+        </div>
+      </div>
+      ${QUESTIONS.filter(q => q.mondai === sec.mondai).map(renderQuestion).join("")}
+    </section>`).join("");
+  QUESTIONS.forEach(wire);
+  document.querySelectorAll("[data-instr]").forEach(btn => btn.addEventListener("click", () => {
+    const sec = SECTIONS.find(s => s.mondai === +btn.dataset.instr);
+    if (btn.classList.contains("playing")) { stopAll(); return; }
+    setPlaying(btn, true, "Instructions");
+    playClip(`instr${sec.mondai}`, { onEnd: () => setPlaying(btn, false, "Instructions") });
+  }));
+  updateScore();
+}
+
+function setPlaying(btn, on, idleLabel) {
+  btn.classList.toggle("playing", on);
+  btn.querySelector("use").setAttribute("href", on ? "#i-stop" : "#i-play");
+  btn.querySelector("span").textContent = on ? "Stop" : idleLabel;
+}
+
+function refreshPlayButton(q) {
+  const el = $("#" + q.id), btn = el.querySelector('[data-role="play"]');
+  if (btn.classList.contains("playing")) return;
+  const locked = state.mode === "exam" && state.played[q.id] && !state.answers[q.id];
+  btn.disabled = !!locked;
+  btn.querySelector("span").textContent = locked ? "Played once" : (state.played[q.id] ? "Replay" : "Play");
+}
+
+function wire(q) {
+  const el = $("#" + q.id);
+  const btn = el.querySelector('[data-role="play"]');
+  const status = el.querySelector('[data-role="status"]');
+  btn.addEventListener("click", () => {
+    if (btn.classList.contains("playing")) { stopAll(); return; }
+    setPlaying(btn, true);
+    state.played[q.id] = true;
+    playClip(q.id, {
+      onStatus: t => status.textContent = t,
+      onEnd: () => { setPlaying(btn, false, "Play"); status.textContent = ""; refreshPlayButton(q); },
+    });
+  });
+  el.querySelectorAll(".bubble, .tile, .text-choice").forEach(b => b.addEventListener("click", () => answer(q, +b.dataset.i)));
+}
+
+function answer(q, i) {
+  if (state.answers[q.id] !== undefined) return;
+  state.answers[q.id] = i;
+  const el = $("#" + q.id);
+  el.classList.add("answered");
+  el.querySelectorAll(".bubble").forEach(b => {
+    const k = +b.dataset.i;
+    if (k === i) b.classList.add("chosen");
+    if (k === shownAnswer(q)) b.classList.add("right");
+    b.setAttribute("aria-disabled", "true");
+  });
+  el.querySelectorAll(".tile, .text-choice").forEach(b => {
+    const k = +b.dataset.i;
+    if (k === shownAnswer(q)) b.classList.add("right");
+    else if (k === i) b.classList.add("wrong");
+  });
+  const ok = i === shownAnswer(q);
+  const fb = el.querySelector('[data-role="feedback"]');
+  const lines = q.lines.filter(l => !l.pause);
+  fb.innerHTML = `
+    <div class="verdict ${ok ? "ok" : "no"}">${ok ? "✓ Correct" : `✗ You chose ${i + 1}. The answer is ${shownAnswer(q) + 1}.`}</div>
+    <p class="explain">${q.explain}</p>
+    <div class="tx ${state.showEn ? "" : "hide-en"}">
+      <div class="tx-head">Transcript <button data-role="en">${state.showEn ? "Hide English" : "Show English"}</button></div>
+      <ol>${lines.map(l => `<li><span class="who ${l.s}">${l.s === "N" ? "N" : l.s === "F" ? "女" : "男"}</span><div><div class="ja">${esc(l.ja)}</div><div class="en">${esc(l.en)}</div></div></li>`).join("")}</ol>
+    </div>`;
+  fb.hidden = false;
+  fb.querySelector('[data-role="en"]').addEventListener("click", () => {
+    state.showEn = !state.showEn;
+    document.querySelectorAll(".tx").forEach(t => t.classList.toggle("hide-en", !state.showEn));
+    document.querySelectorAll('[data-role="en"]').forEach(b => b.textContent = state.showEn ? "Hide English" : "Show English");
+  });
+  refreshPlayButton(q);
+  updateScore();
+}
+
+function tally() {
+  const by = {};
+  SECTIONS.forEach(s => by[s.mondai] = { right: 0, done: 0, total: 0 });
+  let right = 0, done = 0;
+  QUESTIONS.forEach(q => {
+    const b = by[q.mondai]; b.total++;
+    if (state.answers[q.id] !== undefined) { b.done++; done++; if (state.answers[q.id] === shownAnswer(q)) { b.right++; right++; } }
+  });
+  return { by, right, done };
+}
+
+function updateScore() {
+  const t = tally();
+  $("#score").textContent = `${t.right} / ${QUESTIONS.length}`;
+  $("#breakdown").innerHTML = SECTIONS.map(s => {
+    const b = t.by[s.mondai];
+    return `<div class="cell"><div class="k">もんだい${s.mondai} · ${s.en}</div><div class="v">${b.right} / ${b.total}</div></div>`;
+  }).join("");
+}
+
+function summaryText() {
+  const t = tally();
+  const rateName = { "0.85": "Slower 0.85×", "1": "Normal 1×", "1.15": "Faster 1.15×" }[String(playRate())] || playRate();
+  return [
+    `N5 listening pilot, exam ${state.examNo}: ${t.right}/${QUESTIONS.length} correct (${t.done} answered).`,
+    ...SECTIONS.map(s => `- もんだい${s.mondai} (${s.en}): ${t.by[s.mondai].right}/${t.by[s.mondai].total}`),
+    `Wrong: ${QUESTIONS.filter(q => state.answers[q.id] !== undefined && state.answers[q.id] !== shownAnswer(q)).map(q => `もんだい${q.mondai} ${q.num}`).join(", ") || "none"}`,
+    `Mode: ${state.mode === "exam" ? "Exam rules" : "Practice"} · Speed: ${rateName}`,
+    `Voices: VOICEVOX もち子さん (woman, narrator) and 青山龍星 (man)`,
+    `How the voices sounded: `,
+  ].join("\n");
+}
+
+/* ---------------- controls ---------------- */
+function setMode(m) {
+  state.mode = m; store.set("mode", m);
+  $("#m-practice").setAttribute("aria-pressed", m === "practice");
+  $("#m-exam").setAttribute("aria-pressed", m === "exam");
+  $("#rate").disabled = m === "exam";
+  QUESTIONS.forEach(refreshPlayButton);
+}
+$("#m-practice").addEventListener("click", () => setMode("practice"));
+$("#m-exam").addEventListener("click", () => setMode("exam"));
+$("#rate").value = String(state.rate);
+$("#rate").addEventListener("change", e => {
+  state.rate = parseFloat(e.target.value); store.set("rate", state.rate);
+  if (current) player.playbackRate = playRate();
+});
+
+$("#test-voices").addEventListener("click", () => {
+  const btn = $("#test-voices");
+  if (btn.classList.contains("playing")) { stopAll(); return; }
+  setPlaying(btn, true);
+  playClip("test", { onEnd: () => setPlaying(btn, false, "Test the voices") });
+});
+
+$("#copy").addEventListener("click", () => {
+  const text = summaryText();
+  const out = $("#copy-out");
+  out.value = text;
+  const fallback = () => { out.hidden = false; out.focus(); out.select(); $("#copy").textContent = "Select and copy the text below"; };
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(text).then(() => { $("#copy").textContent = "Copied. Paste it into the chat"; out.hidden = false; }, fallback);
+  } else fallback();
+});
+
+function renderHistory() {
+  const h = store.get("history", []);
+  const el = $("#history");
+  el.hidden = !h.length;
+  el.innerHTML = h.length ? "Earlier exams: " + h.slice(-6).map(x => `<b>${x.right}/${x.total}</b>`).join(" · ") : "";
+}
+function newExam() {
+  stopAll();
+  const t = tally();
+  if (t.done) { const h = store.get("history", []); h.push({ right: t.right, total: QUESTIONS.length, at: Date.now() }); store.set("history", h.slice(-20)); }
+  state.answers = {}; state.played = {}; state.examNo++;
+  shuffleChoices();
+  renderAll(); setMode(state.mode); renderHistory();
+  $("#copy").textContent = "Copy my results"; $("#copy-out").hidden = true;
+  window.scrollTo({ top: 0, behavior: "smooth" });
+  document.querySelectorAll(".toast").forEach(t => t.remove());
+  const toast = document.createElement("div");
+  toast.className = "toast"; toast.setAttribute("role", "status");
+  toast.textContent = `Exam ${state.examNo}: answers cleared, choices reshuffled`;
+  document.body.appendChild(toast); setTimeout(() => toast.remove(), 2600);
+}
+$("#new-exam").addEventListener("click", newExam);
+$("#new-exam-top").addEventListener("click", newExam);
+
+shuffleChoices();
+renderAll();
+setMode(state.mode);
+renderHistory();
+</script>
+
+
+<style>
+.n5hub-back{position:fixed;z-index:9999;left:calc(12px + env(safe-area-inset-left,0px));bottom:calc(12px + env(safe-area-inset-bottom,0px));
+display:inline-flex;align-items:center;gap:6px;padding:7px 14px 7px 10px;border-radius:999px;text-decoration:none;
+font:700 13px/1 "Zen Kaku Gothic New","Hiragino Sans",system-ui,sans-serif;
+background:var(--ink,#1d2220);color:var(--paper,#f5f6f3);box-shadow:0 4px 14px rgba(0,0,0,.18);opacity:.92}
+.n5hub-back:hover,.n5hub-back:focus-visible{opacity:1}
+.n5hub-back:focus-visible{outline:2px solid var(--hanko,#c43d2b);outline-offset:2px}
+.n5hub-back b{font-family:"Klee One","Hiragino Mincho ProN",serif;font-weight:600;font-size:15px}
+body{padding-bottom:56px}
+</style>
+<a class="n5hub-back" href="index.html" aria-label="Back to all exercises">&#8592; <b>道場</b> All exercises</a>
+</body></html>

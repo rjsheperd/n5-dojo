@@ -1,0 +1,1134 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<title>N5 Keiyōshi Renshū</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Klee+One:wght@400;600&family=Zen+Kaku+Gothic+New:wght@400;500;700&display=swap">
+<style>
+/* Layout: same family as N5 Kanji Renshū. Home = hero, today's practice, games, then a board of word
+   tiles grouped by part of speech or theme. Every session runs in one centred "practice sheet" stage. */
+:root {
+  --paper: #f5f6f3; --sheet: #ffffff; --ink: #1d2220; --muted: #5d6762; --faint: #c9cfcb;
+  --guide: #9cc3ad; --guide-soft: #e6f1ea; --hanko: #c43d2b; --hanko-soft: #fbe9e6;
+  --ok: #2f7d55; --ok-soft: #e3f3ea; --bad: #b8432f; --bad-soft: #f8e6e2; --gold: #b9842a;
+  --kanji: "Klee One", "Hiragino Mincho ProN", "Yu Mincho", serif;
+  --ui: "Zen Kaku Gothic New", "Hiragino Sans", "Yu Gothic", "Noto Sans JP", system-ui, sans-serif;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --paper: #141816; --sheet: #1c211f; --ink: #e9ece9; --muted: #9aa49f; --faint: #3a423e;
+    --guide: #3f6a54; --guide-soft: #1e2b24; --hanko: #e2614c; --hanko-soft: #3a211d;
+    --ok: #6cc596; --ok-soft: #1b3326; --bad: #ec8a76; --bad-soft: #3a221d; --gold: #ddb062; color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --paper: #141816; --sheet: #1c211f; --ink: #e9ece9; --muted: #9aa49f; --faint: #3a423e;
+  --guide: #3f6a54; --guide-soft: #1e2b24; --hanko: #e2614c; --hanko-soft: #3a211d;
+  --ok: #6cc596; --ok-soft: #1b3326; --bad: #ec8a76; --bad-soft: #3a221d; --gold: #ddb062; color-scheme: dark;
+}
+* { box-sizing: border-box; }
+[hidden] { display: none !important; }
+html, body { background: var(--paper); }
+body { color: var(--ink); font-family: var(--ui); font-size: 16px; line-height: 1.6; }
+button { font: inherit; color: inherit; }
+button:focus-visible, [tabindex]:focus-visible { outline: 2px solid var(--guide); outline-offset: 2px; }
+h1, h2, h3 { margin: 0; text-wrap: balance; }
+.wrap { max-width: 860px; margin: 0 auto; padding-inline: 16px; padding-block: 0 56px; }
+.jp { font-family: var(--kanji); }
+
+.bar { position: sticky; top: env(safe-area-inset-top, 0px); z-index: 20; background: var(--paper); border-bottom: 1px solid var(--faint); }
+.bar-in { max-width: 860px; margin: 0 auto; padding: 10px 16px; display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+.brand { font-family: var(--kanji); font-weight: 600; font-size: 1.25rem; margin-right: auto; display: flex; align-items: baseline; gap: 8px; cursor: pointer; background: none; border: 0; padding: 0; }
+.brand small { font-family: var(--ui); font-size: .72rem; letter-spacing: .14em; text-transform: uppercase; color: var(--muted); font-weight: 700; }
+.pill { display: inline-flex; align-items: center; gap: 6px; font-size: .82rem; font-weight: 700; padding: 3px 10px; border-radius: 999px; background: var(--sheet); border: 1px solid var(--faint); font-variant-numeric: tabular-nums; white-space: nowrap; }
+.pill svg { width: 14px; height: 14px; }
+.pill.streak { color: var(--hanko); }
+.icon-btn { border: 1px solid var(--faint); background: var(--sheet); border-radius: 999px; width: 34px; height: 34px; display: grid; place-items: center; cursor: pointer; flex: none; }
+.icon-btn svg { width: 18px; height: 18px; }
+
+.hero { padding-block: 26px 6px; display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 18px; align-items: end; }
+.hero h1 { font-family: var(--kanji); font-weight: 600; font-size: clamp(1.8rem, 6vw, 2.6rem); line-height: 1.15; }
+.hero p { margin: 6px 0 0; color: var(--muted); max-width: 52ch; }
+.tally { display: grid; justify-items: end; gap: 4px; }
+.tally .big { font-family: var(--kanji); font-weight: 600; font-size: 2.4rem; line-height: 1; font-variant-numeric: tabular-nums; }
+.tally .big span { font-size: 1rem; color: var(--muted); }
+.tally .lbl { font-size: .75rem; letter-spacing: .1em; text-transform: uppercase; color: var(--muted); font-weight: 700; }
+.levelbar { margin-top: 14px; display: grid; grid-template-columns: auto minmax(0, 1fr) auto; gap: 10px; align-items: center; font-size: .82rem; color: var(--muted); font-variant-numeric: tabular-nums; }
+.levelbar .track { height: 8px; border-radius: 999px; background: var(--guide-soft); overflow: hidden; }
+.levelbar .fill { height: 100%; background: var(--guide); border-radius: 999px; transition: width .6s ease; }
+.levelbar b { color: var(--ink); }
+
+.today { margin-top: 18px; background: var(--sheet); border: 1px solid var(--faint); border-radius: 16px; padding: 18px; display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 14px; align-items: center; }
+.today h2 { font-size: 1.15rem; }
+.today p { margin: 2px 0 0; color: var(--muted); font-size: .92rem; }
+.cta { border: 0; border-radius: 12px; background: var(--ink); color: var(--paper); font-weight: 700; padding: 12px 20px; cursor: pointer; font-size: 1rem; white-space: nowrap; }
+.cta:disabled { opacity: .4; cursor: default; }
+.ghost { border: 1px solid var(--faint); background: var(--sheet); border-radius: 12px; padding: 10px 16px; font-weight: 700; cursor: pointer; }
+
+.section-h { margin-top: 30px; display: flex; align-items: baseline; justify-content: space-between; gap: 10px; flex-wrap: wrap; }
+.section-h h2 { font-size: 1.05rem; letter-spacing: .02em; }
+.section-h .hint { font-size: .82rem; color: var(--muted); }
+.games { margin-top: 12px; display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 10px; }
+.game { text-align: left; background: var(--sheet); border: 1px solid var(--faint); border-radius: 14px; padding: 14px; cursor: pointer; display: grid; gap: 4px; align-content: start; transition: transform .15s ease, border-color .15s ease; }
+.game:hover { transform: translateY(-2px); border-color: var(--guide); }
+.game[disabled] { opacity: .5; cursor: default; transform: none; }
+.game .gk { font-family: var(--kanji); font-size: 1.4rem; line-height: 1.15; }
+.game b { font-size: .98rem; }
+.game span { font-size: .82rem; color: var(--muted); }
+.game .best { color: var(--gold); font-weight: 700; }
+.super { margin-top: 12px; width: 100%; text-align: left; background: var(--ink); color: var(--paper); border: 0; border-radius: 16px; padding: 16px 18px; cursor: pointer; display: grid; grid-template-columns: auto minmax(0, 1fr) auto; gap: 14px; align-items: center; }
+.super .gk { font-family: var(--kanji); font-weight: 600; font-size: 2rem; line-height: 1; background: var(--hanko); color: #fff; border-radius: 8px; width: 52px; height: 52px; display: grid; place-items: center; }
+.super b { display: block; font-size: 1.05rem; }
+.super span { font-size: .84rem; opacity: .8; }
+.super .go { font-weight: 700; white-space: nowrap; opacity: 1; }
+.super .track { height: 6px; border-radius: 999px; background: color-mix(in srgb, var(--paper) 25%, transparent); overflow: hidden; margin-top: 8px; }
+.super .track i { display: block; height: 100%; background: var(--hanko); }
+.runstats { font-size: .85rem; font-weight: 700; color: var(--muted); font-variant-numeric: tabular-nums; text-align: center; }
+
+.chips { margin-top: 12px; display: flex; gap: 6px; flex-wrap: wrap; }
+.chip { border: 1px solid var(--faint); background: var(--sheet); border-radius: 999px; padding: 4px 12px; font-size: .82rem; cursor: pointer; font-variant-numeric: tabular-nums; }
+.chip[aria-pressed="true"] { background: var(--ink); color: var(--paper); border-color: var(--ink); }
+
+.group { margin-top: 18px; }
+.group-h { display: flex; justify-content: space-between; align-items: baseline; gap: 10px; font-size: .8rem; color: var(--muted); font-weight: 700; letter-spacing: .06em; margin-bottom: 6px; }
+.group-h > span:last-child { white-space: nowrap; }
+.board { display: grid; grid-template-columns: repeat(auto-fill, minmax(104px, 1fr)); gap: 6px; }
+.tile { position: relative; min-height: 52px; border: 1px solid var(--guide); background: var(--sheet); border-radius: 6px; cursor: pointer; display: grid; place-items: center; padding: 6px 8px; text-align: center; }
+.tile .k { font-family: var(--kanji); font-size: 1.05rem; line-height: 1.25; font-weight: 600; color: color-mix(in srgb, var(--ink) 30%, var(--faint)); overflow-wrap: anywhere; }
+.tile.long .k { font-size: .85rem; }
+.tile.s1 .k { color: color-mix(in srgb, var(--ink) 50%, var(--faint)); }
+.tile.s2 .k { color: color-mix(in srgb, var(--ink) 68%, var(--faint)); }
+.tile.s3 .k { color: color-mix(in srgb, var(--ink) 85%, var(--faint)); }
+.tile.s4 .k, .tile.s5 .k, .tile.s6 .k { color: var(--ink); }
+.tile .stamp { position: absolute; right: 3px; bottom: 3px; width: 14px; height: 14px; }
+.tile .due { position: absolute; top: 4px; right: 4px; width: 7px; height: 7px; border-radius: 50%; background: var(--gold); }
+.more { margin-top: 6px; }
+.legend { margin-top: 12px; display: flex; flex-wrap: wrap; gap: 14px; font-size: .78rem; color: var(--muted); align-items: center; }
+.legend i { display: inline-block; width: 10px; height: 10px; border-radius: 2px; margin-right: 5px; vertical-align: -1px; }
+
+.stage { padding-block: 18px 30px; display: grid; gap: 16px; justify-items: center; }
+.stage-top { width: 100%; max-width: 560px; display: grid; grid-template-columns: auto minmax(0, 1fr) auto; gap: 12px; align-items: center; }
+.progress { height: 8px; border-radius: 999px; background: var(--guide-soft); overflow: hidden; }
+.progress .fill { height: 100%; background: var(--guide); transition: width .3s ease; }
+.progress.timer .fill { background: var(--gold); transition: width 1s linear; }
+.counter { font-size: .85rem; font-weight: 700; color: var(--muted); font-variant-numeric: tabular-nums; white-space: nowrap; }
+.combo { font-size: .85rem; font-weight: 700; color: var(--hanko); min-height: 1.4em; font-variant-numeric: tabular-nums; }
+.sheetq { position: relative; width: min(90vw, 440px); min-height: 170px; background: var(--sheet); border: 2px solid var(--guide); border-radius: 8px; display: grid; place-items: center; align-content: center; gap: 4px; padding: 26px 18px; text-align: center; }
+.sheetq::after { content: ""; position: absolute; left: 6%; right: 6%; top: 50%; border-top: 2px dashed var(--guide-soft); }
+.sheetq > * { position: relative; z-index: 1; }
+.sheetq .w { font-family: var(--kanji); font-weight: 600; font-size: clamp(2.2rem, 11vw, 3.4rem); line-height: 1.2; overflow-wrap: anywhere; }
+.sheetq .w.l1 { font-size: clamp(1.8rem, 8.5vw, 2.6rem); }
+.sheetq .w.l2 { font-size: clamp(1.3rem, 6vw, 1.9rem); }
+.sheetq .en { font-size: 1.45rem; font-weight: 700; line-height: 1.35; }
+.sheetq .rd { font-family: var(--kanji); font-size: 1.1rem; color: var(--muted); }
+.sheetq .speak { position: absolute; top: 8px; right: 8px; z-index: 2; }
+.sheetq .tag { font-size: .78rem; color: var(--muted); }
+.q-label { font-size: .8rem; letter-spacing: .12em; text-transform: uppercase; color: var(--muted); font-weight: 700; text-align: center; }
+.options { width: 100%; max-width: 560px; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+.opt { border: 1px solid var(--faint); background: var(--sheet); border-radius: 12px; padding: 14px 12px 12px; cursor: pointer; text-align: center; font-weight: 600; min-height: 64px; display: grid; place-items: center; transition: transform .1s ease; position: relative; line-height: 1.3; overflow-wrap: anywhere; }
+.opt:active { transform: scale(.98); }
+.opt .n { position: absolute; top: 5px; left: 9px; font-size: .7rem; color: var(--muted); font-weight: 700; }
+.opt.jp { font-size: 1.3rem; }
+.opt.jp.l1 { font-size: 1.05rem; }
+.opt.jp.l2 { font-size: .9rem; }
+.opt.right { background: var(--ok-soft); border-color: var(--ok); }
+.opt.wrong { background: var(--bad-soft); border-color: var(--bad); animation: shake .3s; }
+.opt[disabled] { cursor: default; }
+.feedback { min-height: 1.6em; font-weight: 700; text-align: center; max-width: 560px; }
+.feedback.ok { color: var(--ok); }
+.feedback.no { color: var(--bad); }
+.nextrow { display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; }
+
+.back { width: 100%; max-width: 560px; background: var(--sheet); border: 1px solid var(--faint); border-radius: 14px; padding: 16px 18px; display: grid; gap: 10px; }
+.rrow { display: grid; grid-template-columns: 5.2em minmax(0, 1fr); gap: 10px; align-items: baseline; }
+.rrow .lab { font-size: .72rem; letter-spacing: .1em; text-transform: uppercase; color: var(--muted); font-weight: 700; }
+.reading { font-family: var(--kanji); font-size: 1.25rem; }
+.meaning { font-size: 1.1rem; font-weight: 700; }
+.tags { display: flex; flex-wrap: wrap; gap: 6px; }
+.tags span { font-size: .78rem; border: 1px solid var(--faint); border-radius: 999px; padding: 1px 10px; }
+.from { font-size: .75rem; color: var(--muted); }
+.grades { width: 100%; max-width: 560px; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; }
+.grade { border-radius: 12px; padding: 12px 8px; cursor: pointer; font-weight: 700; border: 1px solid var(--faint); background: var(--sheet); display: grid; gap: 2px; }
+.grade small { font-weight: 500; font-size: .74rem; color: var(--muted); }
+.grade.again { border-color: var(--bad); color: var(--bad); }
+.grade.good { border-color: var(--ok); color: var(--ok); }
+.grade.easy { border-color: var(--guide); }
+
+.pairs { width: 100%; max-width: 620px; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
+@media (min-width: 560px) { .pairs { grid-template-columns: repeat(4, minmax(0, 1fr)); } }
+.pcard { min-height: 86px; border: 1px solid var(--faint); background: var(--sheet); border-radius: 12px; cursor: pointer; padding: 8px; display: grid; place-items: center; text-align: center; font-weight: 600; font-size: .88rem; line-height: 1.3; overflow-wrap: anywhere; transition: transform .12s ease, opacity .35s ease; }
+.pcard.jp { font-family: var(--kanji); font-size: 1.2rem; }
+.pcard.jp.l1 { font-size: 1rem; }
+.pcard.sel { border-color: var(--ink); box-shadow: 0 0 0 2px var(--ink) inset; }
+.pcard.miss { border-color: var(--bad); background: var(--bad-soft); animation: shake .3s; }
+.pcard.done { border-color: var(--ok); background: var(--ok-soft); opacity: .35; cursor: default; }
+
+.summary { width: 100%; max-width: 560px; background: var(--sheet); border: 1px solid var(--faint); border-radius: 16px; padding: 22px; display: grid; gap: 14px; justify-items: center; text-align: center; }
+.summary h2 { font-family: var(--kanji); font-size: 1.8rem; font-weight: 600; }
+.stats3 { width: 100%; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
+.stats3 div { background: var(--paper); border-radius: 10px; padding: 10px 6px; }
+.stats3 b { display: block; font-size: 1.5rem; font-variant-numeric: tabular-nums; }
+.stats3 span { font-size: .74rem; color: var(--muted); }
+.missed { display: flex; flex-wrap: wrap; gap: 6px; justify-content: center; }
+.missed button { font-family: var(--kanji); font-size: 1.05rem; padding: 4px 12px; border: 1px solid var(--bad); background: var(--bad-soft); border-radius: 8px; cursor: pointer; }
+
+.overlay { position: fixed; inset: 0; z-index: 50; background: color-mix(in srgb, var(--ink) 45%, transparent); display: grid; place-items: end center; padding: 16px; padding-bottom: calc(16px + env(safe-area-inset-bottom, 0px)); }
+@media (min-width: 640px) { .overlay { place-items: center; } }
+.sheet { width: 100%; max-width: 520px; max-height: 86vh; overflow: auto; background: var(--sheet); border-radius: 18px; padding: 20px; display: grid; gap: 14px; }
+.sheet-h { display: flex; justify-content: space-between; align-items: center; gap: 10px; }
+.sheet-h h2 { font-size: 1.1rem; }
+.detail-w { font-family: var(--kanji); font-weight: 600; font-size: 2.4rem; line-height: 1.2; overflow-wrap: anywhere; }
+.kv { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
+.kv div { background: var(--paper); border-radius: 10px; padding: 8px; text-align: center; }
+.kv b { display: block; font-variant-numeric: tabular-nums; }
+.kv span { font-size: .72rem; color: var(--muted); }
+.setrow { display: flex; justify-content: space-between; align-items: center; gap: 12px; padding: 8px 0; border-bottom: 1px solid var(--faint); }
+.setrow:last-child { border-bottom: 0; }
+.switch { position: relative; width: 46px; height: 26px; border-radius: 999px; border: 0; background: var(--faint); cursor: pointer; flex: none; }
+.switch::after { content: ""; position: absolute; top: 3px; left: 3px; width: 20px; height: 20px; border-radius: 50%; background: var(--sheet); transition: transform .2s ease; }
+.switch[aria-checked="true"] { background: var(--ok); }
+.switch[aria-checked="true"]::after { transform: translateX(20px); }
+.seg { display: inline-flex; border: 1px solid var(--faint); border-radius: 10px; overflow: hidden; flex: none; }
+.seg button { border: 0; background: transparent; padding: 5px 11px; cursor: pointer; font-size: .85rem; font-variant-numeric: tabular-nums; }
+.seg button[aria-pressed="true"] { background: var(--ink); color: var(--paper); }
+.danger { color: var(--bad); border-color: var(--bad); }
+footer { margin-top: 36px; font-size: .78rem; color: var(--muted); display: grid; gap: 4px; }
+
+.fx { position: fixed; inset: 0; pointer-events: none; z-index: 60; display: grid; place-items: center; }
+.hanamaru { width: min(60vw, 240px); }
+.hanamaru path { fill: none; stroke: var(--hanko); stroke-width: 5; stroke-linecap: round; }
+.xpfloat { position: fixed; z-index: 61; pointer-events: none; font-weight: 800; color: var(--gold); font-size: 1.1rem; }
+.bigstamp { width: 150px; height: 150px; }
+@media (prefers-reduced-motion: no-preference) {
+  .hanamaru path { stroke-dasharray: 1200; stroke-dashoffset: 1200; animation: draw 1s ease forwards; }
+  .xpfloat { animation: floatup 1s ease forwards; }
+  .bigstamp { animation: stamp .55s cubic-bezier(.2, 1.6, .4, 1) both; }
+  .fx.fade { animation: fadeout .5s ease .9s forwards; }
+}
+@keyframes draw { to { stroke-dashoffset: 0; } }
+@keyframes floatup { from { opacity: 1; transform: translateY(0); } to { opacity: 0; transform: translateY(-40px); } }
+@keyframes stamp { 0% { transform: scale(2.4) rotate(-14deg); opacity: 0; } 100% { transform: scale(1) rotate(-8deg); opacity: 1; } }
+@keyframes fadeout { to { opacity: 0; } }
+@keyframes shake { 25% { transform: translateX(-4px); } 75% { transform: translateX(4px); } }
+@media (max-width: 520px) {
+  .hero { grid-template-columns: 1fr; }
+  .tally { justify-items: start; }
+  .today { grid-template-columns: 1fr; }
+  .board { grid-template-columns: repeat(auto-fill, minmax(92px, 1fr)); gap: 5px; }
+}
+@media (max-width: 430px) {
+  .brand small { display: none; }
+  .bar-in { gap: 8px; flex-wrap: nowrap; }
+}
+</style>
+
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <symbol id="i-flame" viewBox="0 0 24 24"><path fill="currentColor" d="M12 2c1 3.5-1.6 5-1.6 7.6 0 1.4 1 2.4 2.2 2.4 1.6 0 2.4-1.4 2-3.4 2.4 1.6 4.4 4.3 4.4 7.4A7 7 0 0 1 12 23a7 7 0 0 1-7-7c0-4.9 4.6-7.6 7-14z"/></symbol>
+  <symbol id="i-gear" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" d="M12 15.5a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7zM19.4 13.5l1.6 1-1.8 3.2-1.8-.6a7.6 7.6 0 0 1-1.8 1l-.3 1.9H11l-.3-1.9a7.6 7.6 0 0 1-1.8-1l-1.8.6-1.8-3.2 1.6-1a7.6 7.6 0 0 1 0-2.1l-1.6-1 1.8-3.2 1.8.6a7.6 7.6 0 0 1 1.8-1L11 2.9h3.6l.3 1.9a7.6 7.6 0 0 1 1.8 1l1.8-.6 1.8 3.2-1.6 1a7.6 7.6 0 0 1 0 2.1z"/></symbol>
+  <symbol id="i-close" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" d="M6 6l12 12M18 6L6 18"/></symbol>
+  <symbol id="i-speak" viewBox="0 0 24 24"><path fill="currentColor" d="M4 9h4l5-4v14l-5-4H4z"/><path fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" d="M16.5 8.5a5 5 0 0 1 0 7M19 6a8.5 8.5 0 0 1 0 12"/></symbol>
+  <symbol id="i-stamp" viewBox="0 0 40 40"><rect x="3" y="3" width="34" height="34" rx="6" fill="var(--hanko)"/><rect x="6" y="6" width="28" height="28" rx="4" fill="none" stroke="#fff" stroke-width="1.6"/><text x="20" y="27.5" text-anchor="middle" font-size="20" font-family="Klee One, serif" font-weight="600" fill="#fff">合</text></symbol>
+</svg>
+<style>
+/* Keiyōshi additions: the sentence "answer sheet" (ruled lines, a hanko-red blank), the forms table and form tiles. */
+.wrap { padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
+.bar-in { padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
+body::before { content: ""; position: fixed; inset: 0 0 auto; height: env(safe-area-inset-top, 0px); z-index: 10; background: var(--paper); }
+
+.ssheet { position: relative; width: min(100%, 560px); background: var(--sheet); border: 2px solid var(--guide); border-radius: 8px; padding: 22px 18px 18px; display: grid; gap: 10px;
+  background-image: repeating-linear-gradient(to bottom, transparent 0, transparent calc(2.3em - 1px), var(--guide-soft) calc(2.3em - 1px), var(--guide-soft) 2.3em); background-position: 0 14px; }
+.ssheet .speak { position: absolute; top: 8px; right: 8px; }
+.sent { font-family: var(--kanji); font-size: clamp(1.15rem, 4.6vw, 1.45rem); line-height: 2.3em; font-weight: 600; padding-right: 30px; }
+.sent .line { display: block; }
+.sent .who { font-family: var(--ui); font-size: .78em; font-weight: 700; color: var(--muted); margin-right: .3em; }
+.blank { display: inline-block; min-width: 4.2em; border-bottom: 3px solid var(--hanko); text-align: center; line-height: 1.3; margin: 0 .15em; }
+.blank.filled { color: var(--ok); border-bottom-color: var(--ok); padding: 0 .2em; }
+.blank.filled.miss { color: var(--bad); border-bottom-color: var(--bad); }
+mark.cue { background: var(--hanko-soft); color: inherit; border-radius: 4px; padding: 0 .12em; box-shadow: inset 0 -2px 0 var(--hanko); }
+.ssheet .en { font-size: .95rem; color: var(--muted); line-height: 1.4; }
+.rule { width: 100%; max-width: 560px; font-size: .92rem; line-height: 1.5; background: var(--sheet); border: 1px solid var(--faint); border-left: 4px solid var(--hanko); border-radius: 10px; padding: 10px 14px; }
+.rule b { font-family: inherit; }
+.formchip { display: inline-flex; gap: 6px; align-items: baseline; font-size: .9rem; font-weight: 700; background: var(--hanko-soft); color: var(--hanko); border-radius: 999px; padding: 3px 12px; }
+.formchip small { font-weight: 500; color: var(--muted); }
+.typetag { font-size: .78rem; font-weight: 700; border: 1px solid var(--faint); border-radius: 999px; padding: 1px 10px; color: var(--muted); }
+.opt.jp { font-family: var(--kanji); }
+
+.ftable { width: 100%; border-collapse: collapse; font-variant-numeric: tabular-nums; }
+.ftable th { text-align: left; font-size: .72rem; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); font-weight: 700; padding: 6px 6px 4px 0; }
+.ftable th { width: 50%; }
+.ftable td { padding: 0 4px 4px 0; vertical-align: middle; }
+.ftable tr.lab td { border-top: 1px solid var(--faint); padding: 6px 0 0; font-size: .74rem; color: var(--muted); font-weight: 700; letter-spacing: .04em; }
+.ftable button { font-family: var(--kanji); font-size: clamp(.8rem, 3.5vw, 1rem); border: 0; background: none; padding: 2px 0; border-radius: 6px; cursor: pointer; text-align: left; white-space: nowrap; }
+.ftable button:hover { background: var(--guide-soft); }
+.ftable tr.hl td { background: var(--hanko-soft); }
+.ftable tr.lab.hl td { color: var(--hanko); }
+
+.tbl-wrap { width: 100%; max-width: 560px; overflow-x: auto; }
+.note { font-size: .88rem; background: var(--hanko-soft); border-radius: 10px; padding: 8px 12px; }
+
+.forms { margin-top: 12px; display: grid; gap: 14px; }
+.fgroup-h { font-size: .8rem; color: var(--muted); font-weight: 700; letter-spacing: .06em; margin-bottom: 6px; }
+.frow { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 6px; }
+@media (max-width: 520px) { .frow { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+.ftile { text-align: left; border: 1px solid var(--faint); background: var(--sheet); border-radius: 10px; padding: 8px 10px; cursor: pointer; display: grid; gap: 3px; }
+.ftile[aria-pressed="true"] { border-color: var(--ink); box-shadow: 0 0 0 2px var(--ink) inset; }
+.ftile b { font-size: .84rem; line-height: 1.25; }
+.ftile .ex { font-family: var(--kanji); font-size: .95rem; color: var(--muted); }
+.ftile .acc { display: flex; justify-content: space-between; font-size: .74rem; color: var(--muted); font-variant-numeric: tabular-nums; }
+.ftile .track { height: 5px; border-radius: 999px; background: var(--guide-soft); overflow: hidden; }
+.ftile .track i { display: block; height: 100%; background: var(--guide); }
+.ftile .track i.low { background: var(--gold); }
+.focusbar { margin-top: 10px; display: flex; gap: 10px; align-items: center; justify-content: space-between; flex-wrap: wrap; background: var(--hanko-soft); border-radius: 12px; padding: 8px 12px; font-size: .9rem; }
+.tile .tt { position: absolute; left: 4px; top: 2px; font-size: .62rem; font-weight: 700; color: var(--muted); }
+.tile .trap { position: absolute; left: 4px; bottom: 3px; width: 6px; height: 6px; border-radius: 50%; background: var(--hanko); }
+
+@media (max-width: 520px) { .games { grid-template-columns: repeat(2, minmax(0, 1fr)); } .games .game:last-child:nth-child(odd) { grid-column: 1 / -1; } }
+.sortbtns { width: 100%; max-width: 560px; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+.sortbtns .opt { min-height: 84px; font-size: 1.15rem; }
+.sortbtns .opt big { display: block; font-family: var(--kanji); font-size: 1.9rem; line-height: 1.1; }
+</style>
+
+<header class="bar">
+  <div class="bar-in">
+    <button class="brand" id="home-btn" aria-label="Home">形容詞練習 <small>N5 adjectives</small></button>
+    <span class="pill streak" title="Days in a row"><svg><use href="#i-flame"/></svg><span id="streak-n">0</span></span>
+    <span class="pill" id="level-pill">Lv 1</span>
+    <button class="icon-btn" id="settings-btn" aria-label="Settings"><svg><use href="#i-gear"/></svg></button>
+  </div>
+</header>
+
+<main class="wrap" id="view"></main>
+<div id="overlay-root"></div>
+
+<script>
+const DATA = {"adj":[{"w":"あかい","say":"あかい","r":"","m":"red","type":"i","kj":false,"note":"","ex":[],"f":{"npa":["あかいです","あかいです"],"npn":["あかくないです","あかくないです"],"pa":["あかかったです","あかかったです"],"pn":["あかくなかったです","あかくなかったです"],"np":["あかい","あかい"],"nn":["あかくない","あかくない"],"pp":["あかかった","あかかった"],"pnp":["あかくなかった","あかくなかった"],"dsh":["あかい","あかい"],"mod":["あかい","あかい"],"adv":["あかく","あかく"],"te":["あかくて","あかくて"]},"d":["npa","npn","pa","pn","np","nn","pp","pnp","dsh","mod","adv","te"],"po":{"npa":["あかくないです","あかかったです","あかくなかったです"],"npn":["あかいです","あかかったです","あかくなかったです"],"pa":["あかいです","あかくないです","あかくなかったです"],"pn":["あかいです","あかくないです","あかかったです"],"np":["あかくない","あかかった","あかくなかった"],"nn":["あかい","あかかった","あかくなかった"],"pp":["あかい","あかくない","あかくなかった"],"pnp":["あかい","あかくない","あかかった"],"dsh":["あかく","あかいだ","あかいな"],"mod":["あかく","あかくて","あかいな"],"adv":["あかい","あかくて","あかいに"],"te":["あかい","あかいで","あかいくて"]},"pt":{}},{"w":"あおい","say":"あおい","r":"","m":"blue","type":"i","kj":false,"note":"","ex":[],"f":{"npa":["あおいです","あおいです"],"npn":["あおくないです","あおくないです"],"pa":["あおかったです","あおかったです"],"pn":["あおくなかったです","あおくなかったです"],"np":["あおい","あおい"],"nn":["あおくない","あおくない"],"pp":["あおかった","あおかった"],"pnp":["あおくなかった","あおくなかった"],"dsh":["あおい","あおい"],"mod":["あおい","あおい"],"adv":["あおく","あおく"],"te":["あおくて","あおくて"]},"d":["npa","npn","pa","pn","np","nn","pp","pnp","dsh","mod","adv","te"],"po":{"npa":["あおくないです","あおかったです","あおくなかったです"],"npn":["あおいです","あおかったです","あおくなかったです"],"pa":["あおいです","あおくないです","あおくなかったです"],"pn":["あおいです","あおくないです","あおかったです"],"np":["あおくない","あおかった","あおくなかった"],"nn":["あおい","あおかった","あおくなかった"],"pp":["あおい","あおくない","あおくなかった"],"pnp":["あおい","あおくない","あおかった"],"dsh":["あおく","あおいだ","あおいな"],"mod":["あおく","あおくて","あおいな"],"adv":["あおい","あおくて","あおいに"],"te":["あおい","あおいで","あおいくて"]},"pt":{}},{"w":"白い","say":"しろい","r":"しろい","m":"white","type":"i","kj":true,"note":"","ex":[],"f":{"npa":["白いです","しろいです"],"npn":["白くないです","しろくないです"],"pa":["白かったです","しろかったです"],"pn":["白くなかったです","しろくなかったです"],"np":["白い","しろい"],"nn":["白くない","しろくない"],"pp":["白かった","しろかった"],"pnp":["白くなかった","しろくなかった"],"dsh":["白い","しろい"],"mod":["白い","しろい"],"adv":["白く","しろく"],"te":["白くて","しろくて"]},"d":["npa","npn","pa","pn","np","nn","pp","pnp","dsh","mod","adv","te"],"po":{"npa":["白くないです","白かったです","白くなかったです"],"npn":["白いです","白かったです","白くなかったです"],"pa":["白いです","白くないです","白くなかったです"],"pn":["白いです","白くないです","白かったです"],"np":["白くない","白かった","白くなかった"],"nn":["白い","白かった","白くなかった"],"pp":["白い","白くない","白くなかった"],"pnp":["白い","白くない","白かった"],"dsh":["白く","白いだ","白いな"],"mod":["白く","白くて","白いな"],"adv":["白い","白くて","白いに"],"te":["白い","白いで","白いくて"]},"pt":{}},{"w":"くろい","say":"くろい","r":"","m":"black","type":"i","kj":false,"note":"","ex":[],"f":{"npa":["くろいです","くろいです"],"npn":["くろくないです","くろくないです"],"pa":["くろかったです","くろかったです"],"pn":["くろくなかったです","くろくなかったです"],"np":["くろい","くろい"],"nn":["くろくない","くろくない"],"pp":["くろかった","くろかった"],"pnp":["くろくなかった","くろくなかった"],"dsh":["くろい","くろい"],"mod":["くろい","くろい"],"adv":["くろく","くろく"],"te":["くろくて","くろくて"]},"d":["npa","npn","pa","pn","np","nn","pp","pnp","dsh","mod","adv","te"],"po":{"npa":["くろくないです","くろかったです","くろくなかったです"],"npn":["くろいです","くろかったです","くろくなかったです"],"pa":["くろいです","くろくないです","くろくなかったです"],"pn":["くろいです","くろくないです","くろかったです"],"np":["くろくない","くろかった","くろくなかった"],"nn":["くろい","くろかった","くろくなかった"],"pp":["くろい","くろくない","くろくなかった"],"pnp":["くろい","くろくない","くろかった"],"dsh":["くろく","くろいだ","くろいな"],"mod":["くろく","くろくて","くろいな"],"adv":["くろい","くろくて","くろいに"],"te":["くろい","くろいで","くろいくて"]},"pt":{}},{"w":"きいろい","say":"きいろい","r":"","m":"yellow","type":"i","kj":false,"note":"","ex":[],"f":{"npa":["きいろいです","きいろいです"],"npn":["きいろくないです","きいろくないです"],"pa":["きいろかったです","きいろかったです"],"pn":["きいろくなかったです","きいろくなかったです"],"np":["きいろい","きいろい"],"nn":["きいろくない","きいろくない"],"pp":["きいろかった","きいろかった"],"pnp":["きいろくなかった","きいろくなかった"],"dsh":["きいろい","きいろい"],"mod":["きいろい","きいろい"],"adv":["きいろく","きいろく"],"te":["きいろくて","きいろくて"]},"d":["npa","npn","pa","pn","np","nn","pp","pnp","dsh","mod","adv","te"],"po":{"npa":["きいろくないです","きいろかったです","きいろくなかったです"],"npn":["きいろいです","きいろかったです","きいろくなかったです"],"pa":["きいろいです","きいろくないです","きいろくなかったです"],"pn":["きいろいです","きいろくないです","きいろかったです"],"np":["きいろくない","きいろかった","きいろくなかった"],"nn":["きいろい","きいろかった","きいろくなかった"],"pp":["きいろい","きいろくない","きいろくなかった"],"pnp":["きいろい","きいろくない","きいろかった"],"dsh":["きいろく","きいろいだ","きいろいな"],"mod":["きいろく","きいろくて","きいろいな"],"adv":["きいろい","きいろくて","きいろいに"],"te":["きいろい","きいろいで","きいろいくて"]},"pt":{}},{"w":"あかるい","say":"あかるい","r":"","m":"bright","type":"i","kj":false,"note":"","ex":[],"f":{"npa":["あかるいです","あかるいです"],"npn":["あかるくないです","あかるくないです"],"pa":["あかるかったです","あかるかったです"],"pn":["あかるくなかったです","あかるくなかったです"],"np":["あかるい","あかるい"],"nn":["あかるくない","あかるくない"],"pp":["あかるかった","あかるかった"],"pnp":["あかるくなかった","あかるくなかった"],"dsh":["あかるい","あかるい"],"mod":["あかるい","あかるい"],"adv":["あかるく","あかるく"],"te":["あかるくて","あかるくて"]},"d":["npa","npn","pa","pn","np","nn","pp","pnp","dsh","mod","adv","te"],"po":{"npa":["あかるくないです","あかるかったです","あかるくなかったです"],"npn":["あかるいです","あかるかったです","あかるくなかったです"],"pa":["あかるいです","あかるくないです","あかるくなかったです"],"pn":["あかるいです","あかるくないです","あかるかったです"],"np":["あかるくない","あかるかった","あかるくなかった"],"nn":["あかるい","あかるかった","あかるくなかった"],"pp":["あかるい","あかるくない","あかるくなかった"],"pnp":["あかるい","あかるくない","あかるかった"],"dsh":["あかるく","あかるいだ","あかるいな"],"mod":["あかるく","あかるくて","あかるいな"],"adv":["あかるい","あかるくて","あかるいに"],"te":["あかるい","あかるいで","あかるいくて"]},"pt":{}},{"w":"くらい","say":"くらい","r":"","m":"dark","type":"i","kj":false,"note":"","ex":[],"f":{"npa":["くらいです","くらいです"],"npn":["くらくないです","くらくないです"],"pa":["くらかったです","くらかったです"],"pn":["くらくなかったです","くらくなかったです"],"np":["くらい","くらい"],"nn":["くらくない","くらくない"],"pp":["くらかった","くらかった"],"pnp":["くらくなかった","くらくなかった"],"dsh":["くらい","くらい"],"mod":["くらい","くらい"],"adv":["くらく","くらく"],"te":["くらくて","くらくて"]},"d":["npa","npn","pa","pn","np","nn","pp","pnp","dsh","mod","adv","te"],"po":{"npa":["くらくないです","くらかったです","くらくなかったです"],"npn":["くらいです","くらかったです","くらくなかったです"],"pa":["くらいです","くらくないです","くらくなかったです"],"pn":["くらいです","くらくないです","くらかったです"],"np":["くらくない","くらかった","くらくなかった"],"nn":["くらい","くらかった","くらくなかった"],"pp":["くらい","くらくない","くらくなかった"],"pnp":["くらい","くらくない","くらかった"],"dsh":["くらく","くらいだ","くらいな"],"mod":["くらく","くらくて","くらいな"],"adv":["くらい","くらくて","くらいに"],"te":["くらい","くらいで","くらいくて"]},"pt":{}},{"w":"あたたかい","say":"あたたかい","r":"","m":"warm","type":"i","kj":false,"note":"","ex":[],"f":{"npa":["あたたかいです","あたたかいです"],"npn":["あたたかくないです","あたたかくないです"],"pa":["あたたかかったです","あたたかかったです"],"pn":["あたたかくなかったです","あたたかくなかったです"],"np":["あたたかい","あたたかい"],"nn":["あたたかくない","あたたかくない"],"pp":["あたたかかった","あたたかかった"],"pnp":["あたたかくなかった","あたたかくなかった"],"dsh":["あたたかい","あたたかい"],"mod":["あたたかい","あたたかい"],"adv":["あたたかく","あたたかく"],"te":["あたたかくて","あたたかくて"]},"d":["npa","npn","pa","pn","np","nn","pp","pnp","dsh","mod","adv","te"],"po":{"npa":["あたたかくないです","あたたかかったです","あたたかくなかったです"],"npn":["あたたかいです","あたたかかったです","あたたかくなかったです"],"pa":["あたたかいです","あたたかくないです","あたたかくなかったです"],"pn":["あたたかいです","あたたかくないです","あたたかかったです"],"np":["あたたかくない","あたたかかった","あたたかくなかった"],"nn":["あたたかい","あたたかかった","あたたかくなかった"],"pp":["あたたかい","あたたかくない","あたたかくなかった"],"pnp":["あたたかい","あたたかくない","あたたかかった"],"dsh":["あたたかく","あたたかいだ","あたたかいな"],"mod":["あたたかく","あたたかくて","あたたかいな"],"adv":["あたたかい","あたたかくて","あたたかいに"],"te":["あたたかい","あたたかいで","あたたかいくて"]},"pt":{}},{"w":"あつい","say":"あつい","r":"","m":"hot (weather); hot (to the touch); thick","type":"i","kj":false,"note":"","ex":[],"f":{"npa":["あついです","あついです"],"npn":["あつくないです","あつくないです"],"pa":["あつかったです","あつかったです"],"pn":["あつくなかったです","あつくなかったです"],"np":["あつい","あつい"],"nn":["あつくない","あつくない"],"pp":["あつかった","あつかった"],"pnp":["あつくなかった","あつくなかった"],"dsh":["あつい","あつい"],"mod":["あつい","あつい"],"adv":["あつく","あつく"],"te":["あつくて","あつくて"]},"d":["npa","npn","pa","pn","np","nn","pp","pnp","dsh","mod","adv","te"],"po":{"npa":["あつくないです","あつかったです","あつくなかったです"],"npn":["あついです","あつかったです","あつくなかったです"],"pa":["あついです","あつくないです","あつくなかったです"],"pn":["あついです","あつくないです","あつかったです"],"np":["あつくない","あつかった","あつくなかった"],"nn":["あつい","あつかった","あつくなかった"],"pp":["あつい","あつくない","あつくなかった"],"pnp":["あつい","あつくない","あつかった"],"dsh":["あつく","あついだ","あついな"],"mod":["あつく","あつくて","あついな"],"adv":["あつい","あつくて","あついに"],"te":["あつい","あついで","あついくて"]},"pt":{}},{"w":"さむい","say":"さむい","r":"","m":"cold (weather)","type":"i","kj":false,"note":"","ex":[],"f":{"npa":["さむいです","さむいです"],"npn":["さむくないです","さむくないです"],"pa":["さむかったです","さむかったです"],"pn":["さむくなかったです","さむくなかったです"],"np":["さむい","さむい"],"nn":["さむくない","さむくない"],"pp":["さむかった","さむかった"],"pnp":["さむくなかった","さむくなかった"],"dsh":["さむい","さむい"],"mod":["さむい","さむい"],"adv":["さむく","さむく"],"te":["さむくて","さむくて"]},"d":["npa","npn","pa","pn","np","nn","pp","pnp","dsh","mod","adv","te"],"po":{"npa":["さむくないです","さむかったです","さむくなかったです"],"npn":["さむいです","さむかったです","さむくなかったです"],"pa":["さむいです","さむくないです","さむくなかったです"],"pn":["さむいです","さむくないです","さむかったです"],"np":["さむくない","さむかった","さむくなかった"],"nn":["さむい","さむかった","さむくなかった"],"pp":["さむい","さむくない","さむくなかった"],"pnp":["さむい","さむくない","さむかった"],"dsh":["さむく","さむいだ","さむいな"],"mod":["さむく","さむくて","さむいな"],"adv":["さむい","さむくて","さむいに"],"te":["さむい","さむいで","さむいくて"]},"pt":{}},{"w":"つめたい","say":"つめたい","r":"","m":"cold (to the touch)","type":"i","kj":false,"note":"","ex":[],"f":{"npa":["つめたいです","つめたいです"],"npn":["つめたくないです","つめたくないです"],"pa":["つめたかったです","つめたかったです"],"pn":["つめたくなかったです","つめたくなかったです"],"np":["つめたい","つめたい"],"nn":["つめたくない","つめたくない"],"pp":["つめたかった","つめたかった"],"pnp":["つめたくなかった","つめたくなかった"],"dsh":["つめたい","つめたい"],"mod":["つめたい","つめたい"],"adv":["つめたく","つめたく"],"te":["つめたくて","つめたくて"]},"d":["npa","npn","pa","pn","np","nn","pp","pnp","dsh","mod","adv","te"],"po":{"npa":["つめたくないです","つめたかったです","つめたくなかったです"],"npn":["つめたいです","つめたかったです","つめたくなかったです"],"pa":["つめたいです","つめたくないです","つめたくなかったです"],"pn":["つめたいです","つめたくないです","つめたかったです"],"np":["つめたくない","つめたかった","つめたくなかった"],"nn":["つめたい","つめたかった","つめたくなかった"],"pp":["つめたい","つめたくない","つめたくなかった"],"pnp":["つめたい","つめたくない","つめたかった"],"dsh":["つめたく","つめたいだ","つめたいな"],"mod":["つめたく","つめたくて","つめたいな"],"adv":["つめたい","つめたくて","つめたいに"],"te":["つめたい","つめたいで","つめたいくて"]},"pt":{}},{"w":"すずしい","say":"すずしい","r":"","m":"cool","type":"i","kj":false,"note":"","ex":[],"f":{"npa":["すずしいです","すずしいです"],"npn":["すずしくないです","すずしくないです"],"pa":["すずしかったです","すずしかったです"],"pn":["すずしくなかったです","すずしくなかったです"],"np":["すずしい","すずしい"],"nn":["すずしくない","すずしくない"],"pp":["すずしかった","すずしかった"],"pnp":["すずしくなかった","すずしくなかった"],"dsh":["すずしい","すずしい"],"mod":["すずしい","すずしい"],"adv":["すずしく","すずしく"],"te":["すずしくて","すずしくて"]},"d":["npa","npn","pa","pn","np","nn","pp","pnp","dsh","mod","adv","te"],"po":{"npa":["すずしくないです","すずしかったです","すずしくなかったです"],"npn":["すずしいです","すずしかったです","すずしくなかったです"],"pa":["すずしいです","すずしくないです","すずしくなかったです"],"pn":["すずしいです","すずしくないです","すずしかったです"],"np":["すずしくない","すずしかった","すずしくなかった"],"nn":["すずしい","すずしかった","すずしくなかった"],"pp":["すずしい","すずしくない","すずしくなかった"],"pnp":["すずしい","すずしくない","すずしかった"],"dsh":["すずしく","すずしいだ","すずしいな"],"mod":["すずしく","すずしくて","すずしいな"],"adv":["すずしい","すずしくて","すずしいに"],"te":["すずしい","すずしいで","すずしいくて"]},"pt":{}},{"w":"新しい","say":"あたらしい","r":"あたらしい","m":"new","type":"i","kj":true,"note":"","ex":[],"f":{"npa":["新しいです","あたらしいです"],"npn":["新しくないです","あたらしくないです"],"pa":["新しかったです","あたらしかったです"],"pn":["新しくなかったです","あたらしくなかったです"],"np":["新しい","あたらしい"],"nn":["新しくない","あたらしくない"],"pp":["新しかった","あたらしかった"],"pnp":["新しくなかった","あたらしくなかった"],"dsh":["新しい","あたらしい"],"mod":["新しい","あたらしい"],"adv":["新しく","あたらしく"],"te":["新しくて","あたらしくて"]},"d":["npa","npn","pa","pn","np","nn","pp","pnp","dsh","mod","adv","te"],"po":{"npa":["新しくないです","新しかったです","新しくなかったです"],"npn":["新しいです","新しかったです","新しくなかったです"],"pa":["新しいです","新しくないです","新しくなかったです"],"pn":["新しいです","新しくないです","新しかったです"],"np":["新しくない","新しかった","新しくなかった"],"nn":["新しい","新しかった","新しくなかった"],"pp":["新しい","新しくない","新しくなかった"],"pnp":["新しい","新しくない","新しかった"],"dsh":["新しく","新しいだ","新しいな"],"mod":["新しく","新しくて","新しいな"],"adv":["新しい","新しくて","新しいに"],"te":["新しい","新しいで","新しいくて"]},"pt":{}},{"w":"古い","say":"ふるい","r":"ふるい","m":"old (things)","type":"i","kj":true,"note":"","ex":[],"f":{"npa":["古いです","ふるいです"],"npn":["古くないです","ふるくないです"],"pa":["古かったです","ふるかったです"],"pn":["古くなかったです","ふるくなかったです"],"np":["古い","ふるい"],"nn":["古くない","ふるくない"],"pp":["古かった","ふるかった"],"pnp":["古くなかった","ふるくなかった"],"dsh":["古い","ふるい"],"mod":["古い","ふるい"],"adv":["古く","ふるく"],"te":["古くて","ふるくて"]},"d":["npa","npn","pa","pn","np","nn","pp","pnp","dsh","mod","adv","te"],"po":{"npa":["古くないです","古かったです","古くなかったです"],"npn":["古いです","古かったです","古くなかったです"],"pa":["古いです","古くないです","古くなかったです"],"pn":["古いです","古くないです","古かったです"],"np":["古くない","古かった","古くなかった"],"nn":["古い","古かった","古くなかった"],"pp":["古い","古くない","古くなかった"],"pnp":["古い","古くない","古かった"],"dsh":["古く","古いだ","古いな"],"mod":["古く","古くて","古いな"],"adv":["古い","古くて","古いに"],"te":["古い","古いで","古いくて"]},"pt":{}},{"w":"うすい","say":"うすい","r":"","m":"thin; weak (taste)","type":"i","kj":false,"note":"","ex":[],"f":{"npa":["うすいです","うすいです"],"npn":["うすくないです","うすくないです"],"pa":["うすかったです","うすかったです"],"pn":["うすくなかったです","うすくなかったです"],"np":["うすい","うすい"],"nn":["うすくない","うすくない"],"pp":["うすかった","うすかった"],"pnp":["うすくなかった","うすくなかった"],"dsh":["うすい","うすい"],"mod":["うすい","うすい"],"adv":["うすく","うすく"],"te":["うすくて","うすくて"]},"d":["npa","npn","pa","pn","np","nn","pp","pnp","dsh","mod","adv","te"],"po":{"npa":["うすくないです","うすかったです","うすくなかったです"],"npn":["うすいです","うすかったです","うすくなかったです"],"pa":["うすいです","うすくないです","うすくなかったです"],"pn":["うすいです","うすくないです","うすかったです"],"np":["うすくない","うすかった","うすくなかった"],"nn":["うすい","うすかった","うすくなかった"],"pp":["うすい","うすくない","うすくなかった"],"pnp":["うすい","うすくない","うすかった"],"dsh":["うすく","うすいだ","うすいな"],"mod":["うすく","うすくて","うすいな"],"adv":["うすい","うすくて","うすいに"],"te":["うすい","うすいで","うすいくて"]},"pt":{}},{"w":"あまい","say":"あまい","r":"","m":"sweet","type":"i","kj":false,"note":"","ex":[],"f":{"npa":["あまいです","あまいです"],"npn":["あまくないです","あまくないです"],"pa":["あまかったです","あまかったです"],"pn":["あまくなかったです","あまくなかったです"],"np":["あまい","あまい"],"nn":["あまくない","あまくない"],"pp":["あまかった","あまかった"],"pnp":["あまくなかった","あまくなかった"],"dsh":["あまい","あまい"],"mod":["あまい","あまい"],"adv":["あまく","あまく"],"te":["あまくて","あまくて"]},"d":["npa","npn","pa","pn","np","nn","pp","pnp","dsh","mod","adv","te"],"po":{"npa":["あまくないです","あまかったです","あまくなかったです"],"npn":["あまいです","あまかったです","あまくなかったです"],"pa":["あまいです","あまくないです","あまくなかったです"],"pn":["あまいです","あまくないです","あまかったです"],"np":["あまくない","あまかった","あまくなかった"],"nn":["あまい","あまかった","あまくなかった"],"pp":["あまい","あまくない","あまくなかった"],"pnp":["あまい","あまくない","あまかった"],"dsh":["あまく","あまいだ","あまいな"],"mod":["あまく","あまくて","あまいな"],"adv":["あまい","あまくて","あまいに"],"te":["あまい","あまいで","あまいくて"]},"pt":{}},{"w":"からい","say":"からい","r":"","m":"spicy","type":"i","kj":false,"note":"","ex":[],"f":{"npa":["からいです","からいです"],"npn":["からくないです","からくないです"],"pa":["からかったです","からかったです"],"pn":["からくなかったです","からくなかったです"],"np":["からい","からい"],"nn":["からくない","からくない"],"pp":["からかった","からかった"],"pnp":["からくなかった","からくなかった"],"dsh":["からい","からい"],"mod":["からい","からい"],"adv":["からく","からく"],"te":["からくて","からくて"]},"d":["npa","npn","pa","pn","np","nn","pp","pnp","dsh","mod","adv","te"],"po":{"npa":["からくないです","からかったです","からくなかったです"],"npn":["からいです","からかったです","からくなかったです"],"pa":["からいです","からくないです","からくなかったです"],"pn":["からいです","からくないです","からかったです"],"np":["からくない","からかった","からくなかった"],"nn":["からい","からかった","からくなかった"],"pp":["からい","からくない","からくなかった"],"pnp":["からい","からくない","からかった"],"dsh":["からく","からいだ","からいな"],"mod":["からく","からくて","からいな"],"adv":["からい","からくて","からいに"],"te":["からい","からいで","からいくて"]},"pt":{}},{"w":"おいしい","say":"おいしい","r":"","m":"delicious","type":"i","kj":false,"note":"","ex":[],"f":{"npa":["おいしいです","おいしいです"],"npn":["おいしくないです","おいしくないです"],"pa":["おいしかったです","おいしかったです"],"pn":["おいしくなかったです","おいしくなかったです"],"np":["おいしい","おいしい"],"nn":["おいしくない","おいしくない"],"pp":["おいしかった","おいしかった"],"pnp":["おいしくなかった","おいしくなかった"],"dsh":["おいしい","おいしい"],"mod":["おいしい","おいしい"],"adv":["おいしく","おいしく"],"te":["おいしくて","おいしくて"]},"d":["npa","npn","pa","pn","np","nn","pp","pnp","dsh","mod","adv","te"],"po":{"npa":["おいしくないです","おいしかったです","おいしくなかったです"],"npn":["おいしいです","おいしかったです","おいしくなかったです"],"pa":["おいしいです","おいしくないです","おいしくなかったです"],"pn":["おいしいです","おいしくないです","おいしかったです"],"np":["おいしくない","おいしかった","おいしくなかった"],"nn":["おいしい","おいしかった","おいしくなかった"],"pp":["おいしい","おいしくない","おいしくなかった"],"pnp":["おいしい","おいしくない","おいしかった"],"dsh":["おいしく","おいしいだ","おいしいな"],"mod":["おいしく","おいしくて","おいしいな"],"adv":["おいしい","おいしくて","おいしいに"],"te":["おいしい","おいしいで","おいしいくて"]},"pt":{}},{"w":"まずい","say":"まずい","r":"","m":"bad-tasting","type":"i","kj":false,"note":"","ex":[],"f":{"npa":["まずいです","まずいです"],"npn":["まずくないです","まずくないです"],"pa":["まずかったです","まずかったです"],"pn":["まずくなかったです","まずくなかったです"],"np":["まずい","まずい"],"nn":["まずくない","まずくない"],"pp":["まずかった","まずかった"],"pnp":["まずくなかった","まずくなかった"],"dsh":["まずい","まずい"],"mod":["まずい","まずい"],"adv":["まずく","まずく"],"te":["まずくて","まずくて"]},"d":["npa","npn","pa","pn","np","nn","pp","pnp","dsh","mod","adv","te"],"po":{"npa":["まずくないです","まずかったです","まずくなかったです"],"npn":["まずいです","まずかったです","まずくなかったです"],"pa":["まずいです","まずくないです","まずくなかったです"],"pn":["まずいです","まずくないです","まずかったです"],"np":["まずくない","まずかった","まずくなかった"],"nn":["まずい","まずかった","まずくなかった"],"pp":["まずい","まずくない","まずくなかった"],"pnp":["まずい","まずくない","まずかった"],"dsh":["まずく","まずいだ","まずいな"],"mod":["まずく","まずくて","まずいな"],"adv":["まずい","まずくて","まずいに"],"te":["まずい","まずいで","まずいくて"]},"pt":{}},{"w":"いい","say":"いい","r":"","m":"good","type":"i","kj":false,"note":"Irregular. Every form except いい itself uses よ: よくない, よかった, よく.","ex":[],"f":{"npa":["いいです","いいです"],"npn":["よくないです","よくないです"],"pa":["よかったです","よかったです"],"pn":["よくなかったです","よくなかったです"],"np":["いい","いい"],"nn":["よくない","よくない"],"pp":["よかった","よかった"],"pnp":["よくなかった","よくなかった"],"dsh":["いい","いい"],"mod":["いい","いい"],"adv":["よく","よく"],"te":["よくて","よくて"]},"d":["npa","npn","pa","pn","np","nn","pp","pnp","dsh","mod","adv","te"],"po":{"npa":["よくないです","よかったです","よくなかったです"],"npn":["いいです","よかったです","よくなかったです"],"pa":["いいです","よくないです","よくなかったです"],"pn":["いいです","よくないです","よかったです"],"np":["よくない","よかった","よくなかった"],"nn":["いい","よかった","よくなかった"],"pp":["いい","よくない","よくなかった"],"pnp":["いい","よくない","よかった"],"dsh":["よく","いいだ","いいな"],"mod":["よく","よくて","いいな"],"adv":["いい","よくて","いいに"],"te":["いい","いいで","いいくて"]},"pt":{"npn":"いくないです","pa":"いかったです","pn":"いくなかったです","nn":"いくない","pp":"いかった","pnp":"いくなかった","adv":"いく","te":"いくて"}},{"w":"よい","say":"よい","r":"","m":"good (formal)","type":"i","kj":false,"note":"","ex":[],"f":{"npa":["よいです","よいです"],"npn":["よくないです","よくないです"],"pa":["よかったです","よかったです"],"pn":["よくなかったです","よくなかったです"],"np":["よい","よい"],"nn":["よくない","よくない"],"pp":["よかった","よかった"],"pnp":["よくなかった","よくなかった"],"dsh":["よい","よい"],"mod":["よい","よい"],"adv":["よく","よく"],"te":["よくて","よくて"]},"d":["npa","npn","pa","pn","np","nn","pp","pnp","dsh","mod","adv","te"],"po":{"npa":["よくないです","よかったです","よくなかったです"],"npn":["よいです","よかったです","よくなかったです"],"pa":["よいです","よくないです","よくなかったです"],"pn":["よいです","よくないです","よかったです"],"np":["よくない","よかった","よくなかった"],"nn":["よい","よかった","よくなかった"],"pp":["よい","よくない","よくなかった"],"pnp":["よい","よくない","よかった"],"dsh":["よく","よいだ","よいな"],"mod":["よく","よくて","よいな"],"adv":["よい","よくて","よいに"],"te":["よい","よいで","よいくて"]},"pt":{}},{"w":"わるい","say":"わるい","r":"","m":"bad","type":"i","kj":false,"note":"","ex":[],"f":{"npa":["わるいです","わるいです"],"npn":["わるくないです","わるくないです"],"pa":["わるかったです","わるかったです"],"pn":["わるくなかったです","わるくなかったです"],"np":["わるい","わるい"],"nn":["わるくない","わるくない"],"pp":["わるかった","わるかった"],"pnp":["わるくなかった","わるくなかった"],"dsh":["わるい","わるい"],"mod":["わるい","わるい"],"adv":["わるく","わるく"],"te":["わるくて","わるくて"]},"d":["npa","npn","pa","pn","np","nn","pp","pnp","dsh","mod","adv","te"],"po":{"npa":["わるくないです","わるかったです","わるくなかったです"],"npn":["わるいです","わるかったです","わるくなかったです"],"pa":["わるいです","わるくないです","わるくなかったです"],"pn":["わるいです","わるくないです","わるかったです"],"np":["わるくない","わるかった","わるくなかった"],"nn":["わるい","わるかった","わるくなかった"],"pp":["わるい","わるくない","わるくなかった"],"pnp":["わるい","わるくない","わるかった"],"dsh":["わるく","わるいだ","わるいな"],"mod":["わるく","わるくて","わるいな"],"adv":["わるい","わるくて","わるいに"],"te":["わるい","わるいで","わるいくて"]},"pt":{}},{"w":"大きい","say":"おおきい","r":"おおきい","m":"big","type":"i","kj":true,"note":"Also written 大きな before a noun: 大きな いえ.","ex":[],"f":{"npa":["大きいです","おおきいです"],"npn":["大きくないです","おおきくないです"],"pa":["大きかったです","おおきかったです"],"pn":["大きくなかったです","おおきくなかったです"],"np":["大きい","おおきい"],"nn":["大きくない","おおきくない"],"pp":["大きかった","おおきかった"],"pnp":["大きくなかった","おおきくなかった"],"dsh":["大きい","おおきい"],"mod":["大きい","おおきい"],"adv":["大きく","おおきく"],"te":["大きくて","おおきくて"]},"d":["npa","npn","pa","pn","np","nn","pp","pnp","dsh","mod","adv","te"],"po":{"npa":["大きくないです","大きかったです","大きくなかったです"],"npn":["大きいです","大きかったです","大きくなかったです"],"pa":["大きいです","大きくないです","大きくなかったです"],"pn":["大きいです","大きくないです","大きかったです"],"np":["大きくない","大きかった","大きくなかった"],"nn":["大きい","大きかった","大きくなかった"],"pp":["大きい","大きくない","大きくなかった"],"pnp":["大きい","大きくない","大きかった"],"dsh":["大きく","大きいだ","大きいな"],"mod":["大きく","大きくて","大きいな"],"adv":["大きい","大きくて","大きいに"],"te":["大きい","大きいで","大きいくて"]},"pt":{}},{"w":"小さい","say":"ちいさい","r":"ちいさい","m":"small","type":"i","kj":true,"note":"Also written 小さな before a noun: 小さな いえ.","ex":[],"f":{"npa":["小さいです","ちいさいです"],"npn":["小さくないです","ちいさくないです"],"pa":["小さかったです","ちいさかったです"],"pn":["小さくなかったです","ちいさくなかったです"],"np":["小さい","ちいさい"],"nn":["小さくない","ちいさくない"],"pp":["小さかった","ちいさかった"],"pnp":["小さくなかった","ちいさくなかった"],"dsh":["小さい","ちいさい"],"mod":["小さい","ちいさい"],"adv":["小さく","ちいさく"],"te":["小さくて","ちいさくて"]},"d":["npa","npn","pa","pn","np","nn","pp","pnp","dsh","mod","adv","te"],"po":{"npa":["小さくないです","小さかったです","小さくなかったです"],"npn":["小さいです","小さかったです","小さくなかったです"],"pa":["小さいです","小さくないです","小さくなかったです"],"pn":["小さいです","小さくないです","小さかったです"],"np":["小さくない","小さかった","小さくなかった"],"nn":["小さい","小さかった","小さくなかった"],"pp":["小さい","小さくない","小さくなかった"],"pnp":["小さい","小さくない","小さかった"],"dsh":["小さく","小さいだ","小さいな"],"mod":["小さく","小さくて","小さいな"],"adv":["小さい","小さくて","小さいに"],"te":["小さい","小さいで","小さいくて"]},"pt":{}},{"w":"高い","say":"たかい","r":"たかい","m":"tall; expensive","type":"i","kj":true,"note":"","ex":[],"f":{"npa":["高いです","たかいです"],"npn":["高くないです","たかくないです"],"pa":["高かったです","たかかったです"],"pn":["高くなかったです","たかくなかったです"],"np":["高い","たかい"],"nn":["高くない","たかくない"],"pp":["高かった","たかかった"],"pnp":["高くなかった","たかくなかった"],"dsh":["高い","たかい"],"mod":["高い","たかい"],"adv":["高く","たかく"],"te":["高くて","たかくて"]},"d":["npa","npn","pa","pn","np","nn","pp","pnp","dsh","mod","adv","te"],"po":{"npa":["高くないです","高かったです","高くなかったです"],"npn":["高いです","高かったです","高くなかったです"],"pa":["高いです","高くないです","高くなかったです"],"pn":["高いです","高くないです","高かったです"],"np":["高くない","高かった","高くなかった"],"nn":["高い","高かった","高くなかった"],"pp":["高い","高くない","高くなかった"],"pnp":["高い","高くない","高かった"],"dsh":["高く","高いだ","高いな"],"mod":["高く","高くて","高いな"],"adv":["高い","高くて","高いに"],"te":["高い","高いで","高いくて"]},"pt":{}},{"w":"ひくい","say":"ひくい","r":"","m":"low, short","type":"i","kj":false,"note":"","ex":[],"f":{"npa":["ひくいです","ひくいです"],"npn":["ひくくないです","ひくくないです"],"pa":["ひくかったです","ひくかったです"],"pn":["ひくくなかったです","ひくくなかったです"],"np":["ひくい","ひくい"],"nn":["ひくくない","ひくくない"],"pp":["ひくかった","ひくかった"],"pnp":["ひくくなかった","ひくくなかった"],"dsh":["ひくい","ひくい"],"mod":["ひくい","ひくい"],"adv":["ひくく","ひくく"],"te":["ひくくて","ひくくて"]},"d":["npa","npn","pa","pn","np","nn","pp","pnp","dsh","mod","adv","te"],"po":{"npa":["ひくくないです","ひくかったです","ひくくなかったです"],"npn":["ひくいです","ひくかったです","ひくくなかったです"],"pa":["ひくいです","ひくくないです","ひくくなかったです"],"pn":["ひくいです","ひくくないです","ひくかったです"],"np":["ひくくない","ひくかった","ひくくなかった"],"nn":["ひくい","ひくかった","ひくくなかった"],"pp":["ひくい","ひくくない","ひくくなかった"],"pnp":["ひくい","ひくくない","ひくかった"],"dsh":["ひくく","ひくいだ","ひくいな"],"mod":["ひくく","ひくくて","ひくいな"],"adv":["ひくい","ひくくて","ひくいに"],"te":["ひくい","ひくいで","ひくいくて"]},"pt":{}},{"w":"安い","say":"やすい","r":"やすい","m":"cheap","type":"i","kj":true,"note":"","ex":[],"f":{"npa":["安いです","やすいです"],"npn":["安くないです","やすくないです"],"pa":["安かったです","やすかったです"],"pn":["安くなかったです","やすくなかったです"],"np":["安い","やすい"],"nn":["安くない","やすくない"],"pp":["安かった","やすかった"],"pnp":["安くなかった","やすくなかった"],"dsh":["安い","やすい"],"mod":["安い","やすい"],"adv":["安く","やすく"],"te":["安くて","やすくて"]},"d":["npa","npn","pa","pn","np","nn","pp","pnp","dsh","mod","adv","te"],"po":{"npa":["安くないです","安かったです","安くなかったです"],"npn":["安いです","安かったです","安くなかったです"],"pa":["安いです","安くないです","安くなかったです"],"pn":["安いです","安くないです","安かったです"],"np":["安くない","安かった","安くなかった"],"nn":["安い","安かった","安くなかった"],"pp":["安い","安くない","安くなかった"],"pnp":["安い","安くない","安かった"],"dsh":["安く","安いだ","安いな"],"mod":["安く","安くて","安いな"],"adv":["安い","安くて","安いに"],"te":["安い","安いで","安いくて"]},"pt":{}},{"w":"長い","say":"ながい","r":"ながい","m":"long","type":"i","kj":true,"note":"","ex":[],"f":{"npa":["長いです","ながいです"],"npn":["長くないです","ながくないです"],"pa":["長かったです","ながかったです"],"pn":["長くなかったです","ながくなかったです"],"np":["長い","ながい"],"nn":["長くない","ながくない"],"pp":["長かった","ながかった"],"pnp":["長くなかった","ながくなかった"],"dsh":["長い","ながい"],"mod":["長い","ながい"],"adv":["長く","ながく"],"te":["長くて","ながくて"]},"d":["npa","npn","pa","pn","np","nn","pp","pnp","dsh","mod","adv","te"],"po":{"npa":["長くないです","長かったです","長くなかったです"],"npn":["長いです","長かったです","長くなかったです"],"pa":["長いです","長くないです","長くなかったです"],"pn":["長いです","長くないです","長かったです"],"np":["長くない","長かった","長くなかった"],"nn":["長い","長かった","長くなかった"],"pp":["長い","長くない","長くなかった"],"pnp":["長い","長くない","長かった"],"dsh":["長く","長いだ","長いな"],"mod":["長く","長くて","長いな"],"adv":["長い","長くて","長いに"],"te":["長い","長いで","長いくて"]},"pt":{}},{"w":"みじかい","say":"みじかい","r":"","m":"short","type":"i","kj":false,"note":"","ex":[],"f":{"npa":["みじかいです","みじかいです"],"npn":["みじかくないです","みじかくないです"],"pa":["みじかかったです","みじかかったです"],"pn":["みじかくなかったです","みじかくなかったです"],"np":["みじかい","みじかい"],"nn":["みじかくない","みじかくない"],"pp":["みじかかった","みじかかった"],"pnp":["みじかくなかった","みじかくなかった"],"dsh":["みじかい","みじかい"],"mod":["みじかい","みじかい"],"adv":["みじかく","みじかく"],"te":["みじかくて","みじかくて"]},"d":["npa","npn","pa","pn","np","nn","pp","pnp","dsh","mod","adv","te"],"po":{"npa":["みじかくないです","みじかかったです","みじかくなかったです"],"npn":["みじかいです","みじかかったです","みじかくなかったです"],"pa":["みじかいです","みじかくないです","みじかくなかったです"],"pn":["みじかいです","みじかくないです","みじかかったです"],"np":["みじかくない","みじかかった","みじかくなかった"],"nn":["みじかい","みじかかった","みじかくなかった"],"pp":["みじかい","みじかくない","みじかくなかった"],"pnp":["みじかい","みじかくない","みじかかった"],"dsh":["みじかく","みじかいだ","みじかいな"],"mod":["みじかく","みじかくて","みじかいな"],"adv":["みじかい","みじかくて","みじかいに"],"te":["みじかい","みじかいで","みじかいくて"]},"pt":{}},{"w":"ふとい","say":"ふとい","r":"","m":"thick, fat","type":"i","kj":false,"note":"","ex":[],"f":{"npa":["ふといです","ふといです"],"npn":["ふとくないです","ふとくないです"],"pa":["ふとかったです","ふとかったです"],"pn":["ふとくなかったです","ふとくなかったです"],"np":["ふとい","ふとい"],"nn":["ふとくない","ふとくない"],"pp":["ふとかった","ふとかった"],"pnp":["ふとくなかった","ふとくなかった"],"dsh":["ふとい","ふとい"],"mod":["ふとい","ふとい"],"adv":["ふとく","ふとく"],"te":["ふとくて","ふとくて"]},"d":["npa","npn","pa","pn","np","nn","pp","pnp","dsh","mod","adv","te"],"po":{"npa":["ふとくないです","ふとかったです","ふとくなかったです"],"npn":["ふといです","ふとかったです","ふとくなかったです"],"pa":["ふといです","ふとくないです","ふとくなかったです"],"pn":["ふといです","ふとくないです","ふとかったです"],"np":["ふとくない","ふとかった","ふとくなかった"],"nn":["ふとい","ふとかった","ふとくなかった"],"pp":["ふとい","ふとくない","ふとくなかった"],"pnp":["ふとい","ふとくない","ふとかった"],"dsh":["ふとく","ふといだ","ふといな"],"mod":["ふとく","ふとくて","ふといな"],"adv":["ふとい","ふとくて","ふといに"],"te":["ふとい","ふといで","ふといくて"]},"pt":{}},{"w":"ほそい","say":"ほそい","r":"","m":"thin, slender","type":"i","kj":false,"note":"","ex":[],"f":{"npa":["ほそいです","ほそいです"],"npn":["ほそくないです","ほそくないです"],"pa":["ほそかったです","ほそかったです"],"pn":["ほそくなかったです","ほそくなかったです"],"np":["ほそい","ほそい"],"nn":["ほそくない","ほそくない"],"pp":["ほそかった","ほそかった"],"pnp":["ほそくなかった","ほそくなかった"],"dsh":["ほそい","ほそい"],"mod":["ほそい","ほそい"],"adv":["ほそく","ほそく"],"te":["ほそくて","ほそくて"]},"d":["npa","npn","pa","pn","np","nn","pp","pnp","dsh","mod","adv","te"],"po":{"npa":["ほそくないです","ほそかったです","ほそくなかったです"],"npn":["ほそいです","ほそかったです","ほそくなかったです"],"pa":["ほそいです","ほそくないです","ほそくなかったです"],"pn":["ほそいです","ほそくないです","ほそかったです"],"np":["ほそくない","ほそかった","ほそくなかった"],"nn":["ほそい","ほそかった","ほそくなかった"],"pp":["ほそい","ほそくない","ほそくなかった"],"pnp":["ほそい","ほそくない","ほそかった"],"dsh":["ほそく","ほそいだ","ほそいな"],"mod":["ほそく","ほそくて","ほそいな"],"adv":["ほそい","ほそくて","ほそいに"],"te":["ほそい","ほそいで","ほそいくて"]},"pt":{}},{"w":"ひろい","say":"ひろい","r":"","m":"wide, spacious","type":"i","kj":false,"note":"","ex":[],"f":{"npa":["ひろいです","ひろいです"],"npn":["ひろくないです","ひろくないです"],"pa":["ひろかったです","ひろかったです"],"pn":["ひろくなかったです","ひろくなかったです"],"np":["ひろい","ひろい"],"nn":["ひろくない","ひろくない"],"pp":["ひろかった","ひろかった"],"pnp":["ひろくなかった","ひろくなかった"],"dsh":["ひろい","ひろい"],"mod":["ひろい","ひろい"],"adv":["ひろく","ひろく"],"te":["ひろくて","ひろくて"]},"d":["npa","npn","pa","pn","np","nn","pp","pnp","dsh","mod","adv","te"],"po":{"npa":["ひろくないです","ひろかったです","ひろくなかったです"],"npn":["ひろいです","ひろかったです","ひろくなかったです"],"pa":["ひろいです","ひろくないです","ひろくなかったです"],"pn":["ひろいです","ひろくないです","ひろかったです"],"np":["ひろくない","ひろかった","ひろくなかった"],"nn":["ひろい","ひろかった","ひろくなかった"],"pp":["ひろい","ひろくない","ひろくなかった"],"pnp":["ひろい","ひろくない","ひろかった"],"dsh":["ひろく","ひろいだ","ひろいな"],"mod":["ひろく","ひろくて","ひろいな"],"adv":["ひろい","ひろくて","ひろいに"],"te":["ひろい","ひろいで","ひろいくて"]},"pt":{}},{"w":"せまい","say":"せまい","r":"","m":"narrow, cramped","type":"i","kj":false,"note":"","ex":[],"f":{"npa":["せまいです","せまいです"],"npn":["せまくないです","せまくないです"],"pa":["せまかったです","せまかったです"],"pn":["せまくなかったです","せまくなかったです"],"np":["せまい","せまい"],"nn":["せまくない","せまくない"],"pp":["せまかった","せまかった"],"pnp":["せまくなかった","せまくなかった"],"dsh":["せまい","せまい"],"mod":["せまい","せまい"],"adv":["せまく","せまく"],"te":["せまくて","せまくて"]},"d":["npa","npn","pa","pn","np","nn","pp","pnp","dsh","mod","adv","te"],"po":{"npa":["せまくないです","せまかったです","せまくなかったです"],"npn":["せまいです","せまかったです","せまくなかったです"],"pa":["せまいです","せまくないです","せまくなかったです"],"pn":["せまいです","せまくないです","せまかったです"],"np":["せまくない","せまかった","せまくなかった"],"nn":["せまい","せまかった","せまくなかった"],"pp":["せまい","せまくない","せまくなかった"],"pnp":["せまい","せまくない","せまかった"],"dsh":["せまく","せまいだ","せまいな"],"mod":["せまく","せまくて","せまいな"],"adv":["せまい","せまくて","せまいに"],"te":["せまい","せまいで","せまいくて"]},"pt":{}},{"w":"おもい","say":"おもい","r":"","m":"heavy","type":"i","kj":false,"note":"","ex":[],"f":{"npa":["おもいです","おもいです"],"npn":["おもくないです","おもくないです"],"pa":["おもかったです","おもかったです"],"pn":["おもくなかったです","おもくなかったです"],"np":["おもい","おもい"],"nn":["おもくない","おもくない"],"pp":["おもかった","おもかった"],"pnp":["おもくなかった","おもくなかった"],"dsh":["おもい","おもい"],"mod":["おもい","おもい"],"adv":["おもく","おもく"],"te":["おもくて","おもくて"]},"d":["npa","npn","pa","pn","np","nn","pp","pnp","dsh","mod","adv","te"],"po":{"npa":["おもくないです","おもかったです","おもくなかったです"],"npn":["おもいです","おもかったです","おもくなかったです"],"pa":["おもいです","おもくないです","おもくなかったです"],"pn":["おもいです","おもくないです","おもかったです"],"np":["おもくない","おもかった","おもくなかった"],"nn":["おもい","おもかった","おもくなかった"],"pp":["おもい","おもくない","おもくなかった"],"pnp":["おもい","おもくない","おもかった"],"dsh":["おもく","おもいだ","おもいな"],"mod":["おもく","おもくて","おもいな"],"adv":["おもい","おもくて","おもいに"],"te":["おもい","おもいで","おもいくて"]},"pt":{}},{"w":"かるい","say":"かるい","r":"","m":"light (weight)","type":"i","kj":false,"note":"","ex":[],"f":{"npa":["かるいです","かるいです"],"npn":["かるくないです","かるくないです"],"pa":["かるかったです","かるかったです"],"pn":["かるくなかったです","かるくなかったです"],"np":["かるい","かるい"],"nn":["かるくない","かるくない"],"pp":["かるかった","かるかった"],"pnp":["かるくなかった","かるくなかった"],"dsh":["かるい","かるい"],"mod":["かるい","かるい"],"adv":["かるく","かるく"],"te":["かるくて","かるくて"]},"d":["npa","npn","pa","pn","np","nn","pp","pnp","dsh","mod","adv","te"],"po":{"npa":["かるくないです","かるかったです","かるくなかったです"],"npn":["かるいです","かるかったです","かるくなかったです"],"pa":["かるいです","かるくないです","かるくなかったです"],"pn":["かるいです","かるくないです","かるかったです"],"np":["かるくない","かるかった","かるくなかった"],"nn":["かるい","かるかった","かるくなかった"],"pp":["かるい","かるくない","かるくなかった"],"pnp":["かるい","かるくない","かるかった"],"dsh":["かるく","かるいだ","かるいな"],"mod":["かるく","かるくて","かるいな"],"adv":["かるい","かるくて","かるいに"],"te":["かるい","かるいで","かるいくて"]},"pt":{}},{"w":"ちかい","say":"ちかい","r":"","m":"near","type":"i","kj":false,"note":"","ex":[],"f":{"npa":["ちかいです","ちかいです"],"npn":["ちかくないです","ちかくないです"],"pa":["ちかかったです","ちかかったです"],"pn":["ちかくなかったです","ちかくなかったです"],"np":["ちかい","ちかい"],"nn":["ちかくない","ちかくない"],"pp":["ちかかった","ちかかった"],"pnp":["ちかくなかった","ちかくなかった"],"dsh":["ちかい","ちかい"],"mod":["ちかい","ちかい"],"adv":["ちかく","ちかく"],"te":["ちかくて","ちかくて"]},"d":["npa","npn","pa","pn","np","nn","pp","pnp","dsh","mod","adv","te"],"po":{"npa":["ちかくないです","ちかかったです","ちかくなかったです"],"npn":["ちかいです","ちかかったです","ちかくなかったです"],"pa":["ちかいです","ちかくないです","ちかくなかったです"],"pn":["ちかいです","ちかくないです","ちかかったです"],"np":["ちかくない","ちかかった","ちかくなかった"],"nn":["ちかい","ちかかった","ちかくなかった"],"pp":["ちかい","ちかくない","ちかくなかった"],"pnp":["ちかい","ちかくない","ちかかった"],"dsh":["ちかく","ちかいだ","ちかいな"],"mod":["ちかく","ちかくて","ちかいな"],"adv":["ちかい","ちかくて","ちかいに"],"te":["ちかい","ちかいで","ちかいくて"]},"pt":{}},{"w":"とおい","say":"とおい","r":"","m":"far","type":"i","kj":false,"note":"","ex":[],"f":{"npa":["とおいです","とおいです"],"npn":["とおくないです","とおくないです"],"pa":["とおかったです","とおかったです"],"pn":["とおくなかったです","とおくなかったです"],"np":["とおい","とおい"],"nn":["とおくない","とおくない"],"pp":["とおかった","とおかった"],"pnp":["とおくなかった","とおくなかった"],"dsh":["とおい","とおい"],"mod":["とおい","とおい"],"adv":["とおく","とおく"],"te":["とおくて","とおくて"]},"d":["npa","npn","pa","pn","np","nn","pp","pnp","dsh","mod","adv","te"],"po":{"npa":["とおくないです","とおかったです","とおくなかったです"],"npn":["とおいです","とおかったです","とおくなかったです"],"pa":["とおいです","とおくないです","とおくなかったです"],"pn":["とおいです","とおくないです","とおかったです"],"np":["とおくない","とおかった","とおくなかった"],"nn":["とおい","とおかった","とおくなかった"],"pp":["とおい","とおくない","とおくなかった"],"pnp":["とおい","とおくない","とおかった"],"dsh":["とおく","とおいだ","とおいな"],"mod":["とおく","とおくて","とおいな"],"adv":["とおい","とおくて","とおいに"],"te":["とおい","とおいで","とおいくて"]},"pt":{}},{"w":"早い","say":"はやい","r":"はやい","m":"early","type":"i","kj":true,"note":"","ex":[],"f":{"npa":["早いです","はやいです"],"npn":["早くないです","はやくないです"],"pa":["早かったです","はやかったです"],"pn":["早くなかったです","はやくなかったです"],"np":["早い","はやい"],"nn":["早くない","はやくない"],"pp":["早かった","はやかった"],"pnp":["早くなかった","はやくなかった"],"dsh":["早い","はやい"],"mod":["早い","はやい"],"adv":["早く","はやく"],"te":["早くて","はやくて"]},"d":["npa","npn","pa","pn","np","nn","pp","pnp","dsh","mod","adv","te"],"po":{"npa":["早くないです","早かったです","早くなかったです"],"npn":["早いです","早かったです","早くなかったです"],"pa":["早いです","早くないです","早くなかったです"],"pn":["早いです","早くないです","早かったです"],"np":["早くない","早かった","早くなかった"],"nn":["早い","早かった","早くなかった"],"pp":["早い","早くない","早くなかった"],"pnp":["早い","早くない","早かった"],"dsh":["早く","早いだ","早いな"],"mod":["早く","早くて","早いな"],"adv":["早い","早くて","早いに"],"te":["早い","早いで","早いくて"]},"pt":{}},{"w":"はやい","say":"はやい","r":"","m":"fast","type":"i","kj":false,"note":"","ex":[],"f":{"npa":["はやいです","はやいです"],"npn":["はやくないです","はやくないです"],"pa":["はやかったです","はやかったです"],"pn":["はやくなかったです","はやくなかったです"],"np":["はやい","はやい"],"nn":["はやくない","はやくない"],"pp":["はやかった","はやかった"],"pnp":["はやくなかった","はやくなかった"],"dsh":["はやい","はやい"],"mod":["はやい","はやい"],"adv":["はやく","はやく"],"te":["はやくて","はやくて"]},"d":["npa","npn","pa","pn","np","nn","pp","pnp","dsh","mod","adv","te"],"po":{"npa":["はやくないです","はやかったです","はやくなかったです"],"npn":["はやいです","はやかったです","はやくなかったです"],"pa":["はやいです","はやくないです","はやくなかったです"],"pn":["はやいです","はやくないです","はやかったです"],"np":["はやくない","はやかった","はやくなかった"],"nn":["はやい","はやかった","はやくなかった"],"pp":["はやい","はやくない","はやくなかった"],"pnp":["はやい","はやくない","はやかった"],"dsh":["はやく","はやいだ","はやいな"],"mod":["はやく","はやくて","はやいな"],"adv":["はやい","はやくて","はやいに"],"te":["はやい","はやいで","はやいくて"]},"pt":{}},{"w":"おそい","say":"おそい","r":"","m":"late; slow","type":"i","kj":false,"note":"","ex":[],"f":{"npa":["おそいです","おそいです"],"npn":["おそくないです","おそくないです"],"pa":["おそかったです","おそかったです"],"pn":["おそくなかったです","おそくなかったです"],"np":["おそい","おそい"],"nn":["おそくない","おそくない"],"pp":["おそかった","おそかった"],"pnp":["おそくなかった","おそくなかった"],"dsh":["おそい","おそい"],"mod":["おそい","おそい"],"adv":["おそく","おそく"],"te":["おそくて","おそくて"]},"d":["npa","npn","pa","pn","np","nn","pp","pnp","dsh","mod","adv","te"],"po":{"npa":["おそくないです","おそかったです","おそくなかったです"],"npn":["おそいです","おそかったです","おそくなかったです"],"pa":["おそいです","おそくないです","おそくなかったです"],"pn":["おそいです","おそくないです","おそかったです"],"np":["おそくない","おそかった","おそくなかった"],"nn":["おそい","おそかった","おそくなかった"],"pp":["おそい","おそくない","おそくなかった"],"pnp":["おそい","おそくない","おそかった"],"dsh":["おそく","おそいだ","おそいな"],"mod":["おそく","おそくて","おそいな"],"adv":["おそい","おそくて","おそいに"],"te":["おそい","おそいで","おそいくて"]},"pt":{}},{"w":"多い","say":"おおい","r":"おおい","m":"many, a lot","type":"i","kj":true,"note":"","ex":[],"f":{"npa":["多いです","おおいです"],"npn":["多くないです","おおくないです"],"pa":["多かったです","おおかったです"],"pn":["多くなかったです","おおくなかったです"],"np":["多い","おおい"],"nn":["多くない","おおくない"],"pp":["多かった","おおかった"],"pnp":["多くなかった","おおくなかった"],"dsh":["多い","おおい"],"mod":["多い","おおい"],"adv":["多く","おおく"],"te":["多くて","おおくて"]},"d":["npa","npn","pa","pn","np","nn","pp","pnp","dsh","mod","adv","te"],"po":{"npa":["多くないです","多かったです","多くなかったです"],"npn":["多いです","多かったです","多くなかったです"],"pa":["多いです","多くないです","多くなかったです"],"pn":["多いです","多くないです","多かったです"],"np":["多くない","多かった","多くなかった"],"nn":["多い","多かった","多くなかった"],"pp":["多い","多くない","多くなかった"],"pnp":["多い","多くない","多かった"],"dsh":["多く","多いだ","多いな"],"mod":["多く","多くて","多いな"],"adv":["多い","多くて","多いに"],"te":["多い","多いで","多いくて"]},"pt":{}},{"w":"少ない","say":"すくない","r":"すくない","m":"few, a little","type":"i","kj":true,"note":"","ex":[],"f":{"npa":["少ないです","すくないです"],"npn":["少なくないです","すくなくないです"],"pa":["少なかったです","すくなかったです"],"pn":["少なくなかったです","すくなくなかったです"],"np":["少ない","すくない"],"nn":["少なくない","すくなくない"],"pp":["少なかった","すくなかった"],"pnp":["少なくなかった","すくなくなかった"],"dsh":["少ない","すくない"],"mod":["少ない","すくない"],"adv":["少なく","すくなく"],"te":["少なくて","すくなくて"]},"d":["npa","npn","pa","pn","np","nn","pp","pnp","dsh","mod","adv","te"],"po":{"npa":["少なくないです","少なかったです","少なくなかったです"],"npn":["少ないです","少なかったです","少なくなかったです"],"pa":["少ないです","少なくないです","少なくなかったです"],"pn":["少ないです","少なくないです","少なかったです"],"np":["少なくない","少なかった","少なくなかった"],"nn":["少ない","少なかった","少なくなかった"],"pp":["少ない","少なくない","少なくなかった"],"pnp":["少ない","少なくない","少なかった"],"dsh":["少なく","少ないだ","少ないな"],"mod":["少なく","少なくて","少ないな"],"adv":["少ない","少なくて","少ないに"],"te":["少ない","少ないで","少ないくて"]},"pt":{}},{"w":"つよい","say":"つよい","r":"","m":"strong","type":"i","kj":false,"note":"","ex":[],"f":{"npa":["つよいです","つよいです"],"npn":["つよくないです","つよくないです"],"pa":["つよかったです","つよかったです"],"pn":["つよくなかったです","つよくなかったです"],"np":["つよい","つよい"],"nn":["つよくない","つよくない"],"pp":["つよかった","つよかった"],"pnp":["つよくなかった","つよくなかった"],"dsh":["つよい","つよい"],"mod":["つよい","つよい"],"adv":["つよく","つよく"],"te":["つよくて","つよくて"]},"d":["npa","npn","pa","pn","np","nn","pp","pnp","dsh","mod","adv","te"],"po":{"npa":["つよくないです","つよかったです","つよくなかったです"],"npn":["つよいです","つよかったです","つよくなかったです"],"pa":["つよいです","つよくないです","つよくなかったです"],"pn":["つよいです","つよくないです","つよかったです"],"np":["つよくない","つよかった","つよくなかった"],"nn":["つよい","つよかった","つよくなかった"],"pp":["つよい","つよくない","つよくなかった"],"pnp":["つよい","つよくない","つよかった"],"dsh":["つよく","つよいだ","つよいな"],"mod":["つよく","つよくて","つよいな"],"adv":["つよい","つよくて","つよいに"],"te":["つよい","つよいで","つよいくて"]},"pt":{}},{"w":"よわい","say":"よわい","r":"","m":"weak","type":"i","kj":false,"note":"","ex":[],"f":{"npa":["よわいです","よわいです"],"npn":["よわくないです","よわくないです"],"pa":["よわかったです","よわかったです"],"pn":["よわくなかったです","よわくなかったです"],"np":["よわい","よわい"],"nn":["よわくない","よわくない"],"pp":["よわかった","よわかった"],"pnp":["よわくなかった","よわくなかった"],"dsh":["よわい","よわい"],"mod":["よわい","よわい"],"adv":["よわく","よわく"],"te":["よわくて","よわくて"]},"d":["npa","npn","pa","pn","np","nn","pp","pnp","dsh","mod","adv","te"],"po":{"npa":["よわくないです","よわかったです","よわくなかったです"],"npn":["よわいです","よわかったです","よわくなかったです"],"pa":["よわいです","よわくないです","よわくなかったです"],"pn":["よわいです","よわくないです","よわかったです"],"np":["よわくない","よわかった","よわくなかった"],"nn":["よわい","よわかった","よわくなかった"],"pp":["よわい","よわくない","よわくなかった"],"pnp":["よわい","よわくない","よわかった"],"dsh":["よわく","よわいだ","よわいな"],"mod":["よわく","よわくて","よわいな"],"adv":["よわい","よわくて","よわいに"],"te":["よわい","よわいで","よわいくて"]},"pt":{}},{"w":"むずかしい","say":"むずかしい","r":"","m":"difficult","type":"i","kj":false,"note":"","ex":[],"f":{"npa":["むずかしいです","むずかしいです"],"npn":["むずかしくないです","むずかしくないです"],"pa":["むずかしかったです","むずかしかったです"],"pn":["むずかしくなかったです","むずかしくなかったです"],"np":["むずかしい","むずかしい"],"nn":["むずかしくない","むずかしくない"],"pp":["むずかしかった","むずかしかった"],"pnp":["むずかしくなかった","むずかしくなかった"],"dsh":["むずかしい","むずかしい"],"mod":["むずかしい","むずかしい"],"adv":["むずかしく","むずかしく"],"te":["むずかしくて","むずかしくて"]},"d":["npa","npn","pa","pn","np","nn","pp","pnp","dsh","mod","adv","te"],"po":{"npa":["むずかしくないです","むずかしかったです","むずかしくなかったです"],"npn":["むずかしいです","むずかしかったです","むずかしくなかったです"],"pa":["むずかしいです","むずかしくないです","むずかしくなかったです"],"pn":["むずかしいです","むずかしくないです","むずかしかったです"],"np":["むずかしくない","むずかしかった","むずかしくなかった"],"nn":["むずかしい","むずかしかった","むずかしくなかった"],"pp":["むずかしい","むずかしくない","むずかしくなかった"],"pnp":["むずかしい","むずかしくない","むずかしかった"],"dsh":["むずかしく","むずかしいだ","むずかしいな"],"mod":["むずかしく","むずかしくて","むずかしいな"],"adv":["むずかしい","むずかしくて","むずかしいに"],"te":["むずかしい","むずかしいで","むずかしいくて"]},"pt":{}},{"w":"やさしい","say":"やさしい","r":"","m":"easy; kind, gentle","type":"i","kj":false,"note":"","ex":[],"f":{"npa":["やさしいです","やさしいです"],"npn":["やさしくないです","やさしくないです"],"pa":["やさしかったです","やさしかったです"],"pn":["やさしくなかったです","やさしくなかったです"],"np":["やさしい","やさしい"],"nn":["やさしくない","やさしくない"],"pp":["やさしかった","やさしかった"],"pnp":["やさしくなかった","やさしくなかった"],"dsh":["やさしい","やさしい"],"mod":["やさしい","やさしい"],"adv":["やさしく","やさしく"],"te":["やさしくて","やさしくて"]},"d":["npa","npn","pa","pn","np","nn","pp","pnp","dsh","mod","adv","te"],"po":{"npa":["やさしくないです","やさしかったです","やさしくなかったです"],"npn":["やさしいです","やさしかったです","やさしくなかったです"],"pa":["やさしいです","やさしくないです","やさしくなかったです"],"pn":["やさしいです","やさしくないです","やさしかったです"],"np":["やさしくない","やさしかった","やさしくなかった"],"nn":["やさしい","やさしかった","やさしくなかった"],"pp":["やさしい","やさしくない","やさしくなかった"],"pnp":["やさしい","やさしくない","やさしかった"],"dsh":["やさしく","やさしいだ","やさしいな"],"mod":["やさしく","やさしくて","やさしいな"],"adv":["やさしい","やさしくて","やさしいに"],"te":["やさしい","やさしいで","やさしいくて"]},"pt":{}},{"w":"おもしろい","say":"おもしろい","r":"","m":"interesting, funny","type":"i","kj":false,"note":"","ex":[],"f":{"npa":["おもしろいです","おもしろいです"],"npn":["おもしろくないです","おもしろくないです"],"pa":["おもしろかったです","おもしろかったです"],"pn":["おもしろくなかったです","おもしろくなかったです"],"np":["おもしろい","おもしろい"],"nn":["おもしろくない","おもしろくない"],"pp":["おもしろかった","おもしろかった"],"pnp":["おもしろくなかった","おもしろくなかった"],"dsh":["おもしろい","おもしろい"],"mod":["おもしろい","おもしろい"],"adv":["おもしろく","おもしろく"],"te":["おもしろくて","おもしろくて"]},"d":["npa","npn","pa","pn","np","nn","pp","pnp","dsh","mod","adv","te"],"po":{"npa":["おもしろくないです","おもしろかったです","おもしろくなかったです"],"npn":["おもしろいです","おもしろかったです","おもしろくなかったです"],"pa":["おもしろいです","おもしろくないです","おもしろくなかったです"],"pn":["おもしろいです","おもしろくないです","おもしろかったです"],"np":["おもしろくない","おもしろかった","おもしろくなかった"],"nn":["おもしろい","おもしろかった","おもしろくなかった"],"pp":["おもしろい","おもしろくない","おもしろくなかった"],"pnp":["おもしろい","おもしろくない","おもしろかった"],"dsh":["おもしろく","おもしろいだ","おもしろいな"],"mod":["おもしろく","おもしろくて","おもしろいな"],"adv":["おもしろい","おもしろくて","おもしろいに"],"te":["おもしろい","おもしろいで","おもしろいくて"]},"pt":{}},{"w":"つまらない","say":"つまらない","r":"","m":"boring","type":"i","kj":false,"note":"","ex":[],"f":{"npa":["つまらないです","つまらないです"],"npn":["つまらなくないです","つまらなくないです"],"pa":["つまらなかったです","つまらなかったです"],"pn":["つまらなくなかったです","つまらなくなかったです"],"np":["つまらない","つまらない"],"nn":["つまらなくない","つまらなくない"],"pp":["つまらなかった","つまらなかった"],"pnp":["つまらなくなかった","つまらなくなかった"],"dsh":["つまらない","つまらない"],"mod":["つまらない","つまらない"],"adv":["つまらなく","つまらなく"],"te":["つまらなくて","つまらなくて"]},"d":["npa","npn","pa","pn","np","nn","pp","pnp","dsh","mod","adv","te"],"po":{"npa":["つまらなくないです","つまらなかったです","つまらなくなかったです"],"npn":["つまらないです","つまらなかったです","つまらなくなかったです"],"pa":["つまらないです","つまらなくないです","つまらなくなかったです"],"pn":["つまらないです","つまらなくないです","つまらなかったです"],"np":["つまらなくない","つまらなかった","つまらなくなかった"],"nn":["つまらない","つまらなかった","つまらなくなかった"],"pp":["つまらない","つまらなくない","つまらなくなかった"],"pnp":["つまらない","つまらなくない","つまらなかった"],"dsh":["つまらなく","つまらないだ","つまらないな"],"mod":["つまらなく","つまらなくて","つまらないな"],"adv":["つまらない","つまらなくて","つまらないに"],"te":["つまらない","つまらないで","つまらないくて"]},"pt":{}},{"w":"たのしい","say":"たのしい","r":"","m":"fun, enjoyable","type":"i","kj":false,"note":"","ex":[],"f":{"npa":["たのしいです","たのしいです"],"npn":["たのしくないです","たのしくないです"],"pa":["たのしかったです","たのしかったです"],"pn":["たのしくなかったです","たのしくなかったです"],"np":["たのしい","たのしい"],"nn":["たのしくない","たのしくない"],"pp":["たのしかった","たのしかった"],"pnp":["たのしくなかった","たのしくなかった"],"dsh":["たのしい","たのしい"],"mod":["たのしい","たのしい"],"adv":["たのしく","たのしく"],"te":["たのしくて","たのしくて"]},"d":["npa","npn","pa","pn","np","nn","pp","pnp","dsh","mod","adv","te"],"po":{"npa":["たのしくないです","たのしかったです","たのしくなかったです"],"npn":["たのしいです","たのしかったです","たのしくなかったです"],"pa":["たのしいです","たのしくないです","たのしくなかったです"],"pn":["たのしいです","たのしくないです","たのしかったです"],"np":["たのしくない","たのしかった","たのしくなかった"],"nn":["たのしい","たのしかった","たのしくなかった"],"pp":["たのしい","たのしくない","たのしくなかった"],"pnp":["たのしい","たのしくない","たのしかった"],"dsh":["たのしく","たのしいだ","たのしいな"],"mod":["たのしく","たのしくて","たのしいな"],"adv":["たのしい","たのしくて","たのしいに"],"te":["たのしい","たのしいで","たのしいくて"]},"pt":{}},{"w":"いそがしい","say":"いそがしい","r":"","m":"busy","type":"i","kj":false,"note":"","ex":[],"f":{"npa":["いそがしいです","いそがしいです"],"npn":["いそがしくないです","いそがしくないです"],"pa":["いそがしかったです","いそがしかったです"],"pn":["いそがしくなかったです","いそがしくなかったです"],"np":["いそがしい","いそがしい"],"nn":["いそがしくない","いそがしくない"],"pp":["いそがしかった","いそがしかった"],"pnp":["いそがしくなかった","いそがしくなかった"],"dsh":["いそがしい","いそがしい"],"mod":["いそがしい","いそがしい"],"adv":["いそがしく","いそがしく"],"te":["いそがしくて","いそがしくて"]},"d":["npa","npn","pa","pn","np","nn","pp","pnp","dsh","mod","adv","te"],"po":{"npa":["いそがしくないです","いそがしかったです","いそがしくなかったです"],"npn":["いそがしいです","いそがしかったです","いそがしくなかったです"],"pa":["いそがしいです","いそがしくないです","いそがしくなかったです"],"pn":["いそがしいです","いそがしくないです","いそがしかったです"],"np":["いそがしくない","いそがしかった","いそがしくなかった"],"nn":["いそがしい","いそがしかった","いそがしくなかった"],"pp":["いそがしい","いそがしくない","いそがしくなかった"],"pnp":["いそがしい","いそがしくない","いそがしかった"],"dsh":["いそがしく","いそがしいだ","いそがしいな"],"mod":["いそがしく","いそがしくて","いそがしいな"],"adv":["いそがしい","いそがしくて","いそがしいに"],"te":["いそがしい","いそがしいで","いそがしいくて"]},"pt":{}},{"w":"いたい","say":"いたい","r":"","m":"painful","type":"i","kj":false,"note":"","ex":[],"f":{"npa":["いたいです","いたいです"],"npn":["いたくないです","いたくないです"],"pa":["いたかったです","いたかったです"],"pn":["いたくなかったです","いたくなかったです"],"np":["いたい","いたい"],"nn":["いたくない","いたくない"],"pp":["いたかった","いたかった"],"pnp":["いたくなかった","いたくなかった"],"dsh":["いたい","いたい"],"mod":["いたい","いたい"],"adv":["いたく","いたく"],"te":["いたくて","いたくて"]},"d":["npa","npn","pa","pn","np","nn","pp","pnp","dsh","mod","adv","te"],"po":{"npa":["いたくないです","いたかったです","いたくなかったです"],"npn":["いたいです","いたかったです","いたくなかったです"],"pa":["いたいです","いたくないです","いたくなかったです"],"pn":["いたいです","いたくないです","いたかったです"],"np":["いたくない","いたかった","いたくなかった"],"nn":["いたい","いたかった","いたくなかった"],"pp":["いたい","いたくない","いたくなかった"],"pnp":["いたい","いたくない","いたかった"],"dsh":["いたく","いたいだ","いたいな"],"mod":["いたく","いたくて","いたいな"],"adv":["いたい","いたくて","いたいに"],"te":["いたい","いたいで","いたいくて"]},"pt":{}},{"w":"かわいい","say":"かわいい","r":"","m":"cute","type":"i","kj":false,"note":"","ex":[],"f":{"npa":["かわいいです","かわいいです"],"npn":["かわいくないです","かわいくないです"],"pa":["かわいかったです","かわいかったです"],"pn":["かわいくなかったです","かわいくなかったです"],"np":["かわいい","かわいい"],"nn":["かわいくない","かわいくない"],"pp":["かわいかった","かわいかった"],"pnp":["かわいくなかった","かわいくなかった"],"dsh":["かわいい","かわいい"],"mod":["かわいい","かわいい"],"adv":["かわいく","かわいく"],"te":["かわいくて","かわいくて"]},"d":["npa","npn","pa","pn","np","nn","pp","pnp","dsh","mod","adv","te"],"po":{"npa":["かわいくないです","かわいかったです","かわいくなかったです"],"npn":["かわいいです","かわいかったです","かわいくなかったです"],"pa":["かわいいです","かわいくないです","かわいくなかったです"],"pn":["かわいいです","かわいくないです","かわいかったです"],"np":["かわいくない","かわいかった","かわいくなかった"],"nn":["かわいい","かわいかった","かわいくなかった"],"pp":["かわいい","かわいくない","かわいくなかった"],"pnp":["かわいい","かわいくない","かわいかった"],"dsh":["かわいく","かわいいだ","かわいいな"],"mod":["かわいく","かわいくて","かわいいな"],"adv":["かわいい","かわいくて","かわいいに"],"te":["かわいい","かわいいで","かわいいくて"]},"pt":{}},{"w":"きたない","say":"きたない","r":"","m":"dirty","type":"i","kj":false,"note":"","ex":[],"f":{"npa":["きたないです","きたないです"],"npn":["きたなくないです","きたなくないです"],"pa":["きたなかったです","きたなかったです"],"pn":["きたなくなかったです","きたなくなかったです"],"np":["きたない","きたない"],"nn":["きたなくない","きたなくない"],"pp":["きたなかった","きたなかった"],"pnp":["きたなくなかった","きたなくなかった"],"dsh":["きたない","きたない"],"mod":["きたない","きたない"],"adv":["きたなく","きたなく"],"te":["きたなくて","きたなくて"]},"d":["npa","npn","pa","pn","np","nn","pp","pnp","dsh","mod","adv","te"],"po":{"npa":["きたなくないです","きたなかったです","きたなくなかったです"],"npn":["きたないです","きたなかったです","きたなくなかったです"],"pa":["きたないです","きたなくないです","きたなくなかったです"],"pn":["きたないです","きたなくないです","きたなかったです"],"np":["きたなくない","きたなかった","きたなくなかった"],"nn":["きたない","きたなかった","きたなくなかった"],"pp":["きたない","きたなくない","きたなくなかった"],"pnp":["きたない","きたなくない","きたなかった"],"dsh":["きたなく","きたないだ","きたないな"],"mod":["きたなく","きたなくて","きたないな"],"adv":["きたない","きたなくて","きたないに"],"te":["きたない","きたないで","きたないくて"]},"pt":{}},{"w":"わかい","say":"わかい","r":"","m":"young","type":"i","kj":false,"note":"","ex":[],"f":{"npa":["わかいです","わかいです"],"npn":["わかくないです","わかくないです"],"pa":["わかかったです","わかかったです"],"pn":["わかくなかったです","わかくなかったです"],"np":["わかい","わかい"],"nn":["わかくない","わかくない"],"pp":["わかかった","わかかった"],"pnp":["わかくなかった","わかくなかった"],"dsh":["わかい","わかい"],"mod":["わかい","わかい"],"adv":["わかく","わかく"],"te":["わかくて","わかくて"]},"d":["npa","npn","pa","pn","np","nn","pp","pnp","dsh","mod","adv","te"],"po":{"npa":["わかくないです","わかかったです","わかくなかったです"],"npn":["わかいです","わかかったです","わかくなかったです"],"pa":["わかいです","わかくないです","わかくなかったです"],"pn":["わかいです","わかくないです","わかかったです"],"np":["わかくない","わかかった","わかくなかった"],"nn":["わかい","わかかった","わかくなかった"],"pp":["わかい","わかくない","わかくなかった"],"pnp":["わかい","わかくない","わかかった"],"dsh":["わかく","わかいだ","わかいな"],"mod":["わかく","わかくて","わかいな"],"adv":["わかい","わかくて","わかいに"],"te":["わかい","わかいで","わかいくて"]},"pt":{}},{"w":"まるい","say":"まるい","r":"","m":"round","type":"i","kj":false,"note":"","ex":[],"f":{"npa":["まるいです","まるいです"],"npn":["まるくないです","まるくないです"],"pa":["まるかったです","まるかったです"],"pn":["まるくなかったです","まるくなかったです"],"np":["まるい","まるい"],"nn":["まるくない","まるくない"],"pp":["まるかった","まるかった"],"pnp":["まるくなかった","まるくなかった"],"dsh":["まるい","まるい"],"mod":["まるい","まるい"],"adv":["まるく","まるく"],"te":["まるくて","まるくて"]},"d":["npa","npn","pa","pn","np","nn","pp","pnp","dsh","mod","adv","te"],"po":{"npa":["まるくないです","まるかったです","まるくなかったです"],"npn":["まるいです","まるかったです","まるくなかったです"],"pa":["まるいです","まるくないです","まるくなかったです"],"pn":["まるいです","まるくないです","まるかったです"],"np":["まるくない","まるかった","まるくなかった"],"nn":["まるい","まるかった","まるくなかった"],"pp":["まるい","まるくない","まるくなかった"],"pnp":["まるい","まるくない","まるかった"],"dsh":["まるく","まるいだ","まるいな"],"mod":["まるく","まるくて","まるいな"],"adv":["まるい","まるくて","まるいに"],"te":["まるい","まるいで","まるいくて"]},"pt":{}},{"w":"ほしい","say":"ほしい","r":"","m":"wanted, desired","type":"i","kj":false,"note":"","ex":[],"f":{"npa":["ほしいです","ほしいです"],"npn":["ほしくないです","ほしくないです"],"pa":["ほしかったです","ほしかったです"],"pn":["ほしくなかったです","ほしくなかったです"],"np":["ほしい","ほしい"],"nn":["ほしくない","ほしくない"],"pp":["ほしかった","ほしかった"],"pnp":["ほしくなかった","ほしくなかった"],"dsh":["ほしい","ほしい"],"mod":["ほしい","ほしい"],"adv":["ほしく","ほしく"],"te":["ほしくて","ほしくて"]},"d":["npa","npn","pa","pn","np","nn","pp","pnp","dsh","mod","adv","te"],"po":{"npa":["ほしくないです","ほしかったです","ほしくなかったです"],"npn":["ほしいです","ほしかったです","ほしくなかったです"],"pa":["ほしいです","ほしくないです","ほしくなかったです"],"pn":["ほしいです","ほしくないです","ほしかったです"],"np":["ほしくない","ほしかった","ほしくなかった"],"nn":["ほしい","ほしかった","ほしくなかった"],"pp":["ほしい","ほしくない","ほしくなかった"],"pnp":["ほしい","ほしくない","ほしかった"],"dsh":["ほしく","ほしいだ","ほしいな"],"mod":["ほしく","ほしくて","ほしいな"],"adv":["ほしい","ほしくて","ほしいに"],"te":["ほしい","ほしいで","ほしいくて"]},"pt":{}},{"w":"うるさい","say":"うるさい","r":"","m":"noisy, annoying","type":"i","kj":false,"note":"","ex":[],"f":{"npa":["うるさいです","うるさいです"],"npn":["うるさくないです","うるさくないです"],"pa":["うるさかったです","うるさかったです"],"pn":["うるさくなかったです","うるさくなかったです"],"np":["うるさい","うるさい"],"nn":["うるさくない","うるさくない"],"pp":["うるさかった","うるさかった"],"pnp":["うるさくなかった","うるさくなかった"],"dsh":["うるさい","うるさい"],"mod":["うるさい","うるさい"],"adv":["うるさく","うるさく"],"te":["うるさくて","うるさくて"]},"d":["npa","npn","pa","pn","np","nn","pp","pnp","dsh","mod","adv","te"],"po":{"npa":["うるさくないです","うるさかったです","うるさくなかったです"],"npn":["うるさいです","うるさかったです","うるさくなかったです"],"pa":["うるさいです","うるさくないです","うるさくなかったです"],"pn":["うるさいです","うるさくないです","うるさかったです"],"np":["うるさくない","うるさかった","うるさくなかった"],"nn":["うるさい","うるさかった","うるさくなかった"],"pp":["うるさい","うるさくない","うるさくなかった"],"pnp":["うるさい","うるさくない","うるさかった"],"dsh":["うるさく","うるさいだ","うるさいな"],"mod":["うるさく","うるさくて","うるさいな"],"adv":["うるさい","うるさくて","うるさいに"],"te":["うるさい","うるさいで","うるさいくて"]},"pt":{}},{"w":"すき","say":"すき","r":"","m":"liked","type":"na","kj":false,"note":"","ex":[],"f":{"npa":["すきです","すきです"],"npn":["すきじゃないです","すきじゃないです"],"pa":["すきでした","すきでした"],"pn":["すきじゃなかったです","すきじゃなかったです"],"np":["すきだ","すきだ"],"nn":["すきじゃない","すきじゃない"],"pp":["すきだった","すきだった"],"pnp":["すきじゃなかった","すきじゃなかった"],"dsh":["すき","すき"],"mod":["すきな","すきな"],"adv":["すきに","すきに"],"te":["すきで","すきで"]},"d":["npa","npn","pa","pn","np","nn","pp","pnp","dsh","mod","adv","te"],"po":{"npa":["すきじゃないです","すきでした","すきじゃなかったです"],"npn":["すきです","すきでした","すきじゃなかったです"],"pa":["すきです","すきじゃないです","すきじゃなかったです"],"pn":["すきです","すきじゃないです","すきでした"],"np":["すきじゃない","すきだった","すきじゃなかった"],"nn":["すきだ","すきだった","すきじゃなかった"],"pp":["すきだ","すきじゃない","すきじゃなかった"],"pnp":["すきだ","すきじゃない","すきだった"],"dsh":["すきだ","すきな","すきに"],"mod":["すきに","すきで","すきの"],"adv":["すきな","すきで","すきだ"],"te":["すきな","すきに","すきだ"]},"pt":{}},{"w":"きらい","say":"きらい","r":"","m":"disliked","type":"na","kj":false,"note":"Ends in い but is a な-adjective: きらいじゃない, never きらくない.","ex":[],"f":{"npa":["きらいです","きらいです"],"npn":["きらいじゃないです","きらいじゃないです"],"pa":["きらいでした","きらいでした"],"pn":["きらいじゃなかったです","きらいじゃなかったです"],"np":["きらいだ","きらいだ"],"nn":["きらいじゃない","きらいじゃない"],"pp":["きらいだった","きらいだった"],"pnp":["きらいじゃなかった","きらいじゃなかった"],"dsh":["きらい","きらい"],"mod":["きらいな","きらいな"],"adv":["きらいに","きらいに"],"te":["きらいで","きらいで"]},"d":["npa","npn","pa","pn","np","nn","pp","pnp","dsh","mod","adv","te"],"po":{"npa":["きらいじゃないです","きらいでした","きらいじゃなかったです"],"npn":["きらいです","きらいでした","きらいじゃなかったです"],"pa":["きらいです","きらいじゃないです","きらいじゃなかったです"],"pn":["きらいです","きらいじゃないです","きらいでした"],"np":["きらいじゃない","きらいだった","きらいじゃなかった"],"nn":["きらいだ","きらいだった","きらいじゃなかった"],"pp":["きらいだ","きらいじゃない","きらいじゃなかった"],"pnp":["きらいだ","きらいじゃない","きらいだった"],"dsh":["きらいだ","きらいな","きらいに"],"mod":["きらいに","きらいで","きらいの"],"adv":["きらいな","きらいで","きらいだ"],"te":["きらいな","きらいに","きらいだ"]},"pt":{"npn":"きらくないです","pa":"きらかったです","pn":"きらくなかったです","nn":"きらくない","pp":"きらかった","pnp":"きらくなかった","adv":"きらく","te":"きらくて"}},{"w":"だいすき","say":"だいすき","r":"","m":"loved, really like","type":"na","kj":false,"note":"","ex":[],"f":{"npa":["だいすきです","だいすきです"],"npn":["だいすきじゃないです","だいすきじゃないです"],"pa":["だいすきでした","だいすきでした"],"pn":["だいすきじゃなかったです","だいすきじゃなかったです"],"np":["だいすきだ","だいすきだ"],"nn":["だいすきじゃない","だいすきじゃない"],"pp":["だいすきだった","だいすきだった"],"pnp":["だいすきじゃなかった","だいすきじゃなかった"],"dsh":["だいすき","だいすき"],"mod":["だいすきな","だいすきな"],"adv":["だいすきに","だいすきに"],"te":["だいすきで","だいすきで"]},"d":["npa","npn","pa","pn","np","nn","pp","pnp","dsh","mod","adv","te"],"po":{"npa":["だいすきじゃないです","だいすきでした","だいすきじゃなかったです"],"npn":["だいすきです","だいすきでした","だいすきじゃなかったです"],"pa":["だいすきです","だいすきじゃないです","だいすきじゃなかったです"],"pn":["だいすきです","だいすきじゃないです","だいすきでした"],"np":["だいすきじゃない","だいすきだった","だいすきじゃなかった"],"nn":["だいすきだ","だいすきだった","だいすきじゃなかった"],"pp":["だいすきだ","だいすきじゃない","だいすきじゃなかった"],"pnp":["だいすきだ","だいすきじゃない","だいすきだった"],"dsh":["だいすきだ","だいすきな","だいすきに"],"mod":["だいすきに","だいすきで","だいすきの"],"adv":["だいすきな","だいすきで","だいすきだ"],"te":["だいすきな","だいすきに","だいすきだ"]},"pt":{}},{"w":"だいきらい","say":"だいきらい","r":"","m":"hated","type":"na","kj":false,"note":"Ends in い but is a な-adjective: だいきらいでした.","ex":[],"f":{"npa":["だいきらいです","だいきらいです"],"npn":["だいきらいじゃないです","だいきらいじゃないです"],"pa":["だいきらいでした","だいきらいでした"],"pn":["だいきらいじゃなかったです","だいきらいじゃなかったです"],"np":["だいきらいだ","だいきらいだ"],"nn":["だいきらいじゃない","だいきらいじゃない"],"pp":["だいきらいだった","だいきらいだった"],"pnp":["だいきらいじゃなかった","だいきらいじゃなかった"],"dsh":["だいきらい","だいきらい"],"mod":["だいきらいな","だいきらいな"],"adv":["だいきらいに","だいきらいに"],"te":["だいきらいで","だいきらいで"]},"d":["npa","npn","pa","pn","np","nn","pp","pnp","dsh","mod","adv","te"],"po":{"npa":["だいきらいじゃないです","だいきらいでした","だいきらいじゃなかったです"],"npn":["だいきらいです","だいきらいでした","だいきらいじゃなかったです"],"pa":["だいきらいです","だいきらいじゃないです","だいきらいじゃなかったです"],"pn":["だいきらいです","だいきらいじゃないです","だいきらいでした"],"np":["だいきらいじゃない","だいきらいだった","だいきらいじゃなかった"],"nn":["だいきらいだ","だいきらいだった","だいきらいじゃなかった"],"pp":["だいきらいだ","だいきらいじゃない","だいきらいじゃなかった"],"pnp":["だいきらいだ","だいきらいじゃない","だいきらいだった"],"dsh":["だいきらいだ","だいきらいな","だいきらいに"],"mod":["だいきらいに","だいきらいで","だいきらいの"],"adv":["だいきらいな","だいきらいで","だいきらいだ"],"te":["だいきらいな","だいきらいに","だいきらいだ"]},"pt":{"npn":"だいきらくないです","pa":"だいきらかったです","pn":"だいきらくなかったです","nn":"だいきらくない","pp":"だいきらかった","pnp":"だいきらくなかった","adv":"だいきらく","te":"だいきらくて"}},{"w":"上手","say":"じょうず","r":"じょうず","m":"skillful, good at","type":"na","kj":true,"note":"","ex":[],"f":{"npa":["上手です","じょうずです"],"npn":["上手じゃないです","じょうずじゃないです"],"pa":["上手でした","じょうずでした"],"pn":["上手じゃなかったです","じょうずじゃなかったです"],"np":["上手だ","じょうずだ"],"nn":["上手じゃない","じょうずじゃない"],"pp":["上手だった","じょうずだった"],"pnp":["上手じゃなかった","じょうずじゃなかった"],"dsh":["上手","じょうず"],"mod":["上手な","じょうずな"],"adv":["上手に","じょうずに"],"te":["上手で","じょうずで"]},"d":["npa","npn","pa","pn","np","nn","pp","pnp","dsh","mod","adv","te"],"po":{"npa":["上手じゃないです","上手でした","上手じゃなかったです"],"npn":["上手です","上手でした","上手じゃなかったです"],"pa":["上手です","上手じゃないです","上手じゃなかったです"],"pn":["上手です","上手じゃないです","上手でした"],"np":["上手じゃない","上手だった","上手じゃなかった"],"nn":["上手だ","上手だった","上手じゃなかった"],"pp":["上手だ","上手じゃない","上手じゃなかった"],"pnp":["上手だ","上手じゃない","上手だった"],"dsh":["上手だ","上手な","上手に"],"mod":["上手に","上手で","上手の"],"adv":["上手な","上手で","上手だ"],"te":["上手な","上手に","上手だ"]},"pt":{}},{"w":"下手","say":"へた","r":"へた","m":"unskillful, bad at","type":"na","kj":true,"note":"","ex":[],"f":{"npa":["下手です","へたです"],"npn":["下手じゃないです","へたじゃないです"],"pa":["下手でした","へたでした"],"pn":["下手じゃなかったです","へたじゃなかったです"],"np":["下手だ","へただ"],"nn":["下手じゃない","へたじゃない"],"pp":["下手だった","へただった"],"pnp":["下手じゃなかった","へたじゃなかった"],"dsh":["下手","へた"],"mod":["下手な","へたな"],"adv":["下手に","へたに"],"te":["下手で","へたで"]},"d":["npa","npn","pa","pn","np","nn","pp","pnp","dsh","mod","adv","te"],"po":{"npa":["下手じゃないです","下手でした","下手じゃなかったです"],"npn":["下手です","下手でした","下手じゃなかったです"],"pa":["下手です","下手じゃないです","下手じゃなかったです"],"pn":["下手です","下手じゃないです","下手でした"],"np":["下手じゃない","下手だった","下手じゃなかった"],"nn":["下手だ","下手だった","下手じゃなかった"],"pp":["下手だ","下手じゃない","下手じゃなかった"],"pnp":["下手だ","下手じゃない","下手だった"],"dsh":["下手だ","下手な","下手に"],"mod":["下手に","下手で","下手の"],"adv":["下手な","下手で","下手だ"],"te":["下手な","下手に","下手だ"]},"pt":{}},{"w":"げんき","say":"げんき","r":"","m":"healthy, energetic","type":"na","kj":false,"note":"","ex":[],"f":{"npa":["げんきです","げんきです"],"npn":["げんきじゃないです","げんきじゃないです"],"pa":["げんきでした","げんきでした"],"pn":["げんきじゃなかったです","げんきじゃなかったです"],"np":["げんきだ","げんきだ"],"nn":["げんきじゃない","げんきじゃない"],"pp":["げんきだった","げんきだった"],"pnp":["げんきじゃなかった","げんきじゃなかった"],"dsh":["げんき","げんき"],"mod":["げんきな","げんきな"],"adv":["げんきに","げんきに"],"te":["げんきで","げんきで"]},"d":["npa","npn","pa","pn","np","nn","pp","pnp","dsh","mod","adv","te"],"po":{"npa":["げんきじゃないです","げんきでした","げんきじゃなかったです"],"npn":["げんきです","げんきでした","げんきじゃなかったです"],"pa":["げんきです","げんきじゃないです","げんきじゃなかったです"],"pn":["げんきです","げんきじゃないです","げんきでした"],"np":["げんきじゃない","げんきだった","げんきじゃなかった"],"nn":["げんきだ","げんきだった","げんきじゃなかった"],"pp":["げんきだ","げんきじゃない","げんきじゃなかった"],"pnp":["げんきだ","げんきじゃない","げんきだった"],"dsh":["げんきだ","げんきな","げんきに"],"mod":["げんきに","げんきで","げんきの"],"adv":["げんきな","げんきで","げんきだ"],"te":["げんきな","げんきに","げんきだ"]},"pt":{}},{"w":"しずか","say":"しずか","r":"","m":"quiet","type":"na","kj":false,"note":"","ex":[],"f":{"npa":["しずかです","しずかです"],"npn":["しずかじゃないです","しずかじゃないです"],"pa":["しずかでした","しずかでした"],"pn":["しずかじゃなかったです","しずかじゃなかったです"],"np":["しずかだ","しずかだ"],"nn":["しずかじゃない","しずかじゃない"],"pp":["しずかだった","しずかだった"],"pnp":["しずかじゃなかった","しずかじゃなかった"],"dsh":["しずか","しずか"],"mod":["しずかな","しずかな"],"adv":["しずかに","しずかに"],"te":["しずかで","しずかで"]},"d":["npa","npn","pa","pn","np","nn","pp","pnp","dsh","mod","adv","te"],"po":{"npa":["しずかじゃないです","しずかでした","しずかじゃなかったです"],"npn":["しずかです","しずかでした","しずかじゃなかったです"],"pa":["しずかです","しずかじゃないです","しずかじゃなかったです"],"pn":["しずかです","しずかじゃないです","しずかでした"],"np":["しずかじゃない","しずかだった","しずかじゃなかった"],"nn":["しずかだ","しずかだった","しずかじゃなかった"],"pp":["しずかだ","しずかじゃない","しずかじゃなかった"],"pnp":["しずかだ","しずかじゃない","しずかだった"],"dsh":["しずかだ","しずかな","しずかに"],"mod":["しずかに","しずかで","しずかの"],"adv":["しずかな","しずかで","しずかだ"],"te":["しずかな","しずかに","しずかだ"]},"pt":{}},{"w":"にぎやか","say":"にぎやか","r":"","m":"lively","type":"na","kj":false,"note":"","ex":[],"f":{"npa":["にぎやかです","にぎやかです"],"npn":["にぎやかじゃないです","にぎやかじゃないです"],"pa":["にぎやかでした","にぎやかでした"],"pn":["にぎやかじゃなかったです","にぎやかじゃなかったです"],"np":["にぎやかだ","にぎやかだ"],"nn":["にぎやかじゃない","にぎやかじゃない"],"pp":["にぎやかだった","にぎやかだった"],"pnp":["にぎやかじゃなかった","にぎやかじゃなかった"],"dsh":["にぎやか","にぎやか"],"mod":["にぎやかな","にぎやかな"],"adv":["にぎやかに","にぎやかに"],"te":["にぎやかで","にぎやかで"]},"d":["npa","npn","pa","pn","np","nn","pp","pnp","dsh","mod","adv","te"],"po":{"npa":["にぎやかじゃないです","にぎやかでした","にぎやかじゃなかったです"],"npn":["にぎやかです","にぎやかでした","にぎやかじゃなかったです"],"pa":["にぎやかです","にぎやかじゃないです","にぎやかじゃなかったです"],"pn":["にぎやかです","にぎやかじゃないです","にぎやかでした"],"np":["にぎやかじゃない","にぎやかだった","にぎやかじゃなかった"],"nn":["にぎやかだ","にぎやかだった","にぎやかじゃなかった"],"pp":["にぎやかだ","にぎやかじゃない","にぎやかじゃなかった"],"pnp":["にぎやかだ","にぎやかじゃない","にぎやかだった"],"dsh":["にぎやかだ","にぎやかな","にぎやかに"],"mod":["にぎやかに","にぎやかで","にぎやかの"],"adv":["にぎやかな","にぎやかで","にぎやかだ"],"te":["にぎやかな","にぎやかに","にぎやかだ"]},"pt":{}},{"w":"きれい","say":"きれい","r":"","m":"pretty; clean","type":"na","kj":false,"note":"Ends in い but is a な-adjective: きれいじゃない, never きれくない.","ex":[],"f":{"npa":["きれいです","きれいです"],"npn":["きれいじゃないです","きれいじゃないです"],"pa":["きれいでした","きれいでした"],"pn":["きれいじゃなかったです","きれいじゃなかったです"],"np":["きれいだ","きれいだ"],"nn":["きれいじゃない","きれいじゃない"],"pp":["きれいだった","きれいだった"],"pnp":["きれいじゃなかった","きれいじゃなかった"],"dsh":["きれい","きれい"],"mod":["きれいな","きれいな"],"adv":["きれいに","きれいに"],"te":["きれいで","きれいで"]},"d":["npa","npn","pa","pn","np","nn","pp","pnp","dsh","mod","adv","te"],"po":{"npa":["きれいじゃないです","きれいでした","きれいじゃなかったです"],"npn":["きれいです","きれいでした","きれいじゃなかったです"],"pa":["きれいです","きれいじゃないです","きれいじゃなかったです"],"pn":["きれいです","きれいじゃないです","きれいでした"],"np":["きれいじゃない","きれいだった","きれいじゃなかった"],"nn":["きれいだ","きれいだった","きれいじゃなかった"],"pp":["きれいだ","きれいじゃない","きれいじゃなかった"],"pnp":["きれいだ","きれいじゃない","きれいだった"],"dsh":["きれいだ","きれいな","きれいに"],"mod":["きれいに","きれいで","きれいの"],"adv":["きれいな","きれいで","きれいだ"],"te":["きれいな","きれいに","きれいだ"]},"pt":{"npn":"きれくないです","pa":"きれかったです","pn":"きれくなかったです","nn":"きれくない","pp":"きれかった","pnp":"きれくなかった","adv":"きれく","te":"きれくて"}},{"w":"ゆうめい","say":"ゆうめい","r":"","m":"famous","type":"na","kj":false,"note":"Ends in an い sound but is a な-adjective: ゆうめいな 人.","ex":[],"f":{"npa":["ゆうめいです","ゆうめいです"],"npn":["ゆうめいじゃないです","ゆうめいじゃないです"],"pa":["ゆうめいでした","ゆうめいでした"],"pn":["ゆうめいじゃなかったです","ゆうめいじゃなかったです"],"np":["ゆうめいだ","ゆうめいだ"],"nn":["ゆうめいじゃない","ゆうめいじゃない"],"pp":["ゆうめいだった","ゆうめいだった"],"pnp":["ゆうめいじゃなかった","ゆうめいじゃなかった"],"dsh":["ゆうめい","ゆうめい"],"mod":["ゆうめいな","ゆうめいな"],"adv":["ゆうめいに","ゆうめいに"],"te":["ゆうめいで","ゆうめいで"]},"d":["npa","npn","pa","pn","np","nn","pp","pnp","dsh","mod","adv","te"],"po":{"npa":["ゆうめいじゃないです","ゆうめいでした","ゆうめいじゃなかったです"],"npn":["ゆうめいです","ゆうめいでした","ゆうめいじゃなかったです"],"pa":["ゆうめいです","ゆうめいじゃないです","ゆうめいじゃなかったです"],"pn":["ゆうめいです","ゆうめいじゃないです","ゆうめいでした"],"np":["ゆうめいじゃない","ゆうめいだった","ゆうめいじゃなかった"],"nn":["ゆうめいだ","ゆうめいだった","ゆうめいじゃなかった"],"pp":["ゆうめいだ","ゆうめいじゃない","ゆうめいじゃなかった"],"pnp":["ゆうめいだ","ゆうめいじゃない","ゆうめいだった"],"dsh":["ゆうめいだ","ゆうめいな","ゆうめいに"],"mod":["ゆうめいに","ゆうめいで","ゆうめいの"],"adv":["ゆうめいな","ゆうめいで","ゆうめいだ"],"te":["ゆうめいな","ゆうめいに","ゆうめいだ"]},"pt":{"npn":"ゆうめくないです","pa":"ゆうめかったです","pn":"ゆうめくなかったです","nn":"ゆうめくない","pp":"ゆうめかった","pnp":"ゆうめくなかった","adv":"ゆうめく","te":"ゆうめくて"}},{"w":"しんせつ","say":"しんせつ","r":"","m":"kind","type":"na","kj":false,"note":"","ex":[],"f":{"npa":["しんせつです","しんせつです"],"npn":["しんせつじゃないです","しんせつじゃないです"],"pa":["しんせつでした","しんせつでした"],"pn":["しんせつじゃなかったです","しんせつじゃなかったです"],"np":["しんせつだ","しんせつだ"],"nn":["しんせつじゃない","しんせつじゃない"],"pp":["しんせつだった","しんせつだった"],"pnp":["しんせつじゃなかった","しんせつじゃなかった"],"dsh":["しんせつ","しんせつ"],"mod":["しんせつな","しんせつな"],"adv":["しんせつに","しんせつに"],"te":["しんせつで","しんせつで"]},"d":["npa","npn","pa","pn","np","nn","pp","pnp","dsh","mod","adv","te"],"po":{"npa":["しんせつじゃないです","しんせつでした","しんせつじゃなかったです"],"npn":["しんせつです","しんせつでした","しんせつじゃなかったです"],"pa":["しんせつです","しんせつじゃないです","しんせつじゃなかったです"],"pn":["しんせつです","しんせつじゃないです","しんせつでした"],"np":["しんせつじゃない","しんせつだった","しんせつじゃなかった"],"nn":["しんせつだ","しんせつだった","しんせつじゃなかった"],"pp":["しんせつだ","しんせつじゃない","しんせつじゃなかった"],"pnp":["しんせつだ","しんせつじゃない","しんせつだった"],"dsh":["しんせつだ","しんせつな","しんせつに"],"mod":["しんせつに","しんせつで","しんせつの"],"adv":["しんせつな","しんせつで","しんせつだ"],"te":["しんせつな","しんせつに","しんせつだ"]},"pt":{}},{"w":"べんり","say":"べんり","r":"","m":"convenient","type":"na","kj":false,"note":"","ex":[],"f":{"npa":["べんりです","べんりです"],"npn":["べんりじゃないです","べんりじゃないです"],"pa":["べんりでした","べんりでした"],"pn":["べんりじゃなかったです","べんりじゃなかったです"],"np":["べんりだ","べんりだ"],"nn":["べんりじゃない","べんりじゃない"],"pp":["べんりだった","べんりだった"],"pnp":["べんりじゃなかった","べんりじゃなかった"],"dsh":["べんり","べんり"],"mod":["べんりな","べんりな"],"adv":["べんりに","べんりに"],"te":["べんりで","べんりで"]},"d":["npa","npn","pa","pn","np","nn","pp","pnp","dsh","mod","adv","te"],"po":{"npa":["べんりじゃないです","べんりでした","べんりじゃなかったです"],"npn":["べんりです","べんりでした","べんりじゃなかったです"],"pa":["べんりです","べんりじゃないです","べんりじゃなかったです"],"pn":["べんりです","べんりじゃないです","べんりでした"],"np":["べんりじゃない","べんりだった","べんりじゃなかった"],"nn":["べんりだ","べんりだった","べんりじゃなかった"],"pp":["べんりだ","べんりじゃない","べんりじゃなかった"],"pnp":["べんりだ","べんりじゃない","べんりだった"],"dsh":["べんりだ","べんりな","べんりに"],"mod":["べんりに","べんりで","べんりの"],"adv":["べんりな","べんりで","べんりだ"],"te":["べんりな","べんりに","べんりだ"]},"pt":{}},{"w":"ふべん","say":"ふべん","r":"","m":"inconvenient","type":"na","kj":false,"note":"","ex":[],"f":{"npa":["ふべんです","ふべんです"],"npn":["ふべんじゃないです","ふべんじゃないです"],"pa":["ふべんでした","ふべんでした"],"pn":["ふべんじゃなかったです","ふべんじゃなかったです"],"np":["ふべんだ","ふべんだ"],"nn":["ふべんじゃない","ふべんじゃない"],"pp":["ふべんだった","ふべんだった"],"pnp":["ふべんじゃなかった","ふべんじゃなかった"],"dsh":["ふべん","ふべん"],"mod":["ふべんな","ふべんな"],"adv":["ふべんに","ふべんに"],"te":["ふべんで","ふべんで"]},"d":["npa","npn","pa","pn","np","nn","pp","pnp","dsh","mod","adv","te"],"po":{"npa":["ふべんじゃないです","ふべんでした","ふべんじゃなかったです"],"npn":["ふべんです","ふべんでした","ふべんじゃなかったです"],"pa":["ふべんです","ふべんじゃないです","ふべんじゃなかったです"],"pn":["ふべんです","ふべんじゃないです","ふべんでした"],"np":["ふべんじゃない","ふべんだった","ふべんじゃなかった"],"nn":["ふべんだ","ふべんだった","ふべんじゃなかった"],"pp":["ふべんだ","ふべんじゃない","ふべんじゃなかった"],"pnp":["ふべんだ","ふべんじゃない","ふべんだった"],"dsh":["ふべんだ","ふべんな","ふべんに"],"mod":["ふべんに","ふべんで","ふべんの"],"adv":["ふべんな","ふべんで","ふべんだ"],"te":["ふべんな","ふべんに","ふべんだ"]},"pt":{}},{"w":"ひま","say":"ひま","r":"","m":"free (time)","type":"na","kj":false,"note":"","ex":[],"f":{"npa":["ひまです","ひまです"],"npn":["ひまじゃないです","ひまじゃないです"],"pa":["ひまでした","ひまでした"],"pn":["ひまじゃなかったです","ひまじゃなかったです"],"np":["ひまだ","ひまだ"],"nn":["ひまじゃない","ひまじゃない"],"pp":["ひまだった","ひまだった"],"pnp":["ひまじゃなかった","ひまじゃなかった"],"dsh":["ひま","ひま"],"mod":["ひまな","ひまな"],"adv":["ひまに","ひまに"],"te":["ひまで","ひまで"]},"d":["npa","npn","pa","pn","np","nn","pp","pnp","dsh","mod","adv","te"],"po":{"npa":["ひまじゃないです","ひまでした","ひまじゃなかったです"],"npn":["ひまです","ひまでした","ひまじゃなかったです"],"pa":["ひまです","ひまじゃないです","ひまじゃなかったです"],"pn":["ひまです","ひまじゃないです","ひまでした"],"np":["ひまじゃない","ひまだった","ひまじゃなかった"],"nn":["ひまだ","ひまだった","ひまじゃなかった"],"pp":["ひまだ","ひまじゃない","ひまじゃなかった"],"pnp":["ひまだ","ひまじゃない","ひまだった"],"dsh":["ひまだ","ひまな","ひまに"],"mod":["ひまに","ひまで","ひまの"],"adv":["ひまな","ひまで","ひまだ"],"te":["ひまな","ひまに","ひまだ"]},"pt":{}},{"w":"だいじょうぶ","say":"だいじょうぶ","r":"","m":"all right, OK","type":"na","kj":false,"note":"","ex":["adv"],"f":{"npa":["だいじょうぶです","だいじょうぶです"],"npn":["だいじょうぶじゃないです","だいじょうぶじゃないです"],"pa":["だいじょうぶでした","だいじょうぶでした"],"pn":["だいじょうぶじゃなかったです","だいじょうぶじゃなかったです"],"np":["だいじょうぶだ","だいじょうぶだ"],"nn":["だいじょうぶじゃない","だいじょうぶじゃない"],"pp":["だいじょうぶだった","だいじょうぶだった"],"pnp":["だいじょうぶじゃなかった","だいじょうぶじゃなかった"],"dsh":["だいじょうぶ","だいじょうぶ"],"mod":["だいじょうぶな","だいじょうぶな"],"te":["だいじょうぶで","だいじょうぶで"]},"d":["npa","npn","pa","pn","np","nn","pp","pnp","dsh","mod","te"],"po":{"npa":["だいじょうぶじゃないです","だいじょうぶでした","だいじょうぶじゃなかったです"],"npn":["だいじょうぶです","だいじょうぶでした","だいじょうぶじゃなかったです"],"pa":["だいじょうぶです","だいじょうぶじゃないです","だいじょうぶじゃなかったです"],"pn":["だいじょうぶです","だいじょうぶじゃないです","だいじょうぶでした"],"np":["だいじょうぶじゃない","だいじょうぶだった","だいじょうぶじゃなかった"],"nn":["だいじょうぶだ","だいじょうぶだった","だいじょうぶじゃなかった"],"pp":["だいじょうぶだ","だいじょうぶじゃない","だいじょうぶじゃなかった"],"pnp":["だいじょうぶだ","だいじょうぶじゃない","だいじょうぶだった"],"dsh":["だいじょうぶだ","だいじょうぶな","だいじょうぶに"],"mod":["だいじょうぶに","だいじょうぶで","だいじょうぶの"],"te":["だいじょうぶな","だいじょうぶに","だいじょうぶだ"]},"pt":{}},{"w":"たいせつ","say":"たいせつ","r":"","m":"important, precious","type":"na","kj":false,"note":"","ex":[],"f":{"npa":["たいせつです","たいせつです"],"npn":["たいせつじゃないです","たいせつじゃないです"],"pa":["たいせつでした","たいせつでした"],"pn":["たいせつじゃなかったです","たいせつじゃなかったです"],"np":["たいせつだ","たいせつだ"],"nn":["たいせつじゃない","たいせつじゃない"],"pp":["たいせつだった","たいせつだった"],"pnp":["たいせつじゃなかった","たいせつじゃなかった"],"dsh":["たいせつ","たいせつ"],"mod":["たいせつな","たいせつな"],"adv":["たいせつに","たいせつに"],"te":["たいせつで","たいせつで"]},"d":["npa","npn","pa","pn","np","nn","pp","pnp","dsh","mod","adv","te"],"po":{"npa":["たいせつじゃないです","たいせつでした","たいせつじゃなかったです"],"npn":["たいせつです","たいせつでした","たいせつじゃなかったです"],"pa":["たいせつです","たいせつじゃないです","たいせつじゃなかったです"],"pn":["たいせつです","たいせつじゃないです","たいせつでした"],"np":["たいせつじゃない","たいせつだった","たいせつじゃなかった"],"nn":["たいせつだ","たいせつだった","たいせつじゃなかった"],"pp":["たいせつだ","たいせつじゃない","たいせつじゃなかった"],"pnp":["たいせつだ","たいせつじゃない","たいせつだった"],"dsh":["たいせつだ","たいせつな","たいせつに"],"mod":["たいせつに","たいせつで","たいせつの"],"adv":["たいせつな","たいせつで","たいせつだ"],"te":["たいせつな","たいせつに","たいせつだ"]},"pt":{}},{"w":"たいへん","say":"たいへん","r":"","m":"tough, hard; very","type":"na","kj":false,"note":"","ex":["adv"],"f":{"npa":["たいへんです","たいへんです"],"npn":["たいへんじゃないです","たいへんじゃないです"],"pa":["たいへんでした","たいへんでした"],"pn":["たいへんじゃなかったです","たいへんじゃなかったです"],"np":["たいへんだ","たいへんだ"],"nn":["たいへんじゃない","たいへんじゃない"],"pp":["たいへんだった","たいへんだった"],"pnp":["たいへんじゃなかった","たいへんじゃなかった"],"dsh":["たいへん","たいへん"],"mod":["たいへんな","たいへんな"],"te":["たいへんで","たいへんで"]},"d":["npa","npn","pa","pn","np","nn","pp","pnp","dsh","mod","te"],"po":{"npa":["たいへんじゃないです","たいへんでした","たいへんじゃなかったです"],"npn":["たいへんです","たいへんでした","たいへんじゃなかったです"],"pa":["たいへんです","たいへんじゃないです","たいへんじゃなかったです"],"pn":["たいへんです","たいへんじゃないです","たいへんでした"],"np":["たいへんじゃない","たいへんだった","たいへんじゃなかった"],"nn":["たいへんだ","たいへんだった","たいへんじゃなかった"],"pp":["たいへんだ","たいへんじゃない","たいへんじゃなかった"],"pnp":["たいへんだ","たいへんじゃない","たいへんだった"],"dsh":["たいへんだ","たいへんな","たいへんに"],"mod":["たいへんに","たいへんで","たいへんの"],"te":["たいへんな","たいへんに","たいへんだ"]},"pt":{}},{"w":"じょうぶ","say":"じょうぶ","r":"","m":"sturdy, strong","type":"na","kj":false,"note":"","ex":[],"f":{"npa":["じょうぶです","じょうぶです"],"npn":["じょうぶじゃないです","じょうぶじゃないです"],"pa":["じょうぶでした","じょうぶでした"],"pn":["じょうぶじゃなかったです","じょうぶじゃなかったです"],"np":["じょうぶだ","じょうぶだ"],"nn":["じょうぶじゃない","じょうぶじゃない"],"pp":["じょうぶだった","じょうぶだった"],"pnp":["じょうぶじゃなかった","じょうぶじゃなかった"],"dsh":["じょうぶ","じょうぶ"],"mod":["じょうぶな","じょうぶな"],"adv":["じょうぶに","じょうぶに"],"te":["じょうぶで","じょうぶで"]},"d":["npa","npn","pa","pn","np","nn","pp","pnp","dsh","mod","adv","te"],"po":{"npa":["じょうぶじゃないです","じょうぶでした","じょうぶじゃなかったです"],"npn":["じょうぶです","じょうぶでした","じょうぶじゃなかったです"],"pa":["じょうぶです","じょうぶじゃないです","じょうぶじゃなかったです"],"pn":["じょうぶです","じょうぶじゃないです","じょうぶでした"],"np":["じょうぶじゃない","じょうぶだった","じょうぶじゃなかった"],"nn":["じょうぶだ","じょうぶだった","じょうぶじゃなかった"],"pp":["じょうぶだ","じょうぶじゃない","じょうぶじゃなかった"],"pnp":["じょうぶだ","じょうぶじゃない","じょうぶだった"],"dsh":["じょうぶだ","じょうぶな","じょうぶに"],"mod":["じょうぶに","じょうぶで","じょうぶの"],"adv":["じょうぶな","じょうぶで","じょうぶだ"],"te":["じょうぶな","じょうぶに","じょうぶだ"]},"pt":{}},{"w":"おなじ","say":"おなじ","r":"","m":"same","type":"na","kj":false,"note":"No な before a noun: おなじ 学校, not おなじな 学校.","ex":["adv"],"f":{"npa":["おなじです","おなじです"],"npn":["おなじじゃないです","おなじじゃないです"],"pa":["おなじでした","おなじでした"],"pn":["おなじじゃなかったです","おなじじゃなかったです"],"np":["おなじだ","おなじだ"],"nn":["おなじじゃない","おなじじゃない"],"pp":["おなじだった","おなじだった"],"pnp":["おなじじゃなかった","おなじじゃなかった"],"dsh":["おなじ","おなじ"],"mod":["おなじ","おなじ"],"te":["おなじで","おなじで"]},"d":["npa","npn","pa","pn","np","nn","pp","pnp","dsh","mod","te"],"po":{"npa":["おなじじゃないです","おなじでした","おなじじゃなかったです"],"npn":["おなじです","おなじでした","おなじじゃなかったです"],"pa":["おなじです","おなじじゃないです","おなじじゃなかったです"],"pn":["おなじです","おなじじゃないです","おなじでした"],"np":["おなじじゃない","おなじだった","おなじじゃなかった"],"nn":["おなじだ","おなじだった","おなじじゃなかった"],"pp":["おなじだ","おなじじゃない","おなじじゃなかった"],"pnp":["おなじだ","おなじじゃない","おなじだった"],"dsh":["おなじだ","おなじな","おなじに"],"mod":["おなじな","おなじに","おなじで"],"te":["おなじな","おなじに","おなじだ"]},"pt":{}},{"w":"いろいろ","say":"いろいろ","r":"","m":"various","type":"na","kj":false,"note":"","ex":["npn","pa","pn","nn","pp","pnp","dsh","adv"],"f":{"npa":["いろいろです","いろいろです"],"np":["いろいろだ","いろいろだ"],"mod":["いろいろな","いろいろな"],"te":["いろいろで","いろいろで"]},"d":["mod","te"],"po":{"mod":["いろいろに","いろいろで","いろいろだ"],"te":["いろいろな","いろいろに","いろいろだ"]},"pt":{}},{"w":"いや","say":"いや","r":"","m":"unpleasant, no thanks","type":"na","kj":false,"note":"","ex":[],"f":{"npa":["いやです","いやです"],"npn":["いやじゃないです","いやじゃないです"],"pa":["いやでした","いやでした"],"pn":["いやじゃなかったです","いやじゃなかったです"],"np":["いやだ","いやだ"],"nn":["いやじゃない","いやじゃない"],"pp":["いやだった","いやだった"],"pnp":["いやじゃなかった","いやじゃなかった"],"dsh":["いや","いや"],"mod":["いやな","いやな"],"adv":["いやに","いやに"],"te":["いやで","いやで"]},"d":["npa","npn","pa","pn","np","nn","pp","pnp","dsh","mod","adv","te"],"po":{"npa":["いやじゃないです","いやでした","いやじゃなかったです"],"npn":["いやです","いやでした","いやじゃなかったです"],"pa":["いやです","いやじゃないです","いやじゃなかったです"],"pn":["いやです","いやじゃないです","いやでした"],"np":["いやじゃない","いやだった","いやじゃなかった"],"nn":["いやだ","いやだった","いやじゃなかった"],"pp":["いやだ","いやじゃない","いやじゃなかった"],"pnp":["いやだ","いやじゃない","いやだった"],"dsh":["いやだ","いやな","いやに"],"mod":["いやに","いやで","いやの"],"adv":["いやな","いやで","いやだ"],"te":["いやな","いやに","いやだ"]},"pt":{}},{"w":"けっこう","say":"けっこう","r":"","m":"fine; no thank you","type":"na","kj":false,"note":"","ex":["npn","pa","pn","nn","pp","pnp","dsh","adv","te"],"f":{"npa":["けっこうです","けっこうです"],"np":["けっこうだ","けっこうだ"],"mod":["けっこうな","けっこうな"]},"d":["mod"],"po":{"mod":["けっこうに","けっこうで","けっこうの"]},"pt":{}}],"sent":[{"a":"あかい","f":"mod","s":"この ＿ かばんは いくらですか。","en":"How much is this red bag?","cue":[],"o":["あかい","あかく","あかくて","あかいな"],"t":null,"say":"この あかい かばんは いくらですか。"},{"a":"あかい","f":"pa","s":"きのうの ゆうがた、空が とても ＿。","en":"Yesterday evening the sky was very red.","cue":["きのう","とても"],"o":["あかかったです","あかいです","あかくないです","あかくなかったです"],"t":null,"say":"きのうの ゆうがた、空が とても あかかったです。"},{"a":"あおい","f":"npa","s":"見て ください。今、空が とても ＿よ。","en":"Look! The sky is really blue right now.","cue":["今","とても"],"o":["あおいです","あおくないです","あおかったです","あおくなかったです"],"t":null,"say":"見て ください。今、空が とても あおいですよ。"},{"a":"あおい","f":"adv","s":"あさに なって、空が だんだん ＿ なりました。","en":"As morning came, the sky gradually turned blue.","cue":["なりました"],"o":["あおく","あおい","あおくて","あおいに"],"t":null,"say":"あさに なって、空が だんだん あおく なりました。"},{"a":"白い","f":"mod","s":"あの ＿ たてものは 学校です。","en":"That white building is a school.","cue":[],"o":["白い","白く","白くて","白いな"],"t":null,"say":"あの 白い たてものは 学校です。"},{"a":"白い","f":"npn","s":"A：その ねこは 白いですか。\nB：いいえ、＿。くろいです。","en":"A: Is that cat white? B: No, it isn't. It's black.","cue":["いいえ","くろいです"],"o":["白くないです","白いです","白かったです","白くなかったです"],"t":null,"say":"その ねこは 白いですか。 いいえ、白くないです。くろいです。"},{"a":"くろい","f":"mod","s":"あには ＿ くつを はいて います。","en":"My older brother is wearing black shoes.","cue":[],"o":["くろい","くろく","くろくて","くろいな"],"t":null,"say":"あには くろい くつを はいて います。"},{"a":"くろい","f":"npn","s":"A：あなたの かばんは くろいですか。\nB：いいえ、＿。あおいです。","en":"A: Is your bag black? B: No, it isn't. It's blue.","cue":["いいえ","あおいです"],"o":["くろくないです","くろいです","くろかったです","くろくなかったです"],"t":null,"say":"あなたの かばんは くろいですか。 いいえ、くろくないです。あおいです。"},{"a":"きいろい","f":"mod","s":"その ＿ かさは わたしのです。","en":"That yellow umbrella is mine.","cue":[],"o":["きいろい","きいろく","きいろくて","きいろいな"],"t":null,"say":"その きいろい かさは わたしのです。"},{"a":"きいろい","f":"npn","s":"A：その バナナは きいろいですか。\nB：いいえ、まだ あまり ＿。","en":"A: Is that banana yellow? B: No, not very yellow yet.","cue":["いいえ","あまり"],"o":["きいろくないです","きいろいです","きいろかったです","きいろくなかったです"],"t":null,"say":"その バナナは きいろいですか。 いいえ、まだ あまり きいろくないです。"},{"a":"あかるい","f":"npa","s":"この へやは まどが 大きいですから、いつも とても ＿。","en":"This room has big windows, so it's always very bright.","cue":["いつも","とても"],"o":["あかるいです","あかるくないです","あかるかったです","あかるくなかったです"],"t":null,"say":"この へやは まどが 大きいですから、いつも とても あかるいです。"},{"a":"あかるい","f":"te","s":"あの きっさてんは ＿ しずかです。","en":"That café is bright and quiet.","cue":[],"o":["あかるくて","あかるい","あかるいで","あかるいくて"],"t":null,"say":"あの きっさてんは あかるくて しずかです。"},{"a":"くらい","f":"adv","s":"ゆうがたに なって、外が ＿ なりました。","en":"Evening came and it got dark outside.","cue":["なりました"],"o":["くらく","くらい","くらくて","くらいに"],"t":null,"say":"ゆうがたに なって、外が くらく なりました。"},{"a":"くらい","f":"pa","s":"きのうの よるは へやが ＿から、電気を つけました。","en":"Last night the room was dark, so I turned on the light.","cue":["きのう","つけました"],"o":["くらかったです","くらいです","くらくないです","くらくなかったです"],"t":null,"say":"きのうの よるは へやが くらかったですから、電気を つけました。"},{"a":"あたたかい","f":"dsh","s":"あしたは はれて、＿ でしょう。","en":"Tomorrow will be sunny and probably warm.","cue":["あした","でしょう"],"o":["あたたかい","あたたかく","あたたかいだ","あたたかかった"],"t":null,"say":"あしたは はれて、あたたかい でしょう。"},{"a":"あたたかい","f":"pa","s":"先週は とても ＿。でも、今週は さむいです。","en":"Last week was very warm. But this week is cold.","cue":["先週","とても"],"o":["あたたかかったです","あたたかいです","あたたかくないです","あたたかくなかったです"],"t":null,"say":"先週は とても あたたかかったです。でも、今週は さむいです。"},{"a":"あつい","f":"pa","s":"きょねんの なつは とても ＿。","en":"Last year's summer was very hot.","cue":["きょねん","とても"],"o":["あつかったです","あついです","あつくないです","あつくなかったです"],"t":null,"say":"きょねんの なつは とても あつかったです。"},{"a":"あつい","f":"npn","s":"A：あしたも あついですか。\nB：いいえ、あしたは あまり ＿。","en":"A: Will it be hot tomorrow too? B: No, tomorrow won't be very hot.","cue":["あした","あまり"],"o":["あつくないです","あついです","あつかったです","あつくなかったです"],"t":null,"say":"あしたも あついですか。 いいえ、あしたは あまり あつくないです。"},{"a":"あつい","f":"pp","s":"A：きのう、外は どうだった？\nB：とても ＿よ。","en":"A: How was it outside yesterday? B: It was really hot.","cue":["きのう","どうだった"],"o":["あつかった","あつい","あつくない","あつくなかった"],"t":null,"say":"きのう、外は どうだった？ とても あつかったよ。"},{"a":"さむい","f":"pn","s":"きのうは あまり ＿。","en":"Yesterday wasn't very cold.","cue":["きのう","あまり"],"o":["さむくなかったです","さむいです","さむくないです","さむかったです"],"t":null,"say":"きのうは あまり さむくなかったです。"},{"a":"さむい","f":"te","s":"この へやは ＿、くらいです。","en":"This room is cold and dark.","cue":[],"o":["さむくて","さむい","さむいで","さむいくて"],"t":null,"say":"この へやは さむくて、くらいです。"},{"a":"さむい","f":"npa","s":"毎年 ふゆは とても ＿。","en":"Winter is very cold every year.","cue":["毎年","とても"],"o":["さむいです","さむくないです","さむかったです","さむくなかったです"],"t":null,"say":"毎年 ふゆは とても さむいです。"},{"a":"つめたい","f":"mod","s":"＿ 水を ください。","en":"Cold water, please.","cue":[],"o":["つめたい","つめたく","つめたくて","つめたいな"],"t":null,"say":"つめたい 水を ください。"},{"a":"つめたい","f":"pa","s":"けさ 飲んだ ぎゅうにゅうは とても ＿。","en":"The milk I drank this morning was very cold.","cue":["けさ","とても"],"o":["つめたかったです","つめたいです","つめたくないです","つめたくなかったです"],"t":null,"say":"けさ 飲んだ ぎゅうにゅうは とても つめたかったです。"},{"a":"すずしい","f":"adv","s":"あきに なって、＿ なりました。","en":"Autumn came and it got cooler.","cue":["なりました"],"o":["すずしく","すずしい","すずしくて","すずしいに"],"t":null,"say":"あきに なって、すずしく なりました。"},{"a":"すずしい","f":"npa","s":"この へやは いつも とても ＿。","en":"This room is always very cool.","cue":["いつも","とても"],"o":["すずしいです","すずしくないです","すずしかったです","すずしくなかったです"],"t":null,"say":"この へやは いつも とても すずしいです。"},{"a":"新しい","f":"mod","s":"＿ パソコンが ほしいです。","en":"I want a new computer.","cue":[],"o":["新しい","新しく","新しくて","新しいな"],"t":null,"say":"新しい パソコンが ほしいです。"},{"a":"新しい","f":"npn","s":"A：その 車は 新しいですか。\nB：いいえ、あまり ＿。","en":"A: Is that car new? B: No, not very.","cue":["いいえ","あまり"],"o":["新しくないです","新しいです","新しかったです","新しくなかったです"],"t":null,"say":"その 車は 新しいですか。 いいえ、あまり 新しくないです。"},{"a":"古い","f":"npa","s":"A：その じしょは 古いですか。\nB：はい、とても ＿。そふの じしょです。","en":"A: Is that dictionary old? B: Yes, very. It's my grandfather's.","cue":["はい","とても"],"o":["古いです","古くないです","古かったです","古くなかったです"],"t":null,"say":"その じしょは 古いですか。 はい、とても 古いです。そふの じしょです。"},{"a":"古い","f":"pa","s":"こどもの 時、わたしの いえは とても ＿。","en":"When I was a child, my house was very old.","cue":["こどもの 時","とても"],"o":["古かったです","古いです","古くないです","古くなかったです"],"t":null,"say":"こどもの 時、わたしの いえは とても 古かったです。"},{"a":"うすい","f":"npa","s":"A：コーヒーは どうですか。\nB：ちょっと ＿。","en":"A: How's the coffee? B: It's a little weak.","cue":["どうですか","ちょっと"],"o":["うすいです","うすくないです","うすかったです","うすくなかったです"],"t":null,"say":"コーヒーは どうですか。 ちょっと うすいです。"},{"a":"うすい","f":"mod","s":"あの ＿ 本を 見せて ください。","en":"Please show me that thin book.","cue":[],"o":["うすい","うすく","うすくて","うすいな"],"t":null,"say":"あの うすい 本を 見せて ください。"},{"a":"あまい","f":"npa","s":"A：この ケーキは あまいですか。\nB：はい、とても ＿。","en":"A: Is this cake sweet? B: Yes, very sweet.","cue":["はい","とても"],"o":["あまいです","あまくないです","あまかったです","あまくなかったです"],"t":null,"say":"この ケーキは あまいですか。 はい、とても あまいです。"},{"a":"あまい","f":"pn","s":"きのう 食べた りんごは あまり ＿。","en":"The apple I ate yesterday wasn't very sweet.","cue":["きのう","あまり"],"o":["あまくなかったです","あまいです","あまくないです","あまかったです"],"t":null,"say":"きのう 食べた りんごは あまり あまくなかったです。"},{"a":"からい","f":"pa","s":"先週 食べた カレーは とても ＿。","en":"The curry I ate last week was very spicy.","cue":["先週","とても"],"o":["からかったです","からいです","からくないです","からくなかったです"],"t":null,"say":"先週 食べた カレーは とても からかったです。"},{"a":"からい","f":"npn","s":"A：この カレーは からいですか。\nB：いいえ、ぜんぜん ＿。","en":"A: Is this curry spicy? B: No, not at all.","cue":["いいえ","ぜんぜん"],"o":["からくないです","からいです","からかったです","からくなかったです"],"t":null,"say":"この カレーは からいですか。 いいえ、ぜんぜん からくないです。"},{"a":"おいしい","f":"pa","s":"きのうの ばんごはんは とても ＿。","en":"Last night's dinner was very good.","cue":["きのう","とても"],"o":["おいしかったです","おいしいです","おいしくないです","おいしくなかったです"],"t":null,"say":"きのうの ばんごはんは とても おいしかったです。"},{"a":"おいしい","f":"mod","s":"駅の ちかくに ＿ レストランが あります。","en":"There's a good restaurant near the station.","cue":[],"o":["おいしい","おいしく","おいしくて","おいしいな"],"t":null,"say":"駅の ちかくに おいしい レストランが あります。"},{"a":"おいしい","f":"dsh","s":"あしたの パーティーの りょうりは 多分 ＿ でしょう。","en":"The food at tomorrow's party will probably be good.","cue":["あした","でしょう"],"o":["おいしい","おいしく","おいしいだ","おいしかった"],"t":null,"say":"あしたの パーティーの りょうりは 多分 おいしい でしょう。"},{"a":"まずい","f":"pn","s":"きのうの べんとうは ぜんぜん ＿。おいしかったです。","en":"Yesterday's lunch box wasn't bad at all. It was tasty.","cue":["きのう","ぜんぜん"],"o":["まずくなかったです","まずいです","まずくないです","まずかったです"],"t":null,"say":"きのうの べんとうは ぜんぜん まずくなかったです。おいしかったです。"},{"a":"まずい","f":"npa","s":"A：その コーヒーは どうですか。\nB：ちょっと ＿。もう 飲みません。","en":"A: How's that coffee? B: It tastes a bit bad. I won't drink any more.","cue":["どうですか","ちょっと"],"o":["まずいです","まずくないです","まずかったです","まずくなかったです"],"t":null,"say":"その コーヒーは どうですか。 ちょっと まずいです。もう 飲みません。"},{"a":"いい","f":"pa","s":"きのうは 天気が とても ＿。こうえんで あそびました。","en":"The weather was very nice yesterday. We played in the park.","cue":["きのう","とても"],"o":["よかったです","いいです","よくないです","よくなかったです"],"t":"いかったです","say":"きのうは 天気が とても よかったです。こうえんで あそびました。"},{"a":"いい","f":"pn","s":"先週の テストは あまり ＿。","en":"Last week's test didn't go very well.","cue":["先週","あまり"],"o":["よくなかったです","いいです","よくないです","よかったです"],"t":"いくなかったです","say":"先週の テストは あまり よくなかったです。"},{"a":"いい","f":"npn","s":"A：あしたの 天気は いいですか。\nB：いいえ、あまり ＿。雨です。","en":"A: Will the weather be good tomorrow? B: No, not very. It'll rain.","cue":["あした","あまり"],"o":["よくないです","いいです","よかったです","よくなかったです"],"t":"いくないです","say":"あしたの 天気は いいですか。 いいえ、あまり よくないです。雨です。"},{"a":"いい","f":"mod","s":"今日は ＿ 天気ですね。","en":"Nice weather today, isn't it?","cue":[],"o":["いい","よく","よくて","いいな"],"t":null,"say":"今日は いい 天気ですね。"},{"a":"いい","f":"adv","s":"かぜが だんだん ＿ なりました。","en":"My cold gradually got better.","cue":["なりました"],"o":["よく","いい","よくて","いいに"],"t":"いく","say":"かぜが だんだん よく なりました。"},{"a":"いい","f":"pp","s":"A：りょこう、どうだった？\nB：とても ＿よ。","en":"A: How was the trip? B: It was great.","cue":["どうだった","とても"],"o":["よかった","いい","よくない","よくなかった"],"t":"いかった","say":"りょこう、どうだった？ とても よかったよ。"},{"a":"よい","f":"pa","s":"先月の りょこうは とても ＿。","en":"Last month's trip was very good.","cue":["先月","とても"],"o":["よかったです","よいです","よくないです","よくなかったです"],"t":null,"say":"先月の りょこうは とても よかったです。"},{"a":"よい","f":"mod","s":"この 店には ＿ 本が たくさん あります。","en":"This shop has lots of good books.","cue":[],"o":["よい","よく","よくて","よいな"],"t":null,"say":"この 店には よい 本が たくさん あります。"},{"a":"わるい","f":"npa","s":"今、天気が とても ＿ですから、出かけません。","en":"The weather is very bad right now, so I won't go out.","cue":["今","とても"],"o":["わるいです","わるくないです","わるかったです","わるくなかったです"],"t":null,"say":"今、天気が とても わるいですですから、出かけません。"},{"a":"わるい","f":"pn","s":"先週の しけんは あまり ＿。","en":"Last week's exam wasn't too bad.","cue":["先週","あまり"],"o":["わるくなかったです","わるいです","わるくないです","わるかったです"],"t":null,"say":"先週の しけんは あまり わるくなかったです。"},{"a":"大きい","f":"mod","s":"あの ＿ たてものは 何ですか。","en":"What is that big building?","cue":[],"o":["大きい","大きく","大きくて","大きいな"],"t":null,"say":"あの 大きい たてものは 何ですか。"},{"a":"大きい","f":"pa","s":"こどもの 時、この こうえんは とても ＿。","en":"When I was a child, this park was very big.","cue":["こどもの 時","とても"],"o":["大きかったです","大きいです","大きくないです","大きくなかったです"],"t":null,"say":"こどもの 時、この こうえんは とても 大きかったです。"},{"a":"小さい","f":"npn","s":"A：その かばんは 小さいですか。\nB：いいえ、あまり ＿。","en":"A: Is that bag small? B: No, not very.","cue":["いいえ","あまり"],"o":["小さくないです","小さいです","小さかったです","小さくなかったです"],"t":null,"say":"その かばんは 小さいですか。 いいえ、あまり 小さくないです。"},{"a":"小さい","f":"pa","s":"きょねん、この いぬは まだ とても ＿。","en":"Last year this dog was still very small.","cue":["きょねん","とても"],"o":["小さかったです","小さいです","小さくないです","小さくなかったです"],"t":null,"say":"きょねん、この いぬは まだ とても 小さかったです。"},{"a":"高い","f":"pa","s":"きのうの ばんごはんは とても ＿。","en":"Last night's dinner was very expensive.","cue":["きのう","とても"],"o":["高かったです","高いです","高くないです","高くなかったです"],"t":null,"say":"きのうの ばんごはんは とても 高かったです。"},{"a":"高い","f":"npn","s":"この 店の やさいは いつも あまり ＿。","en":"The vegetables at this shop are never very expensive.","cue":["いつも","あまり"],"o":["高くないです","高いです","高かったです","高くなかったです"],"t":null,"say":"この 店の やさいは いつも あまり 高くないです。"},{"a":"高い","f":"te","s":"この レストランは ＿、おいしくないです。","en":"This restaurant is expensive and the food isn't good.","cue":[],"o":["高くて","高い","高いで","高いくて"],"t":null,"say":"この レストランは 高くて、おいしくないです。"},{"a":"ひくい","f":"npa","s":"A：お父さんは せが 高いですか。\nB：いいえ、＿。","en":"A: Is your father tall? B: No, he's short.","cue":["いいえ"],"o":["ひくいです","ひくくないです","ひくかったです","ひくくなかったです"],"t":null,"say":"お父さんは せが 高いですか。 いいえ、ひくいです。"},{"a":"ひくい","f":"mod","s":"あの ＿ 山に のぼりましょう。","en":"Let's climb that low mountain.","cue":[],"o":["ひくい","ひくく","ひくくて","ひくいな"],"t":null,"say":"あの ひくい 山に のぼりましょう。"},{"a":"安い","f":"npa","s":"この スーパーの くだものは いつも とても ＿。","en":"The fruit at this supermarket is always very cheap.","cue":["いつも","とても"],"o":["安いです","安くないです","安かったです","安くなかったです"],"t":null,"say":"この スーパーの くだものは いつも とても 安いです。"},{"a":"安い","f":"pn","s":"先週の りょこうは ホテルが あまり ＿。","en":"On last week's trip the hotel wasn't very cheap.","cue":["先週","あまり"],"o":["安くなかったです","安いです","安くないです","安かったです"],"t":null,"say":"先週の りょこうは ホテルが あまり 安くなかったです。"},{"a":"安い","f":"adv","s":"来月から バスが ＿ なります。","en":"From next month the bus will get cheaper.","cue":["なります"],"o":["安く","安い","安くて","安いに"],"t":null,"say":"来月から バスが 安く なります。"},{"a":"長い","f":"pa","s":"きのうの えいがは とても ＿。つかれました。","en":"Yesterday's movie was very long. I got tired.","cue":["きのう","とても"],"o":["長かったです","長いです","長くないです","長くなかったです"],"t":null,"say":"きのうの えいがは とても 長かったです。つかれました。"},{"a":"長い","f":"mod","s":"ふゆは ＿ スカートを はきます。","en":"In winter I wear a long skirt.","cue":[],"o":["長い","長く","長くて","長いな"],"t":null,"say":"ふゆは 長い スカートを はきます。"},{"a":"みじかい","f":"npa","s":"A：その えいがは 長いですか。\nB：いいえ、＿。","en":"A: Is that movie long? B: No, it's short.","cue":["いいえ"],"o":["みじかいです","みじかくないです","みじかかったです","みじかくなかったです"],"t":null,"say":"その えいがは 長いですか。 いいえ、みじかいです。"},{"a":"みじかい","f":"pa","s":"先週の じゅぎょうは とても ＿。","en":"Last week's class was very short.","cue":["先週","とても"],"o":["みじかかったです","みじかいです","みじかくないです","みじかくなかったです"],"t":null,"say":"先週の じゅぎょうは とても みじかかったです。"},{"a":"ふとい","f":"mod","s":"＿ ペンで 名前を 書いて ください。","en":"Please write your name with a thick pen.","cue":[],"o":["ふとい","ふとく","ふとくて","ふといな"],"t":null,"say":"ふとい ペンで 名前を 書いて ください。"},{"a":"ふとい","f":"npn","s":"A：その 木は ふといですか。\nB：いいえ、あまり ＿。","en":"A: Is that tree thick? B: No, not very.","cue":["いいえ","あまり"],"o":["ふとくないです","ふといです","ふとかったです","ふとくなかったです"],"t":null,"say":"その 木は ふといですか。 いいえ、あまり ふとくないです。"},{"a":"ほそい","f":"mod","s":"この ＿ 道を まっすぐ 行って ください。","en":"Please go straight along this narrow road.","cue":[],"o":["ほそい","ほそく","ほそくて","ほそいな"],"t":null,"say":"この ほそい 道を まっすぐ 行って ください。"},{"a":"ほそい","f":"pa","s":"こどもの 時、あには とても ＿。","en":"When we were children, my older brother was very thin.","cue":["こどもの 時","とても"],"o":["ほそかったです","ほそいです","ほそくないです","ほそくなかったです"],"t":null,"say":"こどもの 時、あには とても ほそかったです。"},{"a":"ひろい","f":"te","s":"この へやは ＿ あかるいです。","en":"This room is spacious and bright.","cue":[],"o":["ひろくて","ひろい","ひろいで","ひろいくて"],"t":null,"say":"この へやは ひろくて あかるいです。"},{"a":"ひろい","f":"npn","s":"A：新しい いえは ひろいですか。\nB：いいえ、あまり ＿。","en":"A: Is your new house spacious? B: No, not very.","cue":["いいえ","あまり"],"o":["ひろくないです","ひろいです","ひろかったです","ひろくなかったです"],"t":null,"say":"新しい いえは ひろいですか。 いいえ、あまり ひろくないです。"},{"a":"せまい","f":"pa","s":"きょねんは へやが とても ＿。","en":"Last year my room was very cramped.","cue":["きょねん","とても"],"o":["せまかったです","せまいです","せまくないです","せまくなかったです"],"t":null,"say":"きょねんは へやが とても せまかったです。"},{"a":"せまい","f":"mod","s":"＿ へやですが、駅から ちかいです。","en":"It's a small room, but it's close to the station.","cue":[],"o":["せまい","せまく","せまくて","せまいな"],"t":null,"say":"せまい へやですが、駅から ちかいです。"},{"a":"おもい","f":"npa","s":"この にもつは とても ＿から、いっしょに もって ください。","en":"This luggage is very heavy, so please help me carry it.","cue":["とても","ください"],"o":["おもいです","おもくないです","おもかったです","おもくなかったです"],"t":null,"say":"この にもつは とても おもいですから、いっしょに もって ください。"},{"a":"おもい","f":"pn","s":"きのうの にもつは あまり ＿。","en":"Yesterday's luggage wasn't very heavy.","cue":["きのう","あまり"],"o":["おもくなかったです","おもいです","おもくないです","おもかったです"],"t":null,"say":"きのうの にもつは あまり おもくなかったです。"},{"a":"かるい","f":"npa","s":"この かばんは とても ＿から、毎日 もって 行きます。","en":"This bag is very light, so I take it every day.","cue":["とても","毎日"],"o":["かるいです","かるくないです","かるかったです","かるくなかったです"],"t":null,"say":"この かばんは とても かるいですから、毎日 もって 行きます。"},{"a":"かるい","f":"adv","s":"にもつが ＿ なりました。","en":"The luggage got lighter.","cue":["なりました"],"o":["かるく","かるい","かるくて","かるいに"],"t":null,"say":"にもつが かるく なりました。"},{"a":"ちかい","f":"npa","s":"わたしの いえは 駅から とても ＿から、毎日 あるいて 行きます。","en":"My house is very close to the station, so I walk every day.","cue":["とても","毎日"],"o":["ちかいです","ちかくないです","ちかかったです","ちかくなかったです"],"t":null,"say":"わたしの いえは 駅から とても ちかいですから、毎日 あるいて 行きます。"},{"a":"ちかい","f":"pn","s":"きょねんは いえが 駅から あまり ＿。","en":"Last year my house wasn't very close to the station.","cue":["きょねん","あまり"],"o":["ちかくなかったです","ちかいです","ちかくないです","ちかかったです"],"t":null,"say":"きょねんは いえが 駅から あまり ちかくなかったです。"},{"a":"とおい","f":"npn","s":"A：学校は とおいですか。\nB：いいえ、あまり ＿。","en":"A: Is school far? B: No, not very.","cue":["いいえ","あまり"],"o":["とおくないです","とおいです","とおかったです","とおくなかったです"],"t":null,"say":"学校は とおいですか。 いいえ、あまり とおくないです。"},{"a":"とおい","f":"pa","s":"こどもの 時、学校は とても ＿。","en":"When I was a child, school was very far away.","cue":["こどもの 時","とても"],"o":["とおかったです","とおいです","とおくないです","とおくなかったです"],"t":null,"say":"こどもの 時、学校は とても とおかったです。"},{"a":"早い","f":"adv","s":"あしたは ＿ おきます。","en":"I'll get up early tomorrow.","cue":["おきます"],"o":["早く","早い","早くて","早いに"],"t":null,"say":"あしたは 早く おきます。"},{"a":"早い","f":"npa","s":"父は おきるのが とても ＿。","en":"My father gets up very early.","cue":["とても"],"o":["早いです","早くないです","早かったです","早くなかったです"],"t":null,"say":"父は おきるのが とても 早いです。"},{"a":"はやい","f":"npa","s":"電車は バスより ＿。","en":"The train is faster than the bus.","cue":["より"],"o":["はやいです","はやくないです","はやかったです","はやくなかったです"],"t":null,"say":"電車は バスより はやいです。"},{"a":"はやい","f":"pa","s":"こどもの 時、あには はしるのが とても ＿。","en":"As a child, my older brother was a really fast runner.","cue":["こどもの 時","とても"],"o":["はやかったです","はやいです","はやくないです","はやくなかったです"],"t":null,"say":"こどもの 時、あには はしるのが とても はやかったです。"},{"a":"おそい","f":"adv","s":"すみません、＿ なりました。","en":"Sorry I'm late.","cue":["なりました"],"o":["おそく","おそい","おそくて","おそいに"],"t":null,"say":"すみません、おそく なりました。"},{"a":"おそい","f":"npa","s":"この バスは いつも とても ＿。","en":"This bus is always very slow.","cue":["いつも","とても"],"o":["おそいです","おそくないです","おそかったです","おそくなかったです"],"t":null,"say":"この バスは いつも とても おそいです。"},{"a":"多い","f":"npa","s":"にちようびの こうえんは いつも 人が とても ＿。","en":"The park is always very crowded on Sundays.","cue":["いつも","とても"],"o":["多いです","多くないです","多かったです","多くなかったです"],"t":null,"say":"にちようびの こうえんは いつも 人が とても 多いです。"},{"a":"多い","f":"pn","s":"きのうの 電車は 人が あまり ＿。","en":"Yesterday's train wasn't very crowded.","cue":["きのう","あまり"],"o":["多くなかったです","多いです","多くないです","多かったです"],"t":null,"say":"きのうの 電車は 人が あまり 多くなかったです。"},{"a":"少ない","f":"npa","s":"今、この むらは 人が とても ＿。","en":"Very few people live in this village now.","cue":["今","とても"],"o":["少ないです","少なくないです","少なかったです","少なくなかったです"],"t":null,"say":"今、この むらは 人が とても 少ないです。"},{"a":"少ない","f":"adv","s":"この まちは こどもが だんだん ＿ なりました。","en":"There are fewer and fewer children in this town.","cue":["なりました"],"o":["少なく","少ない","少なくて","少ないに"],"t":null,"say":"この まちは こどもが だんだん 少なく なりました。"},{"a":"つよい","f":"pa","s":"きのうの よるは 雨が とても ＿。","en":"The rain was very heavy last night.","cue":["きのう","とても"],"o":["つよかったです","つよいです","つよくないです","つよくなかったです"],"t":null,"say":"きのうの よるは 雨が とても つよかったです。"},{"a":"つよい","f":"mod","s":"わたしは ＿ おさけは 飲みません。","en":"I don't drink strong alcohol.","cue":[],"o":["つよい","つよく","つよくて","つよいな"],"t":null,"say":"わたしは つよい おさけは 飲みません。"},{"a":"よわい","f":"npa","s":"A：あなたの いぬは つよいですか。\nB：いいえ、＿。まだ 小さいですから。","en":"A: Is your dog strong? B: No, it's weak. It's still small.","cue":["いいえ","小さいですから"],"o":["よわいです","よわくないです","よわかったです","よわくなかったです"],"t":null,"say":"あなたの いぬは つよいですか。 いいえ、よわいです。まだ 小さいですから。"},{"a":"よわい","f":"adv","s":"雨が だんだん ＿ なりました。","en":"The rain gradually got weaker.","cue":["なりました"],"o":["よわく","よわい","よわくて","よわいに"],"t":null,"say":"雨が だんだん よわく なりました。"},{"a":"むずかしい","f":"pa","s":"先週の しけんは とても ＿。","en":"Last week's exam was very hard.","cue":["先週","とても"],"o":["むずかしかったです","むずかしいです","むずかしくないです","むずかしくなかったです"],"t":null,"say":"先週の しけんは とても むずかしかったです。"},{"a":"むずかしい","f":"npn","s":"A：日本語は むずかしいですか。\nB：いいえ、あまり ＿。","en":"A: Is Japanese difficult? B: No, not very.","cue":["いいえ","あまり"],"o":["むずかしくないです","むずかしいです","むずかしかったです","むずかしくなかったです"],"t":null,"say":"日本語は むずかしいですか。 いいえ、あまり むずかしくないです。"},{"a":"むずかしい","f":"dsh","s":"来週の テストは 多分 ＿ でしょう。","en":"Next week's test will probably be difficult.","cue":["来週","でしょう"],"o":["むずかしい","むずかしく","むずかしいだ","むずかしかった"],"t":null,"say":"来週の テストは 多分 むずかしい でしょう。"},{"a":"むずかしい","f":"pp","s":"A：きのうの テスト、どうだった？\nB：とても ＿よ。","en":"A: How was yesterday's test? B: It was really hard.","cue":["きのう","どうだった"],"o":["むずかしかった","むずかしい","むずかしくない","むずかしくなかった"],"t":null,"say":"きのうの テスト、どうだった？ とても むずかしかったよ。"},{"a":"やさしい","f":"mod","s":"やまだ先生は ＿ 先生です。","en":"Ms. Yamada is a kind teacher.","cue":[],"o":["やさしい","やさしく","やさしくて","やさしいな"],"t":null,"say":"やまだ先生は やさしい 先生です。"},{"a":"やさしい","f":"pn","s":"A：きのうの しけんは やさしかったですか。\nB：いいえ、ぜんぜん ＿。","en":"A: Was yesterday's exam easy? B: No, not at all.","cue":["きのう","ぜんぜん"],"o":["やさしくなかったです","やさしいです","やさしくないです","やさしかったです"],"t":null,"say":"きのうの しけんは やさしかったですか。 いいえ、ぜんぜん やさしくなかったです。"},{"a":"おもしろい","f":"pa","s":"先週の じゅぎょうは とても ＿。","en":"Last week's class was very interesting.","cue":["先週","とても"],"o":["おもしろかったです","おもしろいです","おもしろくないです","おもしろくなかったです"],"t":null,"say":"先週の じゅぎょうは とても おもしろかったです。"},{"a":"おもしろい","f":"npn","s":"今 読んで いる 本は あまり ＿。","en":"The book I'm reading now isn't very interesting.","cue":["今","あまり"],"o":["おもしろくないです","おもしろいです","おもしろかったです","おもしろくなかったです"],"t":null,"say":"今 読んで いる 本は あまり おもしろくないです。"},{"a":"おもしろい","f":"nn","s":"A：その ゲーム、おもしろい？\nB：あまり ＿よ。","en":"A: Is that game fun? B: Not really.","cue":["おもしろい？","あまり"],"o":["おもしろくない","おもしろい","おもしろかった","おもしろくなかった"],"t":null,"say":"その ゲーム、おもしろい？ あまり おもしろくないよ。"},{"a":"つまらない","f":"pa","s":"きのうの パーティーは ＿から、すぐ かえりました。","en":"Yesterday's party was boring, so I went home right away.","cue":["きのう","かえりました"],"o":["つまらなかったです","つまらないです","つまらなくないです","つまらなくなかったです"],"t":null,"say":"きのうの パーティーは つまらなかったですから、すぐ かえりました。"},{"a":"つまらない","f":"npn","s":"A：じゅぎょうは つまらないですか。\nB：いいえ、ぜんぜん ＿。","en":"A: Are your classes boring? B: No, not at all.","cue":["いいえ","ぜんぜん"],"o":["つまらなくないです","つまらないです","つまらなかったです","つまらなくなかったです"],"t":null,"say":"じゅぎょうは つまらないですか。 いいえ、ぜんぜん つまらなくないです。"},{"a":"たのしい","f":"pa","s":"先週の りょこうは とても ＿。","en":"Last week's trip was a lot of fun.","cue":["先週","とても"],"o":["たのしかったです","たのしいです","たのしくないです","たのしくなかったです"],"t":null,"say":"先週の りょこうは とても たのしかったです。"},{"a":"たのしい","f":"te","s":"日本語の じゅぎょうは ＿、おもしろいです。","en":"Japanese class is fun and interesting.","cue":[],"o":["たのしくて","たのしい","たのしいで","たのしいくて"],"t":null,"say":"日本語の じゅぎょうは たのしくて、おもしろいです。"},{"a":"たのしい","f":"dsh","s":"あしたの パーティーは 多分 ＿ でしょう。","en":"Tomorrow's party will probably be fun.","cue":["あした","でしょう"],"o":["たのしい","たのしく","たのしいだ","たのしかった"],"t":null,"say":"あしたの パーティーは 多分 たのしい でしょう。"},{"a":"たのしい","f":"pp","s":"A：なつやすみ、どうだった？\nB：とても ＿よ。","en":"A: How was summer vacation? B: It was a lot of fun.","cue":["どうだった","とても"],"o":["たのしかった","たのしい","たのしくない","たのしくなかった"],"t":null,"say":"なつやすみ、どうだった？ とても たのしかったよ。"},{"a":"いそがしい","f":"npa","s":"来週は しごとが とても ＿。","en":"I'll be very busy with work next week.","cue":["来週","とても"],"o":["いそがしいです","いそがしくないです","いそがしかったです","いそがしくなかったです"],"t":null,"say":"来週は しごとが とても いそがしいです。"},{"a":"いそがしい","f":"pn","s":"きのうは あまり ＿。","en":"I wasn't very busy yesterday.","cue":["きのう","あまり"],"o":["いそがしくなかったです","いそがしいです","いそがしくないです","いそがしかったです"],"t":null,"say":"きのうは あまり いそがしくなかったです。"},{"a":"いそがしい","f":"nn","s":"A：あした、ひま？\nB：うん、あしたは ＿から、いっしょに 行きましょう。","en":"A: Free tomorrow? B: Yeah, I'm not busy tomorrow, so let's go together.","cue":["ひま？","いっしょに"],"o":["いそがしくない","いそがしい","いそがしかった","いそがしくなかった"],"t":null,"say":"あした、ひま？ うん、あしたは いそがしくないから、いっしょに 行きましょう。"},{"a":"いたい","f":"npa","s":"今、あたまが とても ＿。","en":"My head hurts a lot right now.","cue":["今","とても"],"o":["いたいです","いたくないです","いたかったです","いたくなかったです"],"t":null,"say":"今、あたまが とても いたいです。"},{"a":"いたい","f":"pa","s":"きのうは おなかが ＿。でも、今日は だいじょうぶです。","en":"My stomach hurt yesterday. But today I'm fine.","cue":["きのう","でも"],"o":["いたかったです","いたいです","いたくないです","いたくなかったです"],"t":null,"say":"きのうは おなかが いたかったです。でも、今日は だいじょうぶです。"},{"a":"かわいい","f":"mod","s":"＿ ねこですね。","en":"What a cute cat!","cue":[],"o":["かわいい","かわいく","かわいくて","かわいいな"],"t":null,"say":"かわいい ねこですね。"},{"a":"かわいい","f":"pa","s":"こどもの 時、いもうとは とても ＿。","en":"My little sister was very cute as a child.","cue":["こどもの 時","とても"],"o":["かわいかったです","かわいいです","かわいくないです","かわいくなかったです"],"t":null,"say":"こどもの 時、いもうとは とても かわいかったです。"},{"a":"きたない","f":"npa","s":"この へやは とても ＿。そうじ して ください。","en":"This room is very dirty. Please clean it.","cue":["とても","ください"],"o":["きたないです","きたなくないです","きたなかったです","きたなくなかったです"],"t":null,"say":"この へやは とても きたないです。そうじ して ください。"},{"a":"きたない","f":"mod","s":"＿ くつで へやに 入らないで ください。","en":"Please don't come into the room in dirty shoes.","cue":[],"o":["きたない","きたなく","きたなくて","きたないな"],"t":null,"say":"きたない くつで へやに 入らないで ください。"},{"a":"わかい","f":"mod","s":"この まちには ＿ 人が 多いです。","en":"There are lots of young people in this town.","cue":[],"o":["わかい","わかく","わかくて","わかいな"],"t":null,"say":"この まちには わかい 人が 多いです。"},{"a":"わかい","f":"pa","s":"その 時、父は まだ ＿。","en":"At that time, my father was still young.","cue":["その 時","まだ"],"o":["わかかったです","わかいです","わかくないです","わかくなかったです"],"t":null,"say":"その 時、父は まだ わかかったです。"},{"a":"まるい","f":"mod","s":"＿ テーブルを 買いました。","en":"I bought a round table.","cue":[],"o":["まるい","まるく","まるくて","まるいな"],"t":null,"say":"まるい テーブルを 買いました。"},{"a":"まるい","f":"npa","s":"見て ください。今日は 月が とても ＿よ。","en":"Look! The moon is very round today.","cue":["見て ください","とても"],"o":["まるいです","まるくないです","まるかったです","まるくなかったです"],"t":null,"say":"見て ください。今日は 月が とても まるいですよ。"},{"a":"ほしい","f":"npa","s":"今、新しい くつが とても ＿。","en":"Right now I really want new shoes.","cue":["今","とても"],"o":["ほしいです","ほしくないです","ほしかったです","ほしくなかったです"],"t":null,"say":"今、新しい くつが とても ほしいです。"},{"a":"ほしい","f":"pa","s":"こどもの 時、いぬが とても ＿。","en":"When I was a child, I really wanted a dog.","cue":["こどもの 時","とても"],"o":["ほしかったです","ほしいです","ほしくないです","ほしくなかったです"],"t":null,"say":"こどもの 時、いぬが とても ほしかったです。"},{"a":"うるさい","f":"npa","s":"今、となりの へやが とても ＿。しずかに して ください。","en":"The next room is very noisy right now. Please ask them to be quiet.","cue":["今","とても"],"o":["うるさいです","うるさくないです","うるさかったです","うるさくなかったです"],"t":null,"say":"今、となりの へやが とても うるさいです。しずかに して ください。"},{"a":"うるさい","f":"pn","s":"ゆうべは あまり ＿。よく ねました。","en":"It wasn't very noisy last night. I slept well.","cue":["ゆうべ","あまり"],"o":["うるさくなかったです","うるさいです","うるさくないです","うるさかったです"],"t":null,"say":"ゆうべは あまり うるさくなかったです。よく ねました。"},{"a":"すき","f":"npa","s":"A：やさいが すきですか。\nB：はい、とても ＿。","en":"A: Do you like vegetables? B: Yes, very much.","cue":["はい","とても"],"o":["すきです","すきじゃないです","すきでした","すきじゃなかったです"],"t":null,"say":"やさいが すきですか。 はい、とても すきです。"},{"a":"すき","f":"pn","s":"こどもの 時、やさいが あまり ＿。","en":"As a child, I didn't really like vegetables.","cue":["こどもの 時","あまり"],"o":["すきじゃなかったです","すきです","すきじゃないです","すきでした"],"t":null,"say":"こどもの 時、やさいが あまり すきじゃなかったです。"},{"a":"すき","f":"mod","s":"＿ たべものは 何ですか。","en":"What food do you like?","cue":[],"o":["すきな","すきに","すきで","すきの"],"t":null,"say":"すきな たべものは 何ですか。"},{"a":"すき","f":"adv","s":"日本語が ＿ なりました。","en":"I've come to like Japanese.","cue":["なりました"],"o":["すきに","すきな","すきで","すきだ"],"t":null,"say":"日本語が すきに なりました。"},{"a":"きらい","f":"pa","s":"こどもの 時、魚が とても ＿。","en":"As a child, I really disliked fish.","cue":["こどもの 時","とても"],"o":["きらいでした","きらいです","きらいじゃないです","きらいじゃなかったです"],"t":"きらかったです","say":"こどもの 時、魚が とても きらいでした。"},{"a":"きらい","f":"npn","s":"A：やさいが きらいですか。\nB：いいえ、＿。すきです。","en":"A: Do you dislike vegetables? B: No, I don't. I like them.","cue":["いいえ","すきです"],"o":["きらいじゃないです","きらいです","きらいでした","きらいじゃなかったです"],"t":"きらくないです","say":"やさいが きらいですか。 いいえ、きらいじゃないです。すきです。"},{"a":"きらい","f":"mod","s":"＿ たべものは ありますか。","en":"Is there any food you dislike?","cue":[],"o":["きらいな","きらいに","きらいで","きらいの"],"t":null,"say":"きらいな たべものは ありますか。"},{"a":"きらい","f":"nn","s":"A：ねこ、きらい？\nB：ぜんぜん ＿よ。","en":"A: Do you hate cats? B: Not at all.","cue":["きらい？","ぜんぜん"],"o":["きらいじゃない","きらいだ","きらいだった","きらいじゃなかった"],"t":"きらくない","say":"ねこ、きらい？ ぜんぜん きらいじゃないよ。"},{"a":"だいすき","f":"npa","s":"A：この うたが すきですか。\nB：はい、＿。","en":"A: Do you like this song? B: Yes, I love it.","cue":["はい"],"o":["だいすきです","だいすきじゃないです","だいすきでした","だいすきじゃなかったです"],"t":null,"say":"この うたが すきですか。 はい、だいすきです。"},{"a":"だいすき","f":"pa","s":"こどもの 時、この ゲームが ＿。毎日 しました。","en":"As a child, I loved this game. I played it every day.","cue":["こどもの 時","毎日 しました"],"o":["だいすきでした","だいすきです","だいすきじゃないです","だいすきじゃなかったです"],"t":null,"say":"こどもの 時、この ゲームが だいすきでした。毎日 しました。"},{"a":"だいきらい","f":"npa","s":"A：やさいは すきですか。\nB：いいえ、＿。","en":"A: Do you like vegetables? B: No, I hate them.","cue":["いいえ"],"o":["だいきらいです","だいきらいじゃないです","だいきらいでした","だいきらいじゃなかったです"],"t":null,"say":"やさいは すきですか。 いいえ、だいきらいです。"},{"a":"だいきらい","f":"pa","s":"こどもの 時、びょういんが ＿。いつも 行きたく ありませんでした。","en":"As a child, I hated hospitals. I never wanted to go.","cue":["こどもの 時","行きたく ありませんでした"],"o":["だいきらいでした","だいきらいです","だいきらいじゃないです","だいきらいじゃなかったです"],"t":"だいきらかったです","say":"こどもの 時、びょういんが だいきらいでした。いつも 行きたく ありませんでした。"},{"a":"上手","f":"npa","s":"マリアさんは 日本語が とても ＿ね。","en":"Maria, your Japanese is very good!","cue":["とても","ね"],"o":["上手です","上手じゃないです","上手でした","上手じゃなかったです"],"t":null,"say":"マリアさんは 日本語が とても 上手ですね。"},{"a":"上手","f":"adv","s":"ギターが 少し ＿ なりました。","en":"I've gotten a little better at the guitar.","cue":["なりました"],"o":["上手に","上手な","上手で","上手だ"],"t":null,"say":"ギターが 少し 上手に なりました。"},{"a":"上手","f":"pn","s":"こどもの 時、えが あまり ＿。","en":"As a child, I wasn't very good at drawing.","cue":["こどもの 時","あまり"],"o":["上手じゃなかったです","上手です","上手じゃないです","上手でした"],"t":null,"say":"こどもの 時、えが あまり 上手じゃなかったです。"},{"a":"下手","f":"npa","s":"わたしは りょうりが ＿から、いつも 母が つくります。","en":"I'm bad at cooking, so my mother always cooks.","cue":["いつも"],"o":["下手です","下手じゃないです","下手でした","下手じゃなかったです"],"t":null,"say":"わたしは りょうりが 下手ですから、いつも 母が つくります。"},{"a":"下手","f":"pa","s":"きょねんは 日本語が ＿。でも、今は 上手です。","en":"Last year my Japanese was poor. But now it's good.","cue":["きょねん","今は 上手です"],"o":["下手でした","下手です","下手じゃないです","下手じゃなかったです"],"t":null,"say":"きょねんは 日本語が 下手でした。でも、今は 上手です。"},{"a":"げんき","f":"pa","s":"こどもの 時、そふは とても ＿。","en":"When I was a child, my grandfather was very healthy.","cue":["こどもの 時","とても"],"o":["げんきでした","げんきです","げんきじゃないです","げんきじゃなかったです"],"t":null,"say":"こどもの 時、そふは とても げんきでした。"},{"a":"げんき","f":"mod","s":"＿ こどもですね。","en":"What an energetic child!","cue":[],"o":["げんきな","げんきに","げんきで","げんきの"],"t":null,"say":"げんきな こどもですね。"},{"a":"げんき","f":"npn","s":"A：おげんきですか。\nB：いいえ、今日は あまり ＿。","en":"A: How are you? B: Not so well today.","cue":["おげんきですか","あまり"],"o":["げんきじゃないです","げんきです","げんきでした","げんきじゃなかったです"],"t":null,"say":"おげんきですか。 いいえ、今日は あまり げんきじゃないです。"},{"a":"しずか","f":"pa","s":"こどもの 時、この まちは とても ＿。","en":"When I was a child, this town was very quiet.","cue":["こどもの 時","とても"],"o":["しずかでした","しずかです","しずかじゃないです","しずかじゃなかったです"],"t":null,"say":"こどもの 時、この まちは とても しずかでした。"},{"a":"しずか","f":"mod","s":"この ＿ こうえんが すきです。","en":"I like this quiet park.","cue":[],"o":["しずかな","しずかに","しずかで","しずかの"],"t":null,"say":"この しずかな こうえんが すきです。"},{"a":"しずか","f":"adv","s":"としょかんでは ＿ はなして ください。","en":"Please speak quietly in the library.","cue":["はなして"],"o":["しずかに","しずかな","しずかで","しずかだ"],"t":null,"say":"としょかんでは しずかに はなして ください。"},{"a":"しずか","f":"dsh","s":"あしたは 休みですから、学校は ＿ でしょう。","en":"Tomorrow is a holiday, so the school will probably be quiet.","cue":["あした","でしょう"],"o":["しずか","しずかだ","しずかな","しずかに"],"t":null,"say":"あしたは 休みですから、学校は しずか でしょう。"},{"a":"しずか","f":"te","s":"この こうえんは ＿ きれいです。","en":"This park is quiet and clean.","cue":[],"o":["しずかで","しずかな","しずかに","しずかだ"],"t":null,"say":"この こうえんは しずかで きれいです。"},{"a":"にぎやか","f":"dsh","s":"あしたの パーティーは 人が 多いですから、＿ でしょう。","en":"Lots of people are coming tomorrow, so the party will probably be lively.","cue":["あした","でしょう"],"o":["にぎやか","にぎやかだ","にぎやかな","にぎやかに"],"t":null,"say":"あしたの パーティーは 人が 多いですから、にぎやか でしょう。"},{"a":"にぎやか","f":"pa","s":"きのうの パーティーは とても ＿。","en":"Yesterday's party was very lively.","cue":["きのう","とても"],"o":["にぎやかでした","にぎやかです","にぎやかじゃないです","にぎやかじゃなかったです"],"t":null,"say":"きのうの パーティーは とても にぎやかでした。"},{"a":"にぎやか","f":"npn","s":"A：駅の ちかくは にぎやかですか。\nB：いいえ、あまり ＿。","en":"A: Is the area near the station lively? B: No, not very.","cue":["いいえ","あまり"],"o":["にぎやかじゃないです","にぎやかです","にぎやかでした","にぎやかじゃなかったです"],"t":null,"say":"駅の ちかくは にぎやかですか。 いいえ、あまり にぎやかじゃないです。"},{"a":"きれい","f":"npa","s":"A：へやは きれいですか。\nB：はい、とても ＿。","en":"A: Is the room clean? B: Yes, very.","cue":["はい","とても"],"o":["きれいです","きれいじゃないです","きれいでした","きれいじゃなかったです"],"t":null,"say":"へやは きれいですか。 はい、とても きれいです。"},{"a":"きれい","f":"pn","s":"きのうは 川が あまり ＿。","en":"The river wasn't very clean yesterday.","cue":["きのう","あまり"],"o":["きれいじゃなかったです","きれいです","きれいじゃないです","きれいでした"],"t":"きれくなかったです","say":"きのうは 川が あまり きれいじゃなかったです。"},{"a":"きれい","f":"mod","s":"＿ 花ですね。","en":"What pretty flowers!","cue":[],"o":["きれいな","きれいに","きれいで","きれいの"],"t":null,"say":"きれいな 花ですね。"},{"a":"きれい","f":"adv","s":"名前を ＿ 書いて ください。","en":"Please write your name neatly.","cue":["書いて"],"o":["きれいに","きれいな","きれいで","きれいだ"],"t":"きれく","say":"名前を きれいに 書いて ください。"},{"a":"きれい","f":"nn","s":"A：その へや、きれい？\nB：あまり ＿よ。","en":"A: Is that room clean? B: Not really.","cue":["きれい？","あまり"],"o":["きれいじゃない","きれいだ","きれいだった","きれいじゃなかった"],"t":"きれくない","say":"その へや、きれい？ あまり きれいじゃないよ。"},{"a":"ゆうめい","f":"mod","s":"ここは ＿ レストランです。","en":"This is a famous restaurant.","cue":[],"o":["ゆうめいな","ゆうめいに","ゆうめいで","ゆうめいの"],"t":null,"say":"ここは ゆうめいな レストランです。"},{"a":"ゆうめい","f":"pa","s":"きょねん、この うたは とても ＿。","en":"Last year this song was very famous.","cue":["きょねん","とても"],"o":["ゆうめいでした","ゆうめいです","ゆうめいじゃないです","ゆうめいじゃなかったです"],"t":"ゆうめかったです","say":"きょねん、この うたは とても ゆうめいでした。"},{"a":"ゆうめい","f":"npn","s":"A：その 山は ゆうめいですか。\nB：いいえ、あまり ＿。","en":"A: Is that mountain famous? B: No, not very.","cue":["いいえ","あまり"],"o":["ゆうめいじゃないです","ゆうめいです","ゆうめいでした","ゆうめいじゃなかったです"],"t":"ゆうめくないです","say":"その 山は ゆうめいですか。 いいえ、あまり ゆうめいじゃないです。"},{"a":"しんせつ","f":"mod","s":"やまださんは ＿ 人です。","en":"Mr. Yamada is a kind person.","cue":[],"o":["しんせつな","しんせつに","しんせつで","しんせつの"],"t":null,"say":"やまださんは しんせつな 人です。"},{"a":"しんせつ","f":"pa","s":"きのう、店の 人は とても ＿。","en":"Yesterday the shop staff were very kind.","cue":["きのう","とても"],"o":["しんせつでした","しんせつです","しんせつじゃないです","しんせつじゃなかったです"],"t":null,"say":"きのう、店の 人は とても しんせつでした。"},{"a":"べんり","f":"npa","s":"駅が ちかいですから、この いえは とても ＿。","en":"The station is close, so this house is very convenient.","cue":["ちかいですから","とても"],"o":["べんりです","べんりじゃないです","べんりでした","べんりじゃなかったです"],"t":null,"say":"駅が ちかいですから、この いえは とても べんりです。"},{"a":"べんり","f":"adv","s":"ちかてつが 出来て、まちが ＿ なりました。","en":"The subway was built and the town became convenient.","cue":["なりました"],"o":["べんりに","べんりな","べんりで","べんりだ"],"t":null,"say":"ちかてつが 出来て、まちが べんりに なりました。"},{"a":"ふべん","f":"pa","s":"先月は 駅が とおくて、とても ＿。","en":"Last month the station was far away, so it was very inconvenient.","cue":["先月","とても"],"o":["ふべんでした","ふべんです","ふべんじゃないです","ふべんじゃなかったです"],"t":null,"say":"先月は 駅が とおくて、とても ふべんでした。"},{"a":"ふべん","f":"npa","s":"この まちは バスが 少ないですから、とても ＿。","en":"There are few buses in this town, so it's very inconvenient.","cue":["少ないですから","とても"],"o":["ふべんです","ふべんじゃないです","ふべんでした","ふべんじゃなかったです"],"t":null,"say":"この まちは バスが 少ないですから、とても ふべんです。"},{"a":"ひま","f":"npa","s":"あしたは ＿から、いっしょに えいがを 見ましょう。","en":"I'm free tomorrow, so let's watch a movie together.","cue":["あした","いっしょに"],"o":["ひまです","ひまじゃないです","ひまでした","ひまじゃなかったです"],"t":null,"say":"あしたは ひまですから、いっしょに えいがを 見ましょう。"},{"a":"ひま","f":"pn","s":"先週は あまり ＿。いそがしかったです。","en":"I wasn't very free last week. I was busy.","cue":["先週","あまり"],"o":["ひまじゃなかったです","ひまです","ひまじゃないです","ひまでした"],"t":null,"say":"先週は あまり ひまじゃなかったです。いそがしかったです。"},{"a":"だいじょうぶ","f":"pa","s":"A：きのうの しけんは どうでしたか。\nB：＿。よく 出来ました。","en":"A: How was yesterday's exam? B: It was fine. I did well.","cue":["どうでしたか","よく 出来ました"],"o":["だいじょうぶでした","だいじょうぶです","だいじょうぶじゃないです","だいじょうぶじゃなかったです"],"t":null,"say":"きのうの しけんは どうでしたか。 だいじょうぶでした。よく 出来ました。"},{"a":"だいじょうぶ","f":"npn","s":"A：足は だいじょうぶですか。\nB：いいえ、あまり ＿。とても いたいです。","en":"A: Is your leg OK? B: No, not really. It hurts a lot.","cue":["いいえ","いたいです"],"o":["だいじょうぶじゃないです","だいじょうぶです","だいじょうぶでした","だいじょうぶじゃなかったです"],"t":null,"say":"足は だいじょうぶですか。 いいえ、あまり だいじょうぶじゃないです。とても いたいです。"},{"a":"たいせつ","f":"mod","s":"これは わたしの ＿ しゃしんです。","en":"This is a precious photo of mine.","cue":[],"o":["たいせつな","たいせつに","たいせつで","たいせつの"],"t":null,"say":"これは わたしの たいせつな しゃしんです。"},{"a":"たいせつ","f":"npa","s":"A：その とけいは たいせつですか。\nB：はい、とても ＿。そふの とけいです。","en":"A: Is that watch important to you? B: Yes, very. It's my grandfather's.","cue":["はい","とても"],"o":["たいせつです","たいせつじゃないです","たいせつでした","たいせつじゃなかったです"],"t":null,"say":"その とけいは たいせつですか。 はい、とても たいせつです。そふの とけいです。"},{"a":"たいへん","f":"pa","s":"先週は しごとが とても ＿。","en":"Work was really tough last week.","cue":["先週","とても"],"o":["たいへんでした","たいへんです","たいへんじゃないです","たいへんじゃなかったです"],"t":null,"say":"先週は しごとが とても たいへんでした。"},{"a":"たいへん","f":"npn","s":"A：しごとは たいへんですか。\nB：いいえ、あまり ＿。","en":"A: Is your job hard? B: No, not very.","cue":["いいえ","あまり"],"o":["たいへんじゃないです","たいへんです","たいへんでした","たいへんじゃなかったです"],"t":null,"say":"しごとは たいへんですか。 いいえ、あまり たいへんじゃないです。"},{"a":"じょうぶ","f":"mod","s":"＿ かばんが ほしいです。","en":"I want a sturdy bag.","cue":[],"o":["じょうぶな","じょうぶに","じょうぶで","じょうぶの"],"t":null,"say":"じょうぶな かばんが ほしいです。"},{"a":"じょうぶ","f":"pn","s":"こどもの 時、わたしは からだが あまり ＿。","en":"As a child, I wasn't very strong.","cue":["こどもの 時","あまり"],"o":["じょうぶじゃなかったです","じょうぶです","じょうぶじゃないです","じょうぶでした"],"t":null,"say":"こどもの 時、わたしは からだが あまり じょうぶじゃなかったです。"},{"a":"おなじ","f":"mod","s":"わたしと あねは ＿ 学校に 行きました。","en":"My sister and I went to the same school.","cue":[],"o":["おなじ","おなじな","おなじに","おなじで"],"t":null,"say":"わたしと あねは おなじ 学校に 行きました。"},{"a":"おなじ","f":"pa","s":"おとといと きのう、ばんごはんは ＿。また カレーでした。","en":"Dinner the day before yesterday and yesterday was the same. Curry again.","cue":["おととい","また"],"o":["おなじでした","おなじです","おなじじゃないです","おなじじゃなかったです"],"t":null,"say":"おとといと きのう、ばんごはんは おなじでした。また カレーでした。"},{"a":"いろいろ","f":"mod","s":"この 店には ＿ くつが あります。","en":"This shop has all kinds of shoes.","cue":[],"o":["いろいろな","いろいろに","いろいろで","いろいろだ"],"t":null,"say":"この 店には いろいろな くつが あります。"},{"a":"いや","f":"npa","s":"A：雨の 日は すきですか。\nB：いいえ、＿。","en":"A: Do you like rainy days? B: No, I hate them.","cue":["いいえ"],"o":["いやです","いやじゃないです","いやでした","いやじゃなかったです"],"t":null,"say":"雨の 日は すきですか。 いいえ、いやです。"},{"a":"いや","f":"mod","s":"＿ ことばを 言わないで ください。","en":"Please don't say unpleasant things.","cue":[],"o":["いやな","いやに","いやで","いやの"],"t":null,"say":"いやな ことばを 言わないで ください。"},{"a":"けっこう","f":"npa","s":"A：コーヒーを もう 少し どうですか。\nB：いいえ、＿。","en":"A: Would you like a little more coffee? B: No, thank you.","cue":["いいえ"],"o":["けっこうです","けっこうじゃないです","けっこうでした","けっこうじゃなかったです"],"t":null,"say":"コーヒーを もう 少し どうですか。 いいえ、けっこうです。"},{"a":"おもしろい","f":"pnp","s":"A：きのうの えいが、どうだった？\nB：あまり ＿よ。","en":"A: How was the movie yesterday? B: Not very good.","cue":["きのう","あまり"],"o":["おもしろくなかった","おもしろい","おもしろくない","おもしろかった"],"t":null,"say":"きのうの えいが、どうだった？ あまり おもしろくなかったよ。"},{"a":"にぎやか","f":"pnp","s":"A：きのうの パーティー、どうだった？\nB：人が 少なくて、あまり ＿よ。","en":"A: How was yesterday's party? B: There weren't many people, so it wasn't very lively.","cue":["きのう","あまり"],"o":["にぎやかじゃなかった","にぎやかだ","にぎやかじゃない","にぎやかだった"],"t":null,"say":"きのうの パーティー、どうだった？ 人が 少なくて、あまり にぎやかじゃなかったよ。"},{"a":"おいしい","f":"np","s":"A：この ケーキ、どう？\nB：とても ＿よ。","en":"A: How's this cake? B: It's really good.","cue":["どう？","とても"],"o":["おいしい","おいしくない","おいしかった","おいしくなかった"],"t":null,"say":"この ケーキ、どう？ とても おいしいよ。"},{"a":"ひま","f":"np","s":"A：あした、ひま？\nB：うん、＿よ。","en":"A: Are you free tomorrow? B: Yeah, I am.","cue":["あした","うん"],"o":["ひまだ","ひまじゃない","ひまだった","ひまじゃなかった"],"t":null,"say":"あした、ひま？ うん、ひまだよ。"},{"a":"むずかしい","f":"pnp","s":"A：テスト、むずかしかった？\nB：ううん、ぜんぜん ＿よ。","en":"A: Was the test hard? B: No, not at all.","cue":["むずかしかった？","ぜんぜん"],"o":["むずかしくなかった","むずかしい","むずかしくない","むずかしかった"],"t":null,"say":"テスト、むずかしかった？ ううん、ぜんぜん むずかしくなかったよ。"}],"source":"N5_Vocabulary.apkg"};
+const PWA = /*PWA*/false;     // true in the installable build
+const APP = "n5-keiyoshi-renshu";
+
+/* ---------------- data ---------------- */
+// learning order: い- and な-adjectives interleaved 3:1 so both types show up from day one
+const W = (() => { const i = DATA.adj.filter(a => a.type === "i"), n = DATA.adj.filter(a => a.type === "na"), out = [];
+  while (i.length || n.length) { out.push(...i.splice(0, 3)); if (n.length) out.push(n.shift()); } return out; })();
+const BY = Object.fromEntries(W.map(a => [a.w, a]));
+const SENT = DATA.sent;
+const TRAPS = W.filter(a => a.note);
+const POL = ["npa", "npn", "pa", "pn"], PLN = ["np", "nn", "pp", "pnp"], JOIN = ["mod", "adv", "te", "dsh"];
+const TENSE = [...POL, ...PLN];
+const FL = {
+  npa: ["Non-past", "polite"], npn: ["Non-past negative", "polite"], pa: ["Past", "polite"], pn: ["Past negative", "polite"],
+  np: ["Non-past", "plain"], nn: ["Non-past negative", "plain"], pp: ["Past", "plain"], pnp: ["Past negative", "plain"],
+  mod: ["Before a noun", ""], adv: ["Adverb · before なる", ""], te: ["て-form · and, so", ""], dsh: ["Before でしょう", ""] };
+const flabel = f => FL[f][0] + (FL[f][1] ? " · " + FL[f][1] : "");
+// the ending pattern for each form, い-type then な-type
+const RULE = {
+  npa: ["〜い です", "〜 です"], npn: ["〜くない です", "〜じゃない です"], pa: ["〜かった です", "〜でした"], pn: ["〜くなかった です", "〜じゃなかった です"],
+  np: ["〜い", "〜だ"], nn: ["〜くない", "〜じゃない"], pp: ["〜かった", "〜だった"], pnp: ["〜くなかった", "〜じゃなかった"],
+  mod: ["〜い + noun", "〜な + noun"], adv: ["〜く + verb or なる", "〜に + verb or なる"], te: ["〜くて", "〜で"], dsh: ["〜い でしょう", "〜 でしょう (no だ)"] };
+const FUTURE = ["あした", "あさって", "来週", "来月", "来年", "こんばん"];
+const ORDER = ["npn", "pa", "pn", "mod", "adv", "te", "nn", "pp", "pnp", "dsh", "npa", "np"];   // flashcard form rotation
+
+/* ---------------- state & persistence ---------------- */
+const DEFAULT = () => ({ v: 1, cards: {}, forms: {}, xp: 0, days: [], best: { speed: 0, sort: 0 },
+  settings: { sound: true, voice: true, listenQs: true, english: false, newPerDay: 5 }, newToday: { d: "", n: 0 }, run: null, updatedAt: 0 });
+const LS = "n5adj:progress";
+function loadLocal() { try { const v = JSON.parse(localStorage.getItem(LS) || "null"); return v && v.v === 1 ? v : null; } catch (e) { return null; } }
+function fresh(v) { const s = Object.assign(DEFAULT(), v || {}); s.settings = Object.assign(DEFAULT().settings, s.settings); s.best = Object.assign(DEFAULT().best, s.best); s.forms = s.forms || {}; return s; }
+let S = fresh(loadLocal());
+let group = "all";             // "all" | "i" | "na" | "trap"
+let focus = null;              // a form key, or null for every form
+const sync = { ref: null, saving: false, again: false, timer: null, mode: "local" };
+
+function save() {
+  S.updatedAt = Date.now();
+  try { localStorage.setItem(LS, JSON.stringify(S)); } catch (e) {}
+  clearTimeout(sync.timer);
+  sync.timer = setTimeout(pushRemote, 1200);
+}
+async function pushRemote() {
+  if (!sync.ref) return;
+  if (sync.saving) { sync.again = true; return; }
+  sync.saving = true;
+  try { await sync.ref.set(JSON.parse(JSON.stringify(S))); sync.mode = "account"; } catch (e) { sync.mode = "local"; }
+  sync.saving = false; renderFooter();
+  if (sync.again) { sync.again = false; pushRemote(); }
+}
+(async function connect() {
+  if (PWA) return;
+  try {
+    const [db, user] = await Promise.all([window.claude?.use?.("db"), window.claude?.use?.("user")]);
+    if (!db || !user) return;
+    const id = await user.id(); if (!id) return;
+    sync.ref = db.doc("data/users/" + id + "/progress-keiyoshi");
+    const snap = await sync.ref.get();
+    const remote = snap.exists ? snap.data() : null;
+    if (remote && remote.v === 1 && (remote.updatedAt || 0) > (S.updatedAt || 0)) {
+      S = fresh(JSON.parse(JSON.stringify(remote)));
+      try { localStorage.setItem(LS, JSON.stringify(S)); } catch (e) {}
+      sync.mode = "account";
+      if (!busy()) render(); else renderBar();
+    } else if (S.updatedAt) await pushRemote();
+    else sync.mode = "account";
+    renderFooter();
+  } catch (e) { /* stays local */ }
+})();
+
+/* ---------------- helpers ---------------- */
+const $ = (s, r = document) => r.querySelector(s);
+const esc = s => String(s).replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+const shuffle = a => { a = a.slice(); for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; };
+const pick = (a, n) => shuffle(a).slice(0, n);
+const rnd = a => a[Math.floor(Math.random() * a.length)];
+const dayStr = (d = new Date()) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+const now = () => Date.now();
+const MIN = 60e3, DAY = 864e5;
+const INTERVAL = [0, 10 * MIN, 1 * DAY, 3 * DAY, 7 * DAY, 16 * DAY, 35 * DAY];
+const STAGE_NAME = ["New", "Learning", "Learning", "Getting there", "合格 · Mastered", "合格 · Mastered", "合格 · Mastered"];
+const card = k => S.cards[k] || { s: 0, due: 0, r: 0, w: 0 };
+const stage = k => card(k).s;
+const mastered = k => stage(k) >= 4;
+const isDue = k => stage(k) > 0 && card(k).due <= now();
+const inGroup = a => group === "all" || (group === "trap" ? !!a.note : a.type === group);
+const pool = () => W.filter(inGroup);
+const GROUP_NAME = { all: "all adjectives", i: "い-adjectives", na: "な-adjectives", trap: "the tricky ones" };
+const len = s => s.length > 9 ? "l2" : s.length > 6 ? "l1" : "";
+const typeName = a => a.type === "i" ? "い-adjective" : "な-adjective";
+
+function streak() {
+  const set = new Set(S.days); let n = 0; const d = new Date();
+  if (!set.has(dayStr(d))) d.setDate(d.getDate() - 1);
+  while (set.has(dayStr(d))) { n++; d.setDate(d.getDate() - 1); }
+  return n;
+}
+function markToday() { const t = dayStr(); if (!S.days.includes(t)) { S.days.push(t); S.days = S.days.slice(-400); } }
+const level = () => Math.floor(S.xp / 250) + 1;
+function addXP(n, ev) { S.xp += n; markToday(); if (ev) floatXP(n, ev); renderBar(); }
+function newLeft() { return S.newToday.d === dayStr() ? Math.max(0, S.settings.newPerDay - S.newToday.n) : S.settings.newPerDay; }
+function useNew() { if (S.newToday.d !== dayStr()) S.newToday = { d: dayStr(), n: 0 }; S.newToday.n++; }
+function formResult(f, ok) { const s = S.forms[f] || { r: 0, w: 0 }; ok ? s.r++ : s.w++; S.forms[f] = s; }
+const formAcc = f => { const s = S.forms[f]; return s && s.r + s.w ? s.r / (s.r + s.w) : null; };
+
+/* ---------------- sound & voice ---------------- */
+let actx = null;
+function tone(seq) {
+  if (!S.settings.sound) return;
+  try {
+    actx = actx || new (window.AudioContext || window.webkitAudioContext)();
+    let t = actx.currentTime;
+    seq.forEach(([f, d, type = "sine", g = .12]) => {
+      const o = actx.createOscillator(), v = actx.createGain();
+      o.type = type; o.frequency.value = f; v.gain.setValueAtTime(g, t); v.gain.exponentialRampToValueAtTime(.0001, t + d);
+      o.connect(v); v.connect(actx.destination); o.start(t); o.stop(t + d); t += d * .7;
+    });
+  } catch (e) {}
+}
+const sfx = { ok: () => tone([[660, .09], [990, .14]]), no: () => tone([[220, .18, "triangle", .1]]), stamp: () => tone([[120, .12, "square", .08], [520, .1], [780, .18]]), done: () => tone([[523, .1], [659, .1], [784, .1], [1046, .24]]) };
+// Japanese voice from the device (Kyoko on Apple devices). Prefers enhanced/premium voices, skips novelty ones.
+let jaVoice = null;
+function findVoice() {
+  try {
+    const vs = speechSynthesis.getVoices().filter(v => /^ja/i.test(v.lang) && !/eloquence|eddy|flo|grandma|grandpa|reed|rocko|sandy|shelley/i.test(v.name));
+    const score = v => (/premium|enhanced|拡張/i.test(v.name) ? 4 : 0) + (/kyoko|o-ren|nanami|google/i.test(v.name) ? 2 : 0) + (v.localService ? 1 : 0);
+    jaVoice = vs.sort((a, b) => score(b) - score(a))[0] || null;
+  } catch (e) { jaVoice = null; }
+}
+const canSpeak = () => "speechSynthesis" in window && !!jaVoice;
+if ("speechSynthesis" in window) { findVoice(); speechSynthesis.onvoiceschanged = () => { findVoice(); if (!busy()) render(); }; }
+function say(text, force, rate = .9) {
+  if ((!S.settings.voice && !force) || !canSpeak() || !text) return;
+  try {
+    speechSynthesis.cancel();
+    const u = new SpeechSynthesisUtterance(text); u.lang = "ja-JP"; u.voice = jaVoice; u.rate = rate;
+    speechSynthesis.speak(u);
+  } catch (e) {}
+}
+const speakBtn = text => canSpeak() ? `<button class="icon-btn speak" data-say="${esc(text)}" aria-label="Hear it"><svg><use href="#i-speak"/></svg></button>` : "";
+function bindSpeak(root = document) { root.querySelectorAll("[data-say]").forEach(b => b.addEventListener("click", e => { e.stopPropagation(); say(b.dataset.say, true); })); }
+
+/* ---------------- celebrations ---------------- */
+function floatXP(n, ev) {
+  const el = document.createElement("div"); el.className = "xpfloat"; el.textContent = `+${n} XP`;
+  const r = ev.getBoundingClientRect ? ev.getBoundingClientRect() : { left: innerWidth / 2, top: innerHeight / 2, width: 0 };
+  el.style.left = (r.left + r.width / 2 - 24) + "px"; el.style.top = (r.top - 8) + "px";
+  document.body.appendChild(el); setTimeout(() => el.remove(), 1000);
+}
+function hanamaru() {
+  const fx = document.createElement("div"); fx.className = "fx fade";
+  fx.innerHTML = `<svg class="hanamaru" viewBox="0 0 200 200" aria-hidden="true"><path d="M100 52c26 0 46 20 46 46s-20 48-46 48-46-20-46-46c0-24 18-44 42-46 22-2 40 14 42 36 2 20-12 38-32 40-18 2-34-10-36-28-1-15 10-28 25-29 12-1 22 8 22 20"/><path d="M100 20c18 0 22 22 8 30M152 34c14 12 4 32-12 30M182 92c4 18-16 28-28 18M168 152c-6 16-28 12-28-4M100 182c-18 0-22-22-8-30M48 166c-14-12-4-32 12-30M18 108c-4-18 16-28 28-18M32 48c6-16 28-12 28 4"/></svg>`;
+  document.body.appendChild(fx); setTimeout(() => fx.remove(), 1500);
+}
+function bigStamp(k) {
+  const fx = document.createElement("div"); fx.className = "fx fade";
+  fx.innerHTML = `<div style="display:grid;justify-items:center;gap:8px"><svg class="bigstamp" aria-hidden="true"><use href="#i-stamp"/></svg>
+    <div style="font-family:var(--kanji);font-size:1.6rem;font-weight:600;background:var(--sheet);padding:2px 14px;border-radius:10px">${esc(k)} 合格</div></div>`;
+  document.body.appendChild(fx); setTimeout(() => fx.remove(), 1500); sfx.stamp();
+}
+
+/* ---------------- spaced repetition (one card per adjective) ---------------- */
+function grade(k, g) {            // g: 0 again, 1 good, 2 easy
+  const c = Object.assign({ s: 0, due: 0, r: 0, w: 0 }, S.cards[k]);
+  const before = c.s;
+  if (g === 0) { c.s = Math.max(1, c.s - 2); c.w++; } else { c.s = Math.min(6, c.s + (g === 2 ? 2 : 1)); c.r++; }
+  c.due = now() + (g === 0 ? MIN : INTERVAL[c.s]);
+  S.cards[k] = c;
+  return before < 4 && c.s >= 4;
+}
+function quizResult(k, ok) {
+  const c = Object.assign({ s: 0, due: 0, r: 0, w: 0 }, S.cards[k]);
+  if (ok) c.r++; else { c.w++; if (c.s > 0) { c.s = Math.max(1, c.s - 1); c.due = now(); } }
+  S.cards[k] = c;
+}
+function sessionQueue() {
+  const due = pool().filter(a => isDue(a.w)).sort((a, b) => card(a.w).due - card(b.w).due).map(a => a.w);
+  const nw = pool().filter(a => stage(a.w) === 0).map(a => a.w).slice(0, newLeft());
+  return { due: due.slice(0, 30), fresh: nw };
+}
+// which form a flashcard asks for: rotates through the forms the word has, weakest first when focusing
+function cardForm(a) {
+  if (focus && a.d.includes(focus)) return focus;
+  const fs = ORDER.filter(f => a.d.includes(f)); const c = card(a.w);
+  return fs[(c.r + c.w) % fs.length];
+}
+
+/* ---------------- questions ---------------- */
+// q = { kind: "sent" | "pick" | "listen", a, f, sent?, options: [{ text, ok, trap }] }
+function withTrap(right, wrong, trap) {
+  let w = shuffle(wrong);
+  if (trap && Math.random() < .6) w[0] = trap;
+  return shuffle([{ text: right, ok: true }, ...w.map(t => ({ text: t, ok: false, trap: t === trap }))]);
+}
+function sentQ(s, kind = "sent") { const a = BY[s.a]; return { kind, a, f: s.f, sent: s, options: withTrap(s.o[0], s.o.slice(1), s.t) }; }
+function pickQ(a, f) { return { kind: "pick", a, f, options: withTrap(a.f[f][0], a.po[f], a.pt[f]) }; }
+// candidate sentences / forms after the group and form filters (falls back to everything if too few)
+function sentPool(listenOnly) {
+  let xs = SENT.filter(s => inGroup(BY[s.a]) && (!focus || s.f === focus) && (!listenOnly || TENSE.includes(s.f)));
+  if (xs.length < 4 && !focus) xs = SENT.filter(s => !listenOnly || TENSE.includes(s.f));
+  return xs;
+}
+function pickPool() {
+  const out = [];
+  pool().forEach(a => a.d.forEach(f => { if (!focus || f === focus) out.push([a, f]); }));
+  return out.length ? out : W.flatMap(a => a.d.map(f => [a, f]));
+}
+// prefer adjectives you've met; then top up with form-pick questions when sentences run short
+function buildQs(kind, n) {
+  const qs = [];
+  if (kind === "pick") { pick(pickPool(), n).forEach(([a, f]) => qs.push(pickQ(a, f))); return qs; }
+  const sp = sentPool(kind === "listen");
+  const met = sp.filter(s => stage(s.a) > 0);
+  const src = met.length >= n ? met : sp;
+  pick(src, n).forEach(s => qs.push(sentQ(s, kind)));
+  if (qs.length < n && kind === "sent") pick(pickPool(), n - qs.length).forEach(([a, f]) => qs.push(pickQ(a, f)));
+  return qs;
+}
+
+// the sentence on its ruled sheet; after answering, the blank is filled and the clue words are marked
+function sentHtml(s, filled, missed) {
+  return s.s.split("\n").map(line => {
+    let who = "", body = line;
+    const m = line.match(/^([AB])：/); if (m) { who = `<span class="who">${m[1]}</span>`; body = line.slice(2); }
+    let h = esc(body);
+    if (filled !== undefined) s.cue.forEach(c => { h = h.split(esc(c)).join(`<mark class="cue">${esc(c)}</mark>`); });
+    h = h.replace("＿", filled !== undefined ? `<span class="blank filled${missed ? " miss" : ""}">${esc(filled)}</span>` : `<span class="blank" aria-label="blank">&nbsp;</span>`);
+    return `<span class="line">${who}${h}</span>`;
+  }).join("");
+}
+function sheetHtml(q, answered) {
+  const s = q.sent;
+  return `<div class="ssheet">${answered ? speakBtn(s.say) : ""}<div class="sent">${sentHtml(s, answered ? s.o[0] : undefined)}</div>
+    ${answered || S.settings.english ? `<div class="en">${esc(s.en)}</div>` : ""}</div>`;
+}
+function pickHtml(q) {
+  const a = q.a;
+  return `<div class="sheetq">${speakBtn(a.say)}<div class="w ${len(a.w)}">${esc(a.w)}</div>${a.r ? `<div class="rd">${esc(a.r)}</div>` : ""}
+    <div class="tag">${esc(a.m)} · ${typeName(a)}</div><div style="margin-top:8px"><span class="formchip">${esc(FL[q.f][0])}${FL[q.f][1] ? ` <small>${FL[q.f][1]}</small>` : ""}</span></div></div>`;
+}
+function promptHtml(q) {
+  if (q.kind === "pick") return pickHtml(q);
+  if (q.kind === "listen") return `<div class="sheetq"><button class="cta" id="replay" style="font-size:1.1rem">♪ Play again</button><div class="tag">Which form did you hear?</div></div>`;
+  return sheetHtml(q, false);
+}
+function labelFor(q) { return q.kind === "pick" ? "Which form is it?" : q.kind === "listen" ? "Listen" : focus ? `Fill the blank · ${flabel(focus)}` : "Fill the blank"; }
+function optionsHtml(q) {
+  return q.options.map((o, i) => `<button class="opt jp ${len(o.text)}" data-i="${i}"><span class="n">${i + 1}</span><span>${esc(o.text)}</span></button>`).join("");
+}
+// the rule after an answer: the ending, and why this sentence needs it
+function ruleHtml(q, chosen) {
+  const a = q.a, f = q.f, r = RULE[f][a.type === "i" ? 0 : 1];
+  let why = "";
+  if (q.sent && q.sent.cue.length) why = ` Clue: ${q.sent.cue.map(c => `<b>${esc(c)}</b>`).join(", ")}.`;
+  if (q.sent && ["npa", "npn", "np", "nn"].includes(f) && q.sent.cue.some(c => FUTURE.includes(c))) why += " Japanese has no future tense; the non-past form covers tomorrow too.";
+  if (f === "dsh" && a.type === "na") why += " A な-adjective drops だ before でしょう.";
+  let trap = chosen && chosen.trap ? `<div style="margin-top:4px;color:var(--bad)"><b>${esc(chosen.text)}</b> isn't a real form. ${esc(a.note)}</div>`
+    : a.note && (f !== "mod" || a.w === "おなじ" || a.type === "na") ? `<div style="margin-top:4px;color:var(--muted)">${esc(a.note)}</div>` : "";
+  return `<div class="rule"><b>${esc(flabel(f))}</b> · ${esc(typeName(a))}: <b>${esc(r)}</b> → <b>${esc(a.f[f][0])}</b>.${why}${trap}</div>`;
+}
+function mountQ(q) {
+  $("#q-label").textContent = labelFor(q);
+  $("#q-prompt").innerHTML = promptHtml(q);
+  bindSpeak($("#q-prompt"));
+  if (q.kind === "listen") { $("#replay").addEventListener("click", () => say(q.sent.say, true)); setTimeout(() => say(q.sent.say, true), 150); }
+  $("#q-opts").innerHTML = optionsHtml(q);
+  $("#q-rule").innerHTML = "";
+}
+// marks right/wrong, records the result, shows the filled sentence and the rule. returns ok
+function scoreQ(q, i) {
+  const right = q.options.findIndex(o => o.ok), ok = i === right;
+  const btns = document.querySelectorAll("#q-opts .opt");
+  btns.forEach(b => b.disabled = true); btns[right].classList.add("right"); if (!ok) btns[i].classList.add("wrong");
+  quizResult(q.a.w, ok); formResult(q.f, ok);
+  if (q.sent) { $("#q-prompt").innerHTML = sheetHtml(q, true); bindSpeak($("#q-prompt")); if (q.kind !== "listen") say(q.sent.say); }
+  else say(q.a.f[q.f][1]);
+  $("#q-rule").innerHTML = ruleHtml(q, ok ? null : q.options[i]);
+  return ok;
+}
+const qShell = top => `${top || ""}<div class="q-label" id="q-label"></div><div id="q-prompt" style="display:contents"></div><div class="options" id="q-opts"></div><div class="feedback" id="q-fb" aria-live="polite"></div><div id="q-rule" style="display:contents"></div><div class="nextrow" id="q-next"></div>`;
+
+/* ---------------- home ---------------- */
+let current = null;
+const busy = () => !!current;
+function renderBar() { $("#streak-n").textContent = streak(); $("#level-pill").textContent = `Lv ${level()} · ${S.xp} XP`; }
+function renderFooter() {
+  const f = $("#sync-note");
+  if (f) f.textContent = PWA ? "Progress is saved on this device. To move it, use Settings → Back up, then Restore on the other device."
+    : sync.mode === "account" ? "Progress is saved to your Claude account, so it follows you between devices." : "Progress is saved in this browser.";
+}
+function formsPanel() {
+  const ex = f => { const a = BY["たかい"] || BY["高い"]; return a.f[f][0]; };
+  const tile = f => { const acc = formAcc(f), s = S.forms[f] || { r: 0, w: 0 };
+    return `<button class="ftile" data-form="${f}" aria-pressed="${focus === f}"><b>${esc(FL[f][0])}</b><span class="ex">${esc(ex(f))}</span>
+      <span class="track"><i class="${acc !== null && acc < .7 ? "low" : ""}" style="width:${acc === null ? 0 : acc * 100}%"></i></span>
+      <span class="acc"><span>${acc === null ? "not tried" : Math.round(acc * 100) + "%"}</span><span>${s.r + s.w ? s.r + "/" + (s.r + s.w) : ""}</span></span></button>`; };
+  return `<div class="forms">
+    <div><div class="fgroup-h">POLITE · です / ます</div><div class="frow">${POL.map(tile).join("")}</div></div>
+    <div><div class="fgroup-h">PLAIN · casual speech, before から and でしょう</div><div class="frow">${PLN.map(tile).join("")}</div></div>
+    <div><div class="fgroup-h">JOINING · nouns, verbs, other adjectives</div><div class="frow">${JOIN.map(tile).join("")}</div></div></div>`;
+}
+function render() {
+  current = null; renderBar();
+  const all = W.length, m = W.filter(a => mastered(a.w)).length;
+  const { due, fresh: nw } = sessionQueue();
+  const total = due.length + nw.length;
+  const unseen = pool().filter(a => stage(a.w) === 0).length;
+  const xpIn = S.xp % 250;
+  const sections = [["i", "い-adjectives", "たかい → たかくない"], ["na", "な-adjectives", "しずか → しずかじゃない"]].map(([t, title, sub]) => ({ t, title, sub, xs: W.filter(a => a.type === t && inGroup(a)) }));
+  const best = S.best || {};
+  const nSent = sentPool(false).length;
+  $("#view").innerHTML = `
+    <section class="hero">
+      <div><h1>${all} adjectives, every ending the N5 tests.</h1>
+        <p>Non-past or past, yes or no, polite or plain: the time word and the clue in each sentence tell you which. Every adjective comes from your N5 Vocabulary deck.</p></div>
+      <div class="tally"><div class="lbl">合格 · Mastered</div><div class="big">${m}<span> / ${all}</span></div></div>
+    </section>
+    <div class="levelbar"><span>Level <b>${level()}</b></span><div class="track"><div class="fill" style="width:${xpIn / 2.5}%"></div></div><span>${xpIn}/250 XP</span></div>
+    ${focus ? `<div class="focusbar"><span>Practising only <b>${esc(flabel(focus))}</b>${group !== "all" ? ` · ${esc(GROUP_NAME[group])}` : ""}</span><button class="ghost" id="clear-focus" style="padding:4px 12px">Show all forms</button></div>` : ""}
+    <section class="today">
+      <div><h2>${total ? "Today's practice" : "All caught up"}</h2>
+        <p>${total ? `${due.length} to review · ${nw.length} new${group !== "all" ? ` · from ${esc(GROUP_NAME[group])}` : ""}. Each card asks for one ending.` : unseen ? `Today's new adjectives are done. ${unseen} still to meet, or play a game below.` : "Nothing is due right now. Play a game below, or come back later for reviews."}</p></div>
+      ${total ? `<button class="cta" id="start-flash">Start</button>` : unseen ? `<button class="cta" id="more-new">Learn 3 more</button>` : ""}
+    </section>
+    <div class="section-h"><h2>Games</h2><span class="hint">Mistakes send that adjective back for review.</span></div>
+    ${superCard()}
+    <div class="games">
+      <button class="game" data-game="sent"><span class="gk">先週 ＿？</span><b>Time-word sentences</b><span>Exam-style blanks. The time word and the clue decide the form. 10 questions.</span></button>
+      <button class="game" data-game="pick"><span class="gk">たかい → ？</span><b>Form drill</b><span>One adjective, one ending to find. Quick and focused.</span></button>
+      <button class="game" data-game="sort"><span class="gk">い ／ な</span><b>い or な?</b><span>Sort 20 adjectives. Watch for きれい and ゆうめい.${best.sort ? ` <span class="best">Best ${best.sort}/20</span>` : ""}</span></button>
+      <button class="game" data-game="listen" ${canSpeak() ? "" : "disabled"}><span class="gk">♪ → ？</span><b>Listen &amp; pick</b><span>${canSpeak() ? "Hear a sentence, pick the ending you heard: past or not, yes or no." : "Needs a Japanese voice on this device."}</span></button>
+      <button class="game" data-game="speed"><span class="gk">60s</span><b>Speed round</b><span>Endings as fast as you can for a minute.${best.speed ? ` <span class="best">Best ${best.speed}</span>` : ""}</span></button>
+    </div>
+    <div class="section-h"><h2>Your endings</h2><span class="hint">Tap a form to practise only that one.</span></div>
+    ${formsPanel()}
+    <div class="section-h"><h2>Your adjectives</h2></div>
+    <p style="margin:6px 0 0;font-size:.82rem;color:var(--muted)">Pick a group to practise just those. Tap an adjective to see all its forms.</p>
+    <div class="chips" role="group" aria-label="Which adjectives">
+      <button class="chip" data-g="all" aria-pressed="${group === "all"}">All ${all}</button>
+      <button class="chip" data-g="i" aria-pressed="${group === "i"}">い-adjectives</button>
+      <button class="chip" data-g="na" aria-pressed="${group === "na"}">な-adjectives</button>
+      <button class="chip" data-g="trap" aria-pressed="${group === "trap"}">Tricky ones · ${TRAPS.length}</button>
+    </div>
+    ${sections.filter(s => s.xs.length).map(sec => `<div class="group"><div class="group-h"><span>${sec.title} <span style="font-weight:500">· ${sec.xs.length} · <span class="jp">${sec.sub}</span></span></span><span>${sec.xs.filter(a => mastered(a.w)).length}/${sec.xs.length} 合格</span></div>
+      <div class="board">${sec.xs.map(a => `<button class="tile s${stage(a.w)} ${a.w.length > 5 ? "long" : ""}" data-k="${esc(a.w)}" aria-label="${esc(a.w)}: ${esc(a.m)}, ${STAGE_NAME[stage(a.w)]}"><span class="k">${esc(a.w)}</span>${a.note ? `<span class="trap" title="Tricky"></span>` : ""}${mastered(a.w) ? `<svg class="stamp" aria-hidden="true"><use href="#i-stamp"/></svg>` : ""}${isDue(a.w) ? `<span class="due"></span>` : ""}</button>`).join("")}</div></div>`).join("")}
+    <div class="legend"><span><i style="background:var(--faint)"></i>New</span><span><i style="background:color-mix(in srgb,var(--ink) 60%,var(--faint))"></i>Learning</span><span><i style="background:var(--ink)"></i>Known</span><span><svg width="12" height="12" style="vertical-align:-1px;margin-right:5px"><use href="#i-stamp"/></svg>合格 mastered</span><span><i style="background:var(--gold);border-radius:50%"></i>Due</span><span><i style="background:var(--hanko);border-radius:50%"></i>Tricky</span></div>
+    <footer><span id="sync-note"></span><span>Source: ${esc(DATA.source)} · ${W.length} adjectives · ${SENT.length} sentences${focus || group !== "all" ? ` (${nSent} match your filter)` : ""}.</span></footer>`;
+  renderFooter();
+  if ($("#start-flash")) $("#start-flash").addEventListener("click", startFlash);
+  if ($("#more-new")) $("#more-new").addEventListener("click", () => { if (S.newToday.d !== dayStr()) S.newToday = { d: dayStr(), n: 0 }; S.newToday.n -= 3; save(); startFlash(); });
+  if ($("#clear-focus")) $("#clear-focus").addEventListener("click", () => { focus = null; render(); });
+  $("#super").addEventListener("click", () => startSuper());
+  document.querySelectorAll(".game").forEach(b => b.addEventListener("click", () => ({ sent: () => startQuiz("sent"), pick: () => startQuiz("pick"), listen: () => startQuiz("listen"), sort: startSort, speed: startSpeed })[b.dataset.game]()));
+  document.querySelectorAll(".chip").forEach(b => b.addEventListener("click", () => { group = b.dataset.g; render(); }));
+  document.querySelectorAll(".ftile").forEach(b => b.addEventListener("click", () => { focus = focus === b.dataset.form ? null : b.dataset.form; render(); if (focus) window.scrollTo({ top: 0, behavior: "smooth" }); }));
+  document.querySelectorAll(".tile").forEach(b => b.addEventListener("click", () => openDetail(b.dataset.k)));
+}
+
+/* ---------------- forms table, detail & settings sheets ---------------- */
+function tableHtml(a, hl) {
+  const cell = f => a.f[f] ? `<button data-say="${esc(a.f[f][1])}">${esc(a.f[f][0])}</button>` : `<span style="color:var(--muted);padding:4px 6px">—</span>`;
+  const row2 = (lab, p, q) => { const c = hl === p || hl === q ? "hl" : ""; return `<tr class="lab ${c}"><td colspan="2">${lab}</td></tr><tr class="${c}"><td>${cell(p)}</td><td>${cell(q)}</td></tr>`; };
+  const row1 = (lab, f) => { const c = hl === f ? "hl" : ""; return `<tr class="lab ${c}"><td colspan="2">${lab}</td></tr><tr class="${c}"><td colspan="2">${cell(f)}</td></tr>`; };
+  return `<div class="tbl-wrap"><table class="ftable"><thead><tr><th>Polite</th><th>Plain</th></tr></thead><tbody>
+    ${row2("Non-past", "npa", "np")}${row2("Negative", "npn", "nn")}${row2("Past", "pa", "pp")}${row2("Past negative", "pn", "pnp")}
+    ${row1("Before a noun", "mod")}${row1("Adverb · なる", "adv")}${row1("て-form", "te")}${row1("Before でしょう", "dsh")}</tbody></table></div>`;
+}
+function backHtml(a, hl) {
+  return `<div class="rrow"><span class="lab">Meaning</span><div class="meaning">${esc(a.m)}</div></div>
+    <div class="rrow"><span class="lab">Type</span><div class="tags"><span>${typeName(a)}</span>${a.r ? `<span class="jp">${esc(a.r)}</span>` : ""}</div></div>
+    ${a.note ? `<div class="note">${esc(a.note)}</div>` : ""}
+    ${tableHtml(a, hl)}
+    <div class="from">Tap a form to hear it. ${a.type === "na" ? "じゃない is also said じゃありません, and では in writing." : "くないです is also said くありません."}</div>`;
+}
+function openOverlay(html, onMount) {
+  const root = $("#overlay-root");
+  root.innerHTML = `<div class="overlay" id="ov"><div class="sheet" role="dialog" aria-modal="true">${html}</div></div>`;
+  const close = () => { root.innerHTML = ""; document.removeEventListener("keydown", escKey); };
+  const escKey = e => { if (e.key === "Escape") close(); };
+  document.addEventListener("keydown", escKey);
+  $("#ov").addEventListener("click", e => { if (e.target.id === "ov") close(); });
+  root.querySelectorAll("[data-close]").forEach(b => b.addEventListener("click", close));
+  bindSpeak(root);
+  onMount && onMount(close);
+}
+function fmtDur(ms) {
+  if (ms < 60 * MIN) return Math.max(1, Math.round(ms / MIN)) + " min";
+  if (ms < DAY) return Math.round(ms / (60 * MIN)) + " h";
+  const d = Math.round(ms / DAY); return d + (d === 1 ? " day" : " days");
+}
+function openDetail(k) {
+  const a = BY[k], c = card(k), acc = c.r + c.w ? Math.round(100 * c.r / (c.r + c.w)) + "%" : "—";
+  const next = c.s === 0 ? "Not started" : c.due <= now() ? "Due now" : `in ${fmtDur(c.due - now())}`;
+  const n = SENT.filter(s => s.a === k).length;
+  openOverlay(`
+    <div class="sheet-h"><h2>${STAGE_NAME[c.s]}</h2><button class="icon-btn" data-close aria-label="Close"><svg><use href="#i-close"/></svg></button></div>
+    <div style="display:flex;align-items:center;gap:12px;justify-content:space-between"><div class="detail-w">${esc(a.w)}</div>${speakBtn(a.say)}</div>
+    <div class="back" style="border:0;padding:0">${backHtml(a)}</div>
+    <div class="kv"><div><b>${c.r}</b><span>Right</span></div><div><b>${acc}</b><span>Accuracy</span></div><div><b>${next}</b><span>Next review</span></div></div>
+    <div class="nextrow" style="justify-content:stretch"><button class="ghost" id="pr-type" style="flex:1">Practise ${typeName(a)}s</button>${n ? `<button class="ghost" id="pr-sent" style="flex:1">Its ${n} sentence${n > 1 ? "s" : ""}</button>` : ""}</div>`,
+    close => {
+      $("#pr-type").addEventListener("click", () => { group = a.type; close(); render(); window.scrollTo({ top: 0, behavior: "smooth" }); });
+      if ($("#pr-sent")) $("#pr-sent").addEventListener("click", () => { close(); startQuiz("sent", SENT.filter(s => s.a === k).map(s => sentQ(s))); });
+    });
+}
+function openSettings() {
+  const sw = (id, on, label, sub) => `<div class="setrow"><div><b>${label}</b><div style="font-size:.82rem;color:var(--muted)">${sub}</div></div><button class="switch" id="${id}" role="switch" aria-checked="${on}" aria-label="${label}"></button></div>`;
+  const seg = (name, cur, opts) => `<div class="seg" role="group" data-seg="${name}">${opts.map(([v, l]) => `<button data-v="${v}" aria-pressed="${cur === v}">${l}</button>`).join("")}</div>`;
+  openOverlay(`
+    <div class="sheet-h"><h2>Settings</h2><button class="icon-btn" data-close aria-label="Close"><svg><use href="#i-close"/></svg></button></div>
+    ${sw("set-english", S.settings.english, "Show English before answering", "Off by default, because the English gives away the tense.")}
+    ${sw("set-voice", S.settings.voice, "Speak sentences", canSpeak() ? `Reads each answer aloud with ${esc(jaVoice.name)}.` : "No Japanese voice found on this device.")}
+    ${sw("set-listen", S.settings.listenQs, "Listening questions in Super mode", "About 1 in 6 Super mode questions are audio only. Turn off to skip them.")}
+    ${sw("set-sound", S.settings.sound, "Sound effects", "Short chimes for right answers and stamps.")}
+    <div class="setrow"><div><b>New adjectives per day</b><div style="font-size:.82rem;color:var(--muted)">How many unseen adjectives each day's practice adds.</div></div>
+      ${seg("newPerDay", S.settings.newPerDay, [[3, 3], [5, 5], [8, 8], [10, 10]])}</div>
+    <div class="setrow"><div><b>Back up progress</b><div style="font-size:.82rem;color:var(--muted)">Saves a small file you can restore here or in the other version of this app.</div></div><button class="ghost" id="backup">Back up</button></div>
+    <div class="setrow"><div><b>Restore from a backup</b><div style="font-size:.82rem;color:var(--muted)" id="restore-note">Replaces your current progress with the file's.</div></div>
+      <button class="ghost" id="restore">Restore</button><input type="file" id="restore-file" accept=".json,application/json" hidden></div>
+    ${S.run ? `<div class="setrow"><div><b>Restart Super mode</b><div style="font-size:.82rem;color:var(--muted)">Drops the current run (${S.run.i}/${S.run.order.length}) and shuffles every sentence again.</div></div><button class="ghost" id="super-reset">Restart</button></div>` : ""}
+    <div class="setrow"><div><b>Reset progress</b><div style="font-size:.82rem;color:var(--muted)">Clears stages, XP, streak and form scores. Can't be undone.</div></div><button class="ghost danger" id="reset">Reset</button></div>`, close => {
+    const toggle = (id, key) => $(id).addEventListener("click", e => { S.settings[key] = !S.settings[key]; e.currentTarget.setAttribute("aria-checked", S.settings[key]); save(); });
+    toggle("#set-english", "english"); toggle("#set-voice", "voice"); toggle("#set-sound", "sound"); toggle("#set-listen", "listenQs");
+    document.querySelectorAll("[data-seg]").forEach(g => g.querySelectorAll("button").forEach(b => b.addEventListener("click", () => {
+      S.settings[g.dataset.seg] = +b.dataset.v;
+      g.querySelectorAll("button").forEach(z => z.setAttribute("aria-pressed", z === b)); save();
+    })));
+    if ($("#super-reset")) $("#super-reset").addEventListener("click", () => { S.run = null; save(); close(); render(); });
+    $("#backup").addEventListener("click", backupProgress);
+    $("#restore").addEventListener("click", () => $("#restore-file").click());
+    $("#restore-file").addEventListener("change", e => restoreProgress(e.target.files[0], close));
+    $("#reset").addEventListener("click", e => {
+      const b = e.currentTarget;
+      if (b.dataset.armed) { S = DEFAULT(); save(); close(); render(); return; }
+      b.dataset.armed = "1"; b.textContent = "Tap again to reset";
+    });
+  });
+}
+const backupName = () => `n5-adjectives-progress-${dayStr()}.json`;
+async function backupProgress() {
+  const text = JSON.stringify(Object.assign({ app: APP }, S));
+  const btn = $("#backup");
+  try {
+    if (!PWA) {
+      const dl = await window.claude?.use?.("downloads");
+      if (!dl) { btn.textContent = "Not available here"; btn.disabled = true; return; }
+      await dl.save({ filename: backupName(), data: text }); btn.textContent = "Saved"; return;
+    }
+    const file = new File([text], backupName(), { type: "application/json" });
+    if (navigator.canShare && navigator.canShare({ files: [file] })) await navigator.share({ files: [file], title: "N5 adjectives progress" });
+    else { const a = document.createElement("a"); a.href = URL.createObjectURL(file); a.download = backupName(); document.body.appendChild(a); a.click(); a.remove(); }
+    btn.textContent = "Saved";
+  } catch (e) { if (e && (e.code === "declined" || e.name === "AbortError")) return; btn.textContent = "Couldn't save"; }
+}
+function restoreProgress(file, close) {
+  if (!file) return;
+  const note = $("#restore-note"), r = new FileReader();
+  r.onload = () => {
+    try {
+      const d = JSON.parse(r.result);
+      if (!d || d.v !== 1 || typeof d.cards !== "object" || d.app !== APP) throw new Error("format");
+      const known = Object.keys(d.cards).filter(k => BY[k]).length;
+      delete d.app; S = fresh(d);
+      save(); close(); render(); toast(`Restored progress for ${known} adjectives`);
+    } catch (e) { note.textContent = "That file isn't a progress backup from this app."; note.style.color = "var(--bad)"; }
+  };
+  r.readAsText(file);
+}
+function toast(msg) {
+  const t = document.createElement("div"); t.setAttribute("role", "status");
+  t.style.cssText = "position:fixed;left:50%;bottom:calc(20px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--ink);color:var(--paper);padding:8px 16px;border-radius:999px;font-weight:700;z-index:70;max-width:calc(100% - 32px);text-align:center";
+  t.textContent = msg; document.body.appendChild(t); setTimeout(() => t.remove(), 2600);
+}
+$("#settings-btn").addEventListener("click", openSettings);
+$("#home-btn").addEventListener("click", () => { stopTimers(); render(); });
+
+/* ---------------- shared stage chrome ---------------- */
+let timers = [];
+const stopTimers = () => { timers.forEach(clearInterval); timers.forEach(clearTimeout); timers = []; document.onkeydown = null; try { speechSynthesis.cancel(); } catch (e) {} };
+function stageShell(inner) {
+  $("#view").innerHTML = `<section class="stage">
+    <div class="stage-top"><button class="ghost" id="quit" style="padding:6px 12px">Quit</button><div class="progress" id="prog"><div class="fill" style="width:0%"></div></div><span class="counter" id="ctr"></span></div>
+    <div class="combo" id="combo" aria-live="polite"></div>${inner}</section>`;
+  $("#quit").addEventListener("click", () => { const wasSuper = current && current.kind === "super"; stopTimers(); save(); render(); if (wasSuper && S.run) toast(`Paused at ${S.run.i}/${S.run.order.length}`); });
+  window.scrollTo({ top: 0 });
+}
+const setProg = (p, txt) => { $("#prog .fill").style.width = Math.min(100, p * 100) + "%"; $("#ctr").textContent = txt; };
+
+/* ---------------- flashcards: each adjective card asks for one ending ---------------- */
+function startFlash() {
+  const { due, fresh: nw } = sessionQueue();
+  const queue = [...due, ...nw].map(k => ({ k, isNew: stage(k) === 0 }));
+  if (!queue.length) return;
+  current = { kind: "flash", queue, done: 0, total: queue.length, right: 0, missed: new Set(), xp: 0, mastered: [] };
+  stopTimers();
+  stageShell(`<div class="q-label" id="fl-label"></div><div id="fl-front" style="display:contents"></div>
+    <div id="fl-back" class="back" hidden></div>
+    <div class="nextrow" id="fl-reveal-row"><button class="cta" id="fl-reveal">Show answer <span style="opacity:.6;font-weight:500">· space</span></button></div>
+    <div class="grades" id="fl-grades" hidden>
+      <button class="grade again" data-g="0">Again<small>soon</small></button>
+      <button class="grade good" data-g="1">Good<small id="g1"></small></button>
+      <button class="grade easy" data-g="2">Easy<small id="g2"></small></button></div>`);
+  $("#fl-reveal").addEventListener("click", reveal);
+  document.querySelectorAll(".grade").forEach(b => b.addEventListener("click", () => answerFlash(+b.dataset.g, b)));
+  document.onkeydown = e => {
+    if (e.key === " ") { e.preventDefault(); if ($("#fl-back").hidden) reveal(); return; }
+    if (!$("#fl-grades").hidden && ["1", "2", "3"].includes(e.key)) answerFlash(+e.key - 1, document.querySelector(`.grade[data-g="${+e.key - 1}"]`));
+  };
+  showFlash();
+}
+function showFlash() {
+  const g = current, item = g.queue[0];
+  if (!item) return endSession();
+  setProg(g.done / g.total, `${g.done}/${g.total}`);
+  const a = BY[item.k];
+  item.f = item.f || cardForm(a);
+  $("#fl-label").textContent = item.isNew ? "New adjective" : "Say the ending";
+  $("#fl-front").innerHTML = item.isNew
+    ? `<div class="sheetq">${speakBtn(a.say)}<div class="w ${len(a.w)}">${esc(a.w)}</div>${a.r ? `<div class="rd">${esc(a.r)}</div>` : ""}<div class="tag">${typeName(a)}</div></div>`
+    : pickHtml({ a, f: item.f });
+  bindSpeak($("#fl-front"));
+  $("#fl-back").hidden = true; $("#fl-grades").hidden = true; $("#fl-reveal-row").hidden = false;
+  const c = card(item.k);
+  $("#g1").textContent = fmtDur(INTERVAL[Math.min(6, c.s + 1)]);
+  $("#g2").textContent = fmtDur(INTERVAL[Math.min(6, c.s + 2)]);
+  say(a.say);
+  if (item.isNew) reveal();
+}
+function reveal() {
+  const item = current.queue[0], a = BY[item.k];
+  if (!item.isNew) {
+    $("#fl-front").innerHTML = `<div class="sheetq">${speakBtn(a.f[item.f][1])}<div class="w ${len(a.f[item.f][0])}">${esc(a.f[item.f][0])}</div><div class="tag">${esc(a.w)} · ${esc(flabel(item.f))}</div></div>`;
+    bindSpeak($("#fl-front")); say(a.f[item.f][1]);
+  }
+  $("#fl-back").innerHTML = backHtml(a, item.isNew ? null : item.f);
+  bindSpeak($("#fl-back"));
+  $("#fl-back").hidden = false; $("#fl-reveal-row").hidden = true; $("#fl-grades").hidden = false;
+}
+function answerFlash(g, btn) {
+  if (document.activeElement && document.activeElement.blur) document.activeElement.blur();
+  const cur = current, item = cur.queue.shift();
+  if (item.isNew && !item.counted) { useNew(); item.counted = true; }
+  if (!item.isNew) formResult(item.f, g > 0);
+  const justMastered = grade(item.k, g);
+  if (g === 0) { cur.missed.add(item.k); sfx.no(); cur.queue.splice(Math.min(cur.queue.length, 3), 0, Object.assign(item, { isNew: false, f: null })); }
+  else { cur.done++; cur.right++; sfx.ok(); const xp = g === 2 ? 10 : 8; cur.xp += xp; addXP(xp, btn); }
+  if (justMastered) { cur.mastered.push(item.k); addXP(25); setTimeout(() => bigStamp(item.k), 150); }
+  save(); showFlash();
+}
+
+/* ---------------- quizzes: sentences, form drill, listening ---------------- */
+function startQuiz(type, given) {
+  const qs = given ? shuffle(given).slice(0, 10) : buildQs(type, 10);
+  if (!qs.length) { toast("No questions match this filter"); return; }
+  current = { kind: "quiz", type, qs, i: 0, right: 0, combo: 0, best: 0, xp: 0, missed: new Set(), given };
+  stopTimers();
+  stageShell(qShell());
+  showQuestion();
+}
+function showQuestion() {
+  const g = current, q = g.qs[g.i];
+  if (!q) return endSession();
+  setProg(g.i / g.qs.length, `${g.i + 1}/${g.qs.length}`);
+  mountQ(q);
+  if (q.kind === "pick") say(q.a.say);
+  $("#q-fb").textContent = ""; $("#q-fb").className = "feedback"; $("#q-next").innerHTML = "";
+  document.querySelectorAll("#q-opts .opt").forEach(b => b.addEventListener("click", () => answerQuestion(+b.dataset.i)));
+  document.onkeydown = e => {
+    if (["1", "2", "3", "4"].includes(e.key) && !g.answered) answerQuestion(+e.key - 1);
+    else if ((e.key === "Enter" || e.key === " ") && g.answered) { e.preventDefault(); nextQuestion(); }
+  };
+  g.answered = false;
+}
+function answerQuestion(i) {
+  const g = current, q = g.qs[g.i];
+  if (g.answered) return; g.answered = true;
+  const ok = scoreQ(q, i);
+  const btns = document.querySelectorAll("#q-opts .opt");
+  if (ok) {
+    g.right++; g.combo++; g.best = Math.max(g.best, g.combo);
+    const xp = 10 + (g.combo >= 3 ? 5 : 0); g.xp += xp; addXP(xp, btns[i]); sfx.ok();
+    $("#q-fb").className = "feedback ok"; $("#q-fb").textContent = "正解!";
+    $("#combo").textContent = g.combo >= 2 ? `${g.combo} in a row` : "";
+    if (g.combo % 5 === 0) hanamaru();
+  } else {
+    g.combo = 0; g.missed.add(q.a.w); sfx.no(); $("#combo").textContent = "";
+    $("#q-fb").className = "feedback no"; $("#q-fb").textContent = `Answer: ${q.options.find(o => o.ok).text}`;
+  }
+  // always wait for Next: the rule under the answer is the lesson
+  $("#q-next").innerHTML = `<button class="cta" id="q-go">Next <span style="opacity:.6;font-weight:500">· enter</span></button>`;
+  $("#q-go").addEventListener("click", nextQuestion); if (!ok) $("#q-go").focus();
+  save();
+}
+function nextQuestion() { stopTimers(); current.i++; showQuestion(); }
+
+/* ---------------- い or な? ---------------- */
+function startSort() {
+  const p = pool().length >= 10 ? pool() : W;
+  const tr = shuffle(p.filter(a => a.note && a.w !== "大きい" && a.w !== "小さい")).slice(0, 6);
+  const xs = shuffle([...tr, ...pick(p.filter(a => !tr.includes(a)), 20 - tr.length)]);
+  current = { kind: "sort", xs, i: 0, right: 0, combo: 0, best: 0, xp: 0, missed: new Set() };
+  stopTimers();
+  stageShell(`<div class="q-label">い-adjective or な-adjective?</div><div id="q-prompt" style="display:contents"></div>
+    <div class="sortbtns" id="q-opts"><button class="opt" data-t="i"><big>い</big>い-adjective</button><button class="opt" data-t="na"><big>な</big>な-adjective</button></div>
+    <div class="feedback" id="q-fb" aria-live="polite"></div><div id="q-rule" style="display:contents"></div><div class="nextrow" id="q-next"></div>`);
+  document.querySelectorAll("#q-opts .opt").forEach(b => b.addEventListener("click", () => answerSort(b.dataset.t, b)));
+  showSort();
+}
+function showSort() {
+  const g = current, a = g.xs[g.i];
+  if (!a) return endSession();
+  setProg(g.i / g.xs.length, `${g.i + 1}/${g.xs.length}`);
+  $("#q-prompt").innerHTML = `<div class="sheetq">${speakBtn(a.say)}<div class="w ${len(a.w)}">${esc(a.w)}</div><div class="tag">${esc(a.m)}</div></div>`;
+  bindSpeak($("#q-prompt")); say(a.say);
+  document.querySelectorAll("#q-opts .opt").forEach(b => { b.disabled = false; b.className = "opt"; });
+  $("#q-fb").textContent = ""; $("#q-rule").innerHTML = ""; $("#q-next").innerHTML = "";
+  g.answered = false;
+  document.onkeydown = e => {
+    if (!g.answered && (e.key === "1" || e.key === "2")) answerSort(e.key === "1" ? "i" : "na", document.querySelectorAll("#q-opts .opt")[+e.key - 1]);
+    else if (g.answered && (e.key === "Enter" || e.key === " ")) { e.preventDefault(); nextSort(); }
+  };
+}
+function answerSort(t, btn) {
+  const g = current, a = g.xs[g.i];
+  if (g.answered) return; g.answered = true;
+  const ok = t === a.type;
+  document.querySelectorAll("#q-opts .opt").forEach(b => { b.disabled = true; if (b.dataset.t === a.type) b.classList.add("right"); });
+  quizResult(a.w, ok);
+  const ex = a.f.mod[0] + (a.w === "おなじ" ? " 学校" : " もの") + (a.f.npn ? " · " + a.f.npn[0] : "");
+  $("#q-rule").innerHTML = `<div class="rule"><b>${esc(a.w)}</b> is a ${typeName(a)}: <b>${esc(ex)}</b>.${a.note ? `<div style="margin-top:4px;color:var(--muted)">${esc(a.note)}</div>` : ""}</div>`;
+  if (ok) {
+    g.right++; g.combo++; g.best = Math.max(g.best, g.combo); g.xp += 5; addXP(5, btn); sfx.ok();
+    $("#q-fb").className = "feedback ok"; $("#q-fb").textContent = "正解!";
+    $("#combo").textContent = g.combo >= 2 ? `${g.combo} in a row` : "";
+    if (g.combo % 10 === 0) hanamaru();
+    timers.push(setTimeout(nextSort, a.note ? 1800 : 900));
+  } else {
+    btn.classList.add("wrong"); g.combo = 0; g.missed.add(a.w); sfx.no(); $("#combo").textContent = "";
+    $("#q-fb").className = "feedback no"; $("#q-fb").textContent = `${a.w} is a ${typeName(a)}`;
+    $("#q-next").innerHTML = `<button class="cta" id="q-go">Next</button>`;
+    $("#q-go").addEventListener("click", nextSort); $("#q-go").focus();
+  }
+  save();
+}
+function nextSort() { stopTimers(); current.i++; showSort(); }
+
+/* ---------------- super mode: every sentence, once, shuffled; resumable ---------------- */
+// S.run = { order: [sentence index…], i, right, wrong: [index…], lap: 1 (all) | 2+ (missed only) }
+function superCard() {
+  const r = S.run, best = S.best.super;
+  const sub = r ? `${r.lap > 1 ? "Missed sentences · " : ""}${r.i} of ${r.order.length} done · ${r.right} right so far`
+    : `All ${SENT.length} sentences, shuffled, in one long quiz. Every adjective, every ending. Stop anytime; it picks up where you left off.${best ? ` <span style="color:var(--gold);opacity:1">Best ${best}%</span>` : ""}`;
+  return `<button class="super" id="super"><span class="gk">全</span>
+    <span><b>Super mode</b><span>${sub}</span>${r ? `<div class="track"><i style="width:${r.i / r.order.length * 100}%"></i></div>` : ""}</span>
+    <span class="go">${r ? "Resume →" : "Start →"}</span></button>`;
+}
+function newRun(idx, lap) { S.run = { order: shuffle(idx), i: 0, right: 0, wrong: [], lap }; save(); }
+function startSuper() {
+  if (!S.run) newRun(SENT.map((_, i) => i), 1);
+  current = { kind: "super", xp: 0, combo: 0, best: 0 };
+  stopTimers();
+  stageShell(qShell(`<div class="runstats" id="run-stats"></div>`));
+  $("#quit").textContent = "Pause";
+  showSuper();
+}
+function showSuper() {
+  const g = current, r = S.run;
+  if (r.i >= r.order.length) return finishSuper();
+  const s = SENT[r.order[r.i]];
+  if (!s || !BY[s.a]) { r.i++; return showSuper(); }
+  const listen = canSpeak() && S.settings.listenQs && TENSE.includes(s.f) && Math.random() < 1 / 6;
+  g.q = sentQ(s, listen ? "listen" : "sent");
+  setProg(r.i / r.order.length, `${r.i + 1}/${r.order.length}`);
+  const done = r.i, acc = done ? Math.round(100 * r.right / done) : 0;
+  $("#run-stats").textContent = `${r.lap > 1 ? "Missed sentences · " : ""}${r.right} right · ${r.wrong.length} missed${done ? ` · ${acc}%` : ""}`;
+  mountQ(g.q);
+  $("#q-fb").textContent = ""; $("#q-fb").className = "feedback"; $("#q-next").innerHTML = "";
+  if (g.q.kind === "listen") {
+    $("#q-next").innerHTML = `<button class="ghost" id="skip-listen">Can't listen now</button><button class="ghost" id="no-listen">Turn off listening questions</button>`;
+    const swap = () => { stopTimers(); g.q = sentQ(s, "sent"); mountQ(g.q); $("#q-next").innerHTML = ""; bindSuperOptions(); };
+    $("#skip-listen").addEventListener("click", swap);
+    $("#no-listen").addEventListener("click", () => { S.settings.listenQs = false; save(); toast("Listening questions off · turn back on in Settings"); swap(); });
+  }
+  bindSuperOptions();
+}
+function bindSuperOptions() {
+  const g = current;
+  g.answered = false;
+  document.querySelectorAll("#q-opts .opt").forEach(b => b.addEventListener("click", () => answerSuper(+b.dataset.i)));
+  document.onkeydown = e => {
+    if (e.key === "s" && g.q.kind === "listen" && !g.answered && $("#skip-listen")) { $("#skip-listen").click(); return; }
+    if (["1", "2", "3", "4"].includes(e.key) && !g.answered) answerSuper(+e.key - 1);
+    else if ((e.key === "Enter" || e.key === " ") && g.answered) { e.preventDefault(); nextSuper(); }
+  };
+}
+function answerSuper(i) {
+  const g = current, q = g.q, r = S.run;
+  if (g.answered) return; g.answered = true;
+  const ok = scoreQ(q, i);
+  const btns = document.querySelectorAll("#q-opts .opt");
+  const idx = r.order[r.i]; r.i++;
+  if (ok) {
+    r.right++; g.combo++; g.best = Math.max(g.best, g.combo);
+    const xp = 5 + (g.combo >= 5 ? 3 : 0); g.xp += xp; addXP(xp, btns[i]); sfx.ok();
+    $("#q-fb").className = "feedback ok"; $("#q-fb").textContent = "正解!";
+    $("#combo").textContent = g.combo >= 2 ? `${g.combo} in a row` : "";
+    if (g.combo % 10 === 0) hanamaru();
+  } else {
+    r.wrong.push(idx); g.combo = 0; sfx.no(); $("#combo").textContent = "";
+    $("#q-fb").className = "feedback no"; $("#q-fb").textContent = `Answer: ${q.options.find(o => o.ok).text}`;
+  }
+  $("#q-next").innerHTML = `<button class="cta" id="q-go">Next <span style="opacity:.6;font-weight:500">· enter</span></button>`;
+  $("#q-go").addEventListener("click", nextSuper); if (!ok) $("#q-go").focus();
+  save();
+}
+function nextSuper() { stopTimers(); showSuper(); }
+function finishSuper() {
+  const r = S.run; stopTimers();
+  const acc = Math.round(100 * r.right / r.order.length);
+  let isBest = false;
+  if (r.lap === 1 && acc > (S.best.super || 0)) { S.best.super = acc; isBest = true; }
+  const missed = r.wrong.slice();
+  const missedAdj = [...new Set(missed.map(i => SENT[i] && SENT[i].a).filter(Boolean))];
+  S.run = null; markToday(); save();
+  sfx.done(); if (!missed.length) setTimeout(hanamaru, 200);
+  const title = !missed.length ? (r.lap === 1 ? "全部正解! Every sentence" : "全部できた!") : r.lap === 1 ? "Super mode complete" : "Round done";
+  $("#view").innerHTML = `<section class="stage"><div class="summary"><h2>${title}</h2>
+    <div class="stats3"><div><b>${r.right}/${r.order.length}</b><span>${r.lap === 1 ? "sentences right" : "missed ones now right"}</span></div><div><b>${acc}%</b><span>${isBest ? "new best" : "accuracy"}</span></div><div><b>${missed.length}</b><span>still missed</span></div></div>
+    ${missedAdj.length ? `<div><div class="q-label" style="margin-bottom:6px">Adjectives to review</div><div class="missed">${missedAdj.map(k => `<button data-k="${esc(k)}">${esc(k)}</button>`).join("")}</div></div>` : ""}
+    <div class="nextrow">${missed.length ? `<button class="cta" id="retry">Redo the ${missed.length} missed</button>` : ""}<button class="${missed.length ? "ghost" : "cta"}" id="again">Start over</button><button class="ghost" id="home">Home</button></div></div></section>`;
+  current = null;
+  if ($("#retry")) $("#retry").addEventListener("click", () => { newRun(missed, r.lap + 1); startSuper(); });
+  $("#again").addEventListener("click", () => { newRun(SENT.map((_, i) => i), 1); startSuper(); });
+  $("#home").addEventListener("click", render);
+  document.querySelectorAll(".missed button").forEach(b => b.addEventListener("click", () => openDetail(b.dataset.k)));
+  renderBar();
+}
+
+/* ---------------- speed round ---------------- */
+function startSpeed() {
+  current = { kind: "speed", right: 0, total: 0, combo: 0, best: 0, score: 0, xp: 0, missed: new Set(), end: now() + 60e3 };
+  stopTimers();
+  stageShell(qShell());
+  $("#prog").classList.add("timer");
+  const tick = () => { const left = Math.max(0, current.end - now()); setProg(left / 60e3, `${Math.ceil(left / 1000)}s · ${current.score} pts`); if (left <= 0) { stopTimers(); endSession(); } };
+  timers.push(setInterval(tick, 250)); tick();
+  nextSpeed();
+}
+function nextSpeed() {
+  const g = current;
+  g.q = Math.random() < .7 ? buildQs("pick", 1)[0] : buildQs("sent", 1)[0];
+  mountQ(g.q); g.answered = false;
+  $("#q-fb").textContent = "";
+  document.querySelectorAll("#q-opts .opt").forEach(b => b.addEventListener("click", () => answerSpeed(+b.dataset.i)));
+  document.onkeydown = e => { if (["1", "2", "3", "4"].includes(e.key)) answerSpeed(+e.key - 1); };
+}
+function answerSpeed(i) {
+  const g = current; if (g.answered || now() > g.end) return;
+  g.answered = true; g.total++;
+  const q = g.q, right = q.options.findIndex(o => o.ok), ok = i === right;
+  const btns = document.querySelectorAll("#q-opts .opt");
+  btns[right].classList.add("right"); quizResult(q.a.w, ok); formResult(q.f, ok);
+  if (ok) {
+    g.right++; g.combo++; g.best = Math.max(g.best, g.combo);
+    const mult = Math.min(4, 1 + Math.floor(g.combo / 3)); g.score += 10 * mult;
+    $("#combo").textContent = g.combo >= 3 ? `${g.combo} combo · ×${mult}` : "";
+    sfx.ok(); if (g.combo % 10 === 0) hanamaru();
+    timers.push(setTimeout(nextSpeed, 250));
+  } else {
+    btns[i].classList.add("wrong"); g.combo = 0; g.missed.add(q.a.w); sfx.no(); $("#combo").textContent = "";
+    $("#q-fb").className = "feedback no"; $("#q-fb").textContent = `${q.a.w} · ${flabel(q.f)} → ${q.options[right].text}`;
+    timers.push(setTimeout(nextSpeed, 1600));
+  }
+}
+
+/* ---------------- end of a session ---------------- */
+function endSession() {
+  const g = current; stopTimers();
+  let title, s1, s2, s3, extra = "";
+  if (g.kind === "flash") {
+    title = g.mastered.length ? "合格!" : "お疲れさま!";
+    s1 = [g.right, "cards done"]; s2 = [g.missed.size, "needed another look"]; s3 = [g.xp, "XP"];
+    if (g.mastered.length) extra = `<p>Newly mastered: <b style="font-family:var(--kanji);font-size:1.15rem">${g.mastered.map(esc).join("、")}</b></p>`;
+  } else if (g.kind === "quiz" || g.kind === "sort") {
+    const n = g.kind === "quiz" ? g.qs.length : g.xs.length;
+    if (g.kind === "sort") { const isBest = g.right > (S.best.sort || 0); if (isBest) S.best.sort = g.right; }
+    title = g.right === n ? "満点! Perfect" : g.right >= n * .7 ? "よくできました" : "もう一度!";
+    s1 = [`${g.right}/${n}`, "correct"]; s2 = [g.best, "best streak"]; s3 = [g.xp, "XP"];
+  } else {
+    const isBest = g.score > (S.best.speed || 0); if (isBest) S.best.speed = g.score;
+    const xp = Math.round(g.score / 2); addXP(xp); g.xp = xp;
+    title = isBest ? "New best!" : "Time!";
+    s1 = [g.score, "points"]; s2 = [`${g.right}/${g.total}`, "correct"]; s3 = [g.best, "best combo"];
+  }
+  markToday(); save();
+  if (g.kind !== "flash" || g.right) sfx.done();
+  const perfect = (g.kind === "quiz" && g.right === g.qs.length) || (g.kind === "sort" && g.right === g.xs.length);
+  if (perfect || (g.kind === "flash" && g.mastered.length)) setTimeout(hanamaru, 200);
+  const missed = [...g.missed];
+  $("#view").innerHTML = `<section class="stage"><div class="summary"><h2>${title}</h2>
+    <div class="stats3"><div><b>${s1[0]}</b><span>${s1[1]}</span></div><div><b>${s2[0]}</b><span>${s2[1]}</span></div><div><b>${s3[0]}</b><span>${s3[1]}</span></div></div>
+    ${extra}
+    ${missed.length ? `<div><div class="q-label" style="margin-bottom:6px">Review these</div><div class="missed">${missed.map(k => `<button data-k="${esc(k)}">${esc(k)}</button>`).join("")}</div></div>` : ""}
+    <div class="nextrow"><button class="cta" id="again">Play again</button><button class="ghost" id="home">Home</button></div></div></section>`;
+  current = null;
+  let again = { flash: startFlash, quiz: () => startQuiz(g.type, g.given), sort: startSort, speed: startSpeed }[g.kind];
+  const q = sessionQueue();
+  if (g.kind === "flash" && !(q.due.length + q.fresh.length)) { $("#again").textContent = "Play Time-word sentences"; again = () => startQuiz("sent"); }
+  $("#again").addEventListener("click", again);
+  $("#home").addEventListener("click", render);
+  document.querySelectorAll(".missed button").forEach(b => b.addEventListener("click", () => openDetail(b.dataset.k)));
+  renderBar();
+}
+
+render();
+</script>
+
+
+<style>
+.n5hub-back{position:fixed;z-index:9999;left:calc(12px + env(safe-area-inset-left,0px));bottom:calc(12px + env(safe-area-inset-bottom,0px));
+display:inline-flex;align-items:center;gap:6px;padding:7px 14px 7px 10px;border-radius:999px;text-decoration:none;
+font:700 13px/1 "Zen Kaku Gothic New","Hiragino Sans",system-ui,sans-serif;
+background:var(--ink,#1d2220);color:var(--paper,#f5f6f3);box-shadow:0 4px 14px rgba(0,0,0,.18);opacity:.92}
+.n5hub-back:hover,.n5hub-back:focus-visible{opacity:1}
+.n5hub-back:focus-visible{outline:2px solid var(--hanko,#c43d2b);outline-offset:2px}
+.n5hub-back b{font-family:"Klee One","Hiragino Mincho ProN",serif;font-weight:600;font-size:15px}
+body{padding-bottom:56px}
+</style>
+<a class="n5hub-back" href="index.html" aria-label="Back to all exercises">&#8592; <b>道場</b> All exercises</a>
+</body></html>

@@ -1,0 +1,1002 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<title>N5 Kotoba Renshū</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Klee+One:wght@400;600&family=Zen+Kaku+Gothic+New:wght@400;500;700&display=swap">
+<style>
+/* Layout: same family as N5 Kanji Renshū. Home = hero, today's practice, games, then a board of word
+   tiles grouped by part of speech or theme. Every session runs in one centred "practice sheet" stage. */
+:root {
+  --paper: #f5f6f3; --sheet: #ffffff; --ink: #1d2220; --muted: #5d6762; --faint: #c9cfcb;
+  --guide: #9cc3ad; --guide-soft: #e6f1ea; --hanko: #c43d2b; --hanko-soft: #fbe9e6;
+  --ok: #2f7d55; --ok-soft: #e3f3ea; --bad: #b8432f; --bad-soft: #f8e6e2; --gold: #b9842a;
+  --kanji: "Klee One", "Hiragino Mincho ProN", "Yu Mincho", serif;
+  --ui: "Zen Kaku Gothic New", "Hiragino Sans", "Yu Gothic", "Noto Sans JP", system-ui, sans-serif;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --paper: #141816; --sheet: #1c211f; --ink: #e9ece9; --muted: #9aa49f; --faint: #3a423e;
+    --guide: #3f6a54; --guide-soft: #1e2b24; --hanko: #e2614c; --hanko-soft: #3a211d;
+    --ok: #6cc596; --ok-soft: #1b3326; --bad: #ec8a76; --bad-soft: #3a221d; --gold: #ddb062; color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --paper: #141816; --sheet: #1c211f; --ink: #e9ece9; --muted: #9aa49f; --faint: #3a423e;
+  --guide: #3f6a54; --guide-soft: #1e2b24; --hanko: #e2614c; --hanko-soft: #3a211d;
+  --ok: #6cc596; --ok-soft: #1b3326; --bad: #ec8a76; --bad-soft: #3a221d; --gold: #ddb062; color-scheme: dark;
+}
+* { box-sizing: border-box; }
+[hidden] { display: none !important; }
+html, body { background: var(--paper); }
+body { color: var(--ink); font-family: var(--ui); font-size: 16px; line-height: 1.6; }
+button { font: inherit; color: inherit; }
+button:focus-visible, [tabindex]:focus-visible { outline: 2px solid var(--guide); outline-offset: 2px; }
+h1, h2, h3 { margin: 0; text-wrap: balance; }
+.wrap { max-width: 860px; margin: 0 auto; padding-inline: 16px; padding-block: 0 56px; }
+.jp { font-family: var(--kanji); }
+
+.bar { position: sticky; top: env(safe-area-inset-top, 0px); z-index: 20; background: var(--paper); border-bottom: 1px solid var(--faint); }
+.bar-in { max-width: 860px; margin: 0 auto; padding: 10px 16px; display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+.brand { font-family: var(--kanji); font-weight: 600; font-size: 1.25rem; margin-right: auto; display: flex; align-items: baseline; gap: 8px; cursor: pointer; background: none; border: 0; padding: 0; }
+.brand small { font-family: var(--ui); font-size: .72rem; letter-spacing: .14em; text-transform: uppercase; color: var(--muted); font-weight: 700; }
+.pill { display: inline-flex; align-items: center; gap: 6px; font-size: .82rem; font-weight: 700; padding: 3px 10px; border-radius: 999px; background: var(--sheet); border: 1px solid var(--faint); font-variant-numeric: tabular-nums; white-space: nowrap; }
+.pill svg { width: 14px; height: 14px; }
+.pill.streak { color: var(--hanko); }
+.icon-btn { border: 1px solid var(--faint); background: var(--sheet); border-radius: 999px; width: 34px; height: 34px; display: grid; place-items: center; cursor: pointer; flex: none; }
+.icon-btn svg { width: 18px; height: 18px; }
+
+.hero { padding-block: 26px 6px; display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 18px; align-items: end; }
+.hero h1 { font-family: var(--kanji); font-weight: 600; font-size: clamp(1.8rem, 6vw, 2.6rem); line-height: 1.15; }
+.hero p { margin: 6px 0 0; color: var(--muted); max-width: 52ch; }
+.tally { display: grid; justify-items: end; gap: 4px; }
+.tally .big { font-family: var(--kanji); font-weight: 600; font-size: 2.4rem; line-height: 1; font-variant-numeric: tabular-nums; }
+.tally .big span { font-size: 1rem; color: var(--muted); }
+.tally .lbl { font-size: .75rem; letter-spacing: .1em; text-transform: uppercase; color: var(--muted); font-weight: 700; }
+.levelbar { margin-top: 14px; display: grid; grid-template-columns: auto minmax(0, 1fr) auto; gap: 10px; align-items: center; font-size: .82rem; color: var(--muted); font-variant-numeric: tabular-nums; }
+.levelbar .track { height: 8px; border-radius: 999px; background: var(--guide-soft); overflow: hidden; }
+.levelbar .fill { height: 100%; background: var(--guide); border-radius: 999px; transition: width .6s ease; }
+.levelbar b { color: var(--ink); }
+
+.today { margin-top: 18px; background: var(--sheet); border: 1px solid var(--faint); border-radius: 16px; padding: 18px; display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 14px; align-items: center; }
+.today h2 { font-size: 1.15rem; }
+.today p { margin: 2px 0 0; color: var(--muted); font-size: .92rem; }
+.cta { border: 0; border-radius: 12px; background: var(--ink); color: var(--paper); font-weight: 700; padding: 12px 20px; cursor: pointer; font-size: 1rem; white-space: nowrap; }
+.cta:disabled { opacity: .4; cursor: default; }
+.ghost { border: 1px solid var(--faint); background: var(--sheet); border-radius: 12px; padding: 10px 16px; font-weight: 700; cursor: pointer; }
+
+.section-h { margin-top: 30px; display: flex; align-items: baseline; justify-content: space-between; gap: 10px; flex-wrap: wrap; }
+.section-h h2 { font-size: 1.05rem; letter-spacing: .02em; }
+.section-h .hint { font-size: .82rem; color: var(--muted); }
+.games { margin-top: 12px; display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 10px; }
+.game { text-align: left; background: var(--sheet); border: 1px solid var(--faint); border-radius: 14px; padding: 14px; cursor: pointer; display: grid; gap: 4px; align-content: start; transition: transform .15s ease, border-color .15s ease; }
+.game:hover { transform: translateY(-2px); border-color: var(--guide); }
+.game[disabled] { opacity: .5; cursor: default; transform: none; }
+.game .gk { font-family: var(--kanji); font-size: 1.4rem; line-height: 1.15; }
+.game b { font-size: .98rem; }
+.game span { font-size: .82rem; color: var(--muted); }
+.game .best { color: var(--gold); font-weight: 700; }
+.super { margin-top: 12px; width: 100%; text-align: left; background: var(--ink); color: var(--paper); border: 0; border-radius: 16px; padding: 16px 18px; cursor: pointer; display: grid; grid-template-columns: auto minmax(0, 1fr) auto; gap: 14px; align-items: center; }
+.super .gk { font-family: var(--kanji); font-weight: 600; font-size: 2rem; line-height: 1; background: var(--hanko); color: #fff; border-radius: 8px; width: 52px; height: 52px; display: grid; place-items: center; }
+.super b { display: block; font-size: 1.05rem; }
+.super span { font-size: .84rem; opacity: .8; }
+.super .go { font-weight: 700; white-space: nowrap; opacity: 1; }
+.super .track { height: 6px; border-radius: 999px; background: color-mix(in srgb, var(--paper) 25%, transparent); overflow: hidden; margin-top: 8px; }
+.super .track i { display: block; height: 100%; background: var(--hanko); }
+.runstats { font-size: .85rem; font-weight: 700; color: var(--muted); font-variant-numeric: tabular-nums; text-align: center; }
+
+.chips { margin-top: 12px; display: flex; gap: 6px; flex-wrap: wrap; }
+.chip { border: 1px solid var(--faint); background: var(--sheet); border-radius: 999px; padding: 4px 12px; font-size: .82rem; cursor: pointer; font-variant-numeric: tabular-nums; }
+.chip[aria-pressed="true"] { background: var(--ink); color: var(--paper); border-color: var(--ink); }
+
+.group { margin-top: 18px; }
+.group-h { display: flex; justify-content: space-between; align-items: baseline; gap: 10px; font-size: .8rem; color: var(--muted); font-weight: 700; letter-spacing: .06em; margin-bottom: 6px; }
+.group-h > span:last-child { white-space: nowrap; }
+.board { display: grid; grid-template-columns: repeat(auto-fill, minmax(104px, 1fr)); gap: 6px; }
+.tile { position: relative; min-height: 52px; border: 1px solid var(--guide); background: var(--sheet); border-radius: 6px; cursor: pointer; display: grid; place-items: center; padding: 6px 8px; text-align: center; }
+.tile .k { font-family: var(--kanji); font-size: 1.05rem; line-height: 1.25; font-weight: 600; color: color-mix(in srgb, var(--ink) 30%, var(--faint)); overflow-wrap: anywhere; }
+.tile.long .k { font-size: .85rem; }
+.tile.s1 .k { color: color-mix(in srgb, var(--ink) 50%, var(--faint)); }
+.tile.s2 .k { color: color-mix(in srgb, var(--ink) 68%, var(--faint)); }
+.tile.s3 .k { color: color-mix(in srgb, var(--ink) 85%, var(--faint)); }
+.tile.s4 .k, .tile.s5 .k, .tile.s6 .k { color: var(--ink); }
+.tile .stamp { position: absolute; right: 3px; bottom: 3px; width: 14px; height: 14px; }
+.tile .due { position: absolute; top: 4px; right: 4px; width: 7px; height: 7px; border-radius: 50%; background: var(--gold); }
+.more { margin-top: 6px; }
+.legend { margin-top: 12px; display: flex; flex-wrap: wrap; gap: 14px; font-size: .78rem; color: var(--muted); align-items: center; }
+.legend i { display: inline-block; width: 10px; height: 10px; border-radius: 2px; margin-right: 5px; vertical-align: -1px; }
+
+.stage { padding-block: 18px 30px; display: grid; gap: 16px; justify-items: center; }
+.stage-top { width: 100%; max-width: 560px; display: grid; grid-template-columns: auto minmax(0, 1fr) auto; gap: 12px; align-items: center; }
+.progress { height: 8px; border-radius: 999px; background: var(--guide-soft); overflow: hidden; }
+.progress .fill { height: 100%; background: var(--guide); transition: width .3s ease; }
+.progress.timer .fill { background: var(--gold); transition: width 1s linear; }
+.counter { font-size: .85rem; font-weight: 700; color: var(--muted); font-variant-numeric: tabular-nums; white-space: nowrap; }
+.combo { font-size: .85rem; font-weight: 700; color: var(--hanko); min-height: 1.4em; font-variant-numeric: tabular-nums; }
+.sheetq { position: relative; width: min(90vw, 440px); min-height: 170px; background: var(--sheet); border: 2px solid var(--guide); border-radius: 8px; display: grid; place-items: center; align-content: center; gap: 4px; padding: 26px 18px; text-align: center; }
+.sheetq::after { content: ""; position: absolute; left: 6%; right: 6%; top: 50%; border-top: 2px dashed var(--guide-soft); }
+.sheetq > * { position: relative; z-index: 1; }
+.sheetq .w { font-family: var(--kanji); font-weight: 600; font-size: clamp(2.2rem, 11vw, 3.4rem); line-height: 1.2; overflow-wrap: anywhere; }
+.sheetq .w.l1 { font-size: clamp(1.8rem, 8.5vw, 2.6rem); }
+.sheetq .w.l2 { font-size: clamp(1.3rem, 6vw, 1.9rem); }
+.sheetq .en { font-size: 1.45rem; font-weight: 700; line-height: 1.35; }
+.sheetq .rd { font-family: var(--kanji); font-size: 1.1rem; color: var(--muted); }
+.sheetq .speak { position: absolute; top: 8px; right: 8px; z-index: 2; }
+.sheetq .tag { font-size: .78rem; color: var(--muted); }
+.q-label { font-size: .8rem; letter-spacing: .12em; text-transform: uppercase; color: var(--muted); font-weight: 700; text-align: center; }
+.options { width: 100%; max-width: 560px; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+.opt { border: 1px solid var(--faint); background: var(--sheet); border-radius: 12px; padding: 14px 12px 12px; cursor: pointer; text-align: center; font-weight: 600; min-height: 64px; display: grid; place-items: center; transition: transform .1s ease; position: relative; line-height: 1.3; overflow-wrap: anywhere; }
+.opt:active { transform: scale(.98); }
+.opt .n { position: absolute; top: 5px; left: 9px; font-size: .7rem; color: var(--muted); font-weight: 700; }
+.opt.jp { font-size: 1.3rem; }
+.opt.jp.l1 { font-size: 1.05rem; }
+.opt.jp.l2 { font-size: .9rem; }
+.opt.right { background: var(--ok-soft); border-color: var(--ok); }
+.opt.wrong { background: var(--bad-soft); border-color: var(--bad); animation: shake .3s; }
+.opt[disabled] { cursor: default; }
+.feedback { min-height: 1.6em; font-weight: 700; text-align: center; max-width: 560px; }
+.feedback.ok { color: var(--ok); }
+.feedback.no { color: var(--bad); }
+.nextrow { display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; }
+
+.back { width: 100%; max-width: 560px; background: var(--sheet); border: 1px solid var(--faint); border-radius: 14px; padding: 16px 18px; display: grid; gap: 10px; }
+.rrow { display: grid; grid-template-columns: 5.2em minmax(0, 1fr); gap: 10px; align-items: baseline; }
+.rrow .lab { font-size: .72rem; letter-spacing: .1em; text-transform: uppercase; color: var(--muted); font-weight: 700; }
+.reading { font-family: var(--kanji); font-size: 1.25rem; }
+.meaning { font-size: 1.1rem; font-weight: 700; }
+.tags { display: flex; flex-wrap: wrap; gap: 6px; }
+.tags span { font-size: .78rem; border: 1px solid var(--faint); border-radius: 999px; padding: 1px 10px; }
+.from { font-size: .75rem; color: var(--muted); }
+.grades { width: 100%; max-width: 560px; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; }
+.grade { border-radius: 12px; padding: 12px 8px; cursor: pointer; font-weight: 700; border: 1px solid var(--faint); background: var(--sheet); display: grid; gap: 2px; }
+.grade small { font-weight: 500; font-size: .74rem; color: var(--muted); }
+.grade.again { border-color: var(--bad); color: var(--bad); }
+.grade.good { border-color: var(--ok); color: var(--ok); }
+.grade.easy { border-color: var(--guide); }
+
+.pairs { width: 100%; max-width: 620px; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
+@media (min-width: 560px) { .pairs { grid-template-columns: repeat(4, minmax(0, 1fr)); } }
+.pcard { min-height: 86px; border: 1px solid var(--faint); background: var(--sheet); border-radius: 12px; cursor: pointer; padding: 8px; display: grid; place-items: center; text-align: center; font-weight: 600; font-size: .88rem; line-height: 1.3; overflow-wrap: anywhere; transition: transform .12s ease, opacity .35s ease; }
+.pcard.jp { font-family: var(--kanji); font-size: 1.2rem; }
+.pcard.jp.l1 { font-size: 1rem; }
+.pcard.sel { border-color: var(--ink); box-shadow: 0 0 0 2px var(--ink) inset; }
+.pcard.miss { border-color: var(--bad); background: var(--bad-soft); animation: shake .3s; }
+.pcard.done { border-color: var(--ok); background: var(--ok-soft); opacity: .35; cursor: default; }
+
+.summary { width: 100%; max-width: 560px; background: var(--sheet); border: 1px solid var(--faint); border-radius: 16px; padding: 22px; display: grid; gap: 14px; justify-items: center; text-align: center; }
+.summary h2 { font-family: var(--kanji); font-size: 1.8rem; font-weight: 600; }
+.stats3 { width: 100%; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
+.stats3 div { background: var(--paper); border-radius: 10px; padding: 10px 6px; }
+.stats3 b { display: block; font-size: 1.5rem; font-variant-numeric: tabular-nums; }
+.stats3 span { font-size: .74rem; color: var(--muted); }
+.missed { display: flex; flex-wrap: wrap; gap: 6px; justify-content: center; }
+.missed button { font-family: var(--kanji); font-size: 1.05rem; padding: 4px 12px; border: 1px solid var(--bad); background: var(--bad-soft); border-radius: 8px; cursor: pointer; }
+
+.overlay { position: fixed; inset: 0; z-index: 50; background: color-mix(in srgb, var(--ink) 45%, transparent); display: grid; place-items: end center; padding: 16px; padding-bottom: calc(16px + env(safe-area-inset-bottom, 0px)); }
+@media (min-width: 640px) { .overlay { place-items: center; } }
+.sheet { width: 100%; max-width: 520px; max-height: 86vh; overflow: auto; background: var(--sheet); border-radius: 18px; padding: 20px; display: grid; gap: 14px; }
+.sheet-h { display: flex; justify-content: space-between; align-items: center; gap: 10px; }
+.sheet-h h2 { font-size: 1.1rem; }
+.detail-w { font-family: var(--kanji); font-weight: 600; font-size: 2.4rem; line-height: 1.2; overflow-wrap: anywhere; }
+.kv { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
+.kv div { background: var(--paper); border-radius: 10px; padding: 8px; text-align: center; }
+.kv b { display: block; font-variant-numeric: tabular-nums; }
+.kv span { font-size: .72rem; color: var(--muted); }
+.setrow { display: flex; justify-content: space-between; align-items: center; gap: 12px; padding: 8px 0; border-bottom: 1px solid var(--faint); }
+.setrow:last-child { border-bottom: 0; }
+.switch { position: relative; width: 46px; height: 26px; border-radius: 999px; border: 0; background: var(--faint); cursor: pointer; flex: none; }
+.switch::after { content: ""; position: absolute; top: 3px; left: 3px; width: 20px; height: 20px; border-radius: 50%; background: var(--sheet); transition: transform .2s ease; }
+.switch[aria-checked="true"] { background: var(--ok); }
+.switch[aria-checked="true"]::after { transform: translateX(20px); }
+.seg { display: inline-flex; border: 1px solid var(--faint); border-radius: 10px; overflow: hidden; flex: none; }
+.seg button { border: 0; background: transparent; padding: 5px 11px; cursor: pointer; font-size: .85rem; font-variant-numeric: tabular-nums; }
+.seg button[aria-pressed="true"] { background: var(--ink); color: var(--paper); }
+.danger { color: var(--bad); border-color: var(--bad); }
+footer { margin-top: 36px; font-size: .78rem; color: var(--muted); display: grid; gap: 4px; }
+
+.fx { position: fixed; inset: 0; pointer-events: none; z-index: 60; display: grid; place-items: center; }
+.hanamaru { width: min(60vw, 240px); }
+.hanamaru path { fill: none; stroke: var(--hanko); stroke-width: 5; stroke-linecap: round; }
+.xpfloat { position: fixed; z-index: 61; pointer-events: none; font-weight: 800; color: var(--gold); font-size: 1.1rem; }
+.bigstamp { width: 150px; height: 150px; }
+@media (prefers-reduced-motion: no-preference) {
+  .hanamaru path { stroke-dasharray: 1200; stroke-dashoffset: 1200; animation: draw 1s ease forwards; }
+  .xpfloat { animation: floatup 1s ease forwards; }
+  .bigstamp { animation: stamp .55s cubic-bezier(.2, 1.6, .4, 1) both; }
+  .fx.fade { animation: fadeout .5s ease .9s forwards; }
+}
+@keyframes draw { to { stroke-dashoffset: 0; } }
+@keyframes floatup { from { opacity: 1; transform: translateY(0); } to { opacity: 0; transform: translateY(-40px); } }
+@keyframes stamp { 0% { transform: scale(2.4) rotate(-14deg); opacity: 0; } 100% { transform: scale(1) rotate(-8deg); opacity: 1; } }
+@keyframes fadeout { to { opacity: 0; } }
+@keyframes shake { 25% { transform: translateX(-4px); } 75% { transform: translateX(4px); } }
+@media (max-width: 520px) {
+  .hero { grid-template-columns: 1fr; }
+  .tally { justify-items: start; }
+  .today { grid-template-columns: 1fr; }
+  .board { grid-template-columns: repeat(auto-fill, minmax(92px, 1fr)); gap: 5px; }
+}
+@media (max-width: 430px) {
+  .brand small { display: none; }
+  .bar-in { gap: 8px; flex-wrap: nowrap; }
+}
+</style>
+
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <symbol id="i-flame" viewBox="0 0 24 24"><path fill="currentColor" d="M12 2c1 3.5-1.6 5-1.6 7.6 0 1.4 1 2.4 2.2 2.4 1.6 0 2.4-1.4 2-3.4 2.4 1.6 4.4 4.3 4.4 7.4A7 7 0 0 1 12 23a7 7 0 0 1-7-7c0-4.9 4.6-7.6 7-14z"/></symbol>
+  <symbol id="i-gear" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" d="M12 15.5a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7zM19.4 13.5l1.6 1-1.8 3.2-1.8-.6a7.6 7.6 0 0 1-1.8 1l-.3 1.9H11l-.3-1.9a7.6 7.6 0 0 1-1.8-1l-1.8.6-1.8-3.2 1.6-1a7.6 7.6 0 0 1 0-2.1l-1.6-1 1.8-3.2 1.8.6a7.6 7.6 0 0 1 1.8-1L11 2.9h3.6l.3 1.9a7.6 7.6 0 0 1 1.8 1l1.8-.6 1.8 3.2-1.6 1a7.6 7.6 0 0 1 0 2.1z"/></symbol>
+  <symbol id="i-close" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" d="M6 6l12 12M18 6L6 18"/></symbol>
+  <symbol id="i-speak" viewBox="0 0 24 24"><path fill="currentColor" d="M4 9h4l5-4v14l-5-4H4z"/><path fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" d="M16.5 8.5a5 5 0 0 1 0 7M19 6a8.5 8.5 0 0 1 0 12"/></symbol>
+  <symbol id="i-stamp" viewBox="0 0 40 40"><rect x="3" y="3" width="34" height="34" rx="6" fill="var(--hanko)"/><rect x="6" y="6" width="28" height="28" rx="4" fill="none" stroke="#fff" stroke-width="1.6"/><text x="20" y="27.5" text-anchor="middle" font-size="20" font-family="Klee One, serif" font-weight="600" fill="#fff">合</text></symbol>
+</svg>
+
+<header class="bar">
+  <div class="bar-in">
+    <button class="brand" id="home-btn" aria-label="Home">言葉練習 <small>N5 words</small></button>
+    <span class="pill streak" title="Days in a row"><svg><use href="#i-flame"/></svg><span id="streak-n">0</span></span>
+    <span class="pill" id="level-pill">Lv 1</span>
+    <button class="icon-btn" id="settings-btn" aria-label="Settings"><svg><use href="#i-gear"/></svg></button>
+  </div>
+</header>
+
+<main class="wrap" id="view"></main>
+<div id="overlay-root"></div>
+
+<script>
+const DATA = {"words":[{"w":"わたし","r":"","say":"わたし","m":"I, me","t":"Pronoun / demonstrative","g":"","th":"Pronouns","cat":"Pronouns & questions","kj":false,"o":5},{"w":"ぼく","r":"","say":"ぼく","m":"I, me (male, casual)","t":"Pronoun / demonstrative","g":"","th":"Pronouns","cat":"Pronouns & questions","kj":false,"o":13},{"w":"あなた","r":"","say":"あなた","m":"you","t":"Pronoun / demonstrative","g":"","th":"Pronouns","cat":"Pronouns & questions","kj":false,"o":21},{"w":"かれ","r":"","say":"かれ","m":"he, him; boyfriend","t":"Pronoun / demonstrative","g":"","th":"Pronouns","cat":"Pronouns & questions","kj":false,"o":29},{"w":"かのじょ","r":"","say":"かのじょ","m":"she, her; girlfriend","t":"Pronoun / demonstrative","g":"","th":"Pronouns","cat":"Pronouns & questions","kj":false,"o":37},{"w":"わたしたち","r":"","say":"わたしたち","m":"we, us","t":"Pronoun / demonstrative","g":"","th":"Pronouns","cat":"Pronouns & questions","kj":false,"o":45},{"w":"これ","r":"","say":"これ","m":"this (thing near me)","t":"Pronoun / demonstrative","g":"","th":"Pronouns","cat":"Pronouns & questions","kj":false,"o":53},{"w":"それ","r":"","say":"それ","m":"that (thing near you)","t":"Pronoun / demonstrative","g":"","th":"Pronouns","cat":"Pronouns & questions","kj":false,"o":61},{"w":"あれ","r":"","say":"あれ","m":"that (thing over there)","t":"Pronoun / demonstrative","g":"","th":"Pronouns","cat":"Pronouns & questions","kj":false,"o":69},{"w":"どれ","r":"","say":"どれ","m":"which one (of three or more)","t":"Question word","g":"","th":"Question words","cat":"Pronouns & questions","kj":false,"o":77},{"w":"ここ","r":"","say":"ここ","m":"here","t":"Pronoun / demonstrative","g":"","th":"Pronouns","cat":"Pronouns & questions","kj":false,"o":85},{"w":"そこ","r":"","say":"そこ","m":"there (near you)","t":"Pronoun / demonstrative","g":"","th":"Pronouns","cat":"Pronouns & questions","kj":false,"o":93},{"w":"あそこ","r":"","say":"あそこ","m":"over there","t":"Pronoun / demonstrative","g":"","th":"Pronouns","cat":"Pronouns & questions","kj":false,"o":101},{"w":"どこ","r":"","say":"どこ","m":"where","t":"Question word","g":"","th":"Question words","cat":"Pronouns & questions","kj":false,"o":109},{"w":"こちら","r":"","say":"こちら","m":"this way; this person (polite)","t":"Pronoun / demonstrative","g":"","th":"Pronouns","cat":"Pronouns & questions","kj":false,"o":117},{"w":"そちら","r":"","say":"そちら","m":"that way; that person (polite)","t":"Pronoun / demonstrative","g":"","th":"Pronouns","cat":"Pronouns & questions","kj":false,"o":125},{"w":"あちら","r":"","say":"あちら","m":"that way over there (polite)","t":"Pronoun / demonstrative","g":"","th":"Pronouns","cat":"Pronouns & questions","kj":false,"o":133},{"w":"どちら","r":"","say":"どちら","m":"which way; which one (of two); where (polite)","t":"Question word","g":"","th":"Question words","cat":"Pronouns & questions","kj":false,"o":141},{"w":"こっち","r":"","say":"こっち","m":"this way (casual)","t":"Pronoun / demonstrative","g":"","th":"Pronouns","cat":"Pronouns & questions","kj":false,"o":149},{"w":"そっち","r":"","say":"そっち","m":"that way (casual)","t":"Pronoun / demonstrative","g":"","th":"Pronouns","cat":"Pronouns & questions","kj":false,"o":157},{"w":"あっち","r":"","say":"あっち","m":"over there (casual)","t":"Pronoun / demonstrative","g":"","th":"Pronouns","cat":"Pronouns & questions","kj":false,"o":165},{"w":"どっち","r":"","say":"どっち","m":"which one (of two, casual)","t":"Question word","g":"","th":"Question words","cat":"Pronouns & questions","kj":false,"o":173},{"w":"この","r":"","say":"この","m":"this ~","t":"Pronoun / demonstrative","g":"","th":"Pronouns","cat":"Pronouns & questions","kj":false,"o":181},{"w":"その","r":"","say":"その","m":"that ~","t":"Pronoun / demonstrative","g":"","th":"Pronouns","cat":"Pronouns & questions","kj":false,"o":189},{"w":"あの","r":"","say":"あの","m":"that ~ over there","t":"Pronoun / demonstrative","g":"","th":"Pronouns","cat":"Pronouns & questions","kj":false,"o":197},{"w":"どの","r":"","say":"どの","m":"which ~","t":"Question word","g":"","th":"Question words","cat":"Pronouns & questions","kj":false,"o":205},{"w":"こんな","r":"","say":"こんな","m":"this kind of","t":"Pronoun / demonstrative","g":"","th":"Pronouns","cat":"Pronouns & questions","kj":false,"o":213},{"w":"そんな","r":"","say":"そんな","m":"that kind of","t":"Pronoun / demonstrative","g":"","th":"Pronouns","cat":"Pronouns & questions","kj":false,"o":221},{"w":"あんな","r":"","say":"あんな","m":"that kind of (over there)","t":"Pronoun / demonstrative","g":"","th":"Pronouns","cat":"Pronouns & questions","kj":false,"o":229},{"w":"どんな","r":"","say":"どんな","m":"what kind of","t":"Question word","g":"","th":"Question words","cat":"Pronouns & questions","kj":false,"o":237},{"w":"みんな","r":"","say":"みんな","m":"everyone; everything","t":"Pronoun / demonstrative","g":"","th":"Pronouns","cat":"Pronouns & questions","kj":false,"o":245},{"w":"みなさん","r":"","say":"みなさん","m":"everyone (polite)","t":"Pronoun / demonstrative","g":"","th":"Pronouns","cat":"Pronouns & questions","kj":false,"o":253},{"w":"だれ","r":"","say":"だれ","m":"who","t":"Question word","g":"","th":"Question words","cat":"Pronouns & questions","kj":false,"o":261},{"w":"どなた","r":"","say":"どなた","m":"who (polite)","t":"Question word","g":"","th":"Question words","cat":"Pronouns & questions","kj":false,"o":269},{"w":"何","r":"なに / なん","say":"なに","m":"what; what (before d/n/t sounds and counters)","t":"Question word","g":"","th":"Question words","cat":"Pronouns & questions","kj":true,"o":277},{"w":"いつ","r":"","say":"いつ","m":"when","t":"Question word","g":"","th":"Question words","cat":"Pronouns & questions","kj":false,"o":285},{"w":"いくつ","r":"","say":"いくつ","m":"how many; how old","t":"Question word","g":"","th":"Question words","cat":"Pronouns & questions","kj":false,"o":292},{"w":"いくら","r":"","say":"いくら","m":"how much (price)","t":"Question word","g":"","th":"Question words","cat":"Pronouns & questions","kj":false,"o":299},{"w":"どう","r":"","say":"どう","m":"how; in what way","t":"Question word","g":"","th":"Question words","cat":"Pronouns & questions","kj":false,"o":306},{"w":"どうして","r":"","say":"どうして","m":"why","t":"Question word","g":"","th":"Question words","cat":"Pronouns & questions","kj":false,"o":313},{"w":"なぜ","r":"","say":"なぜ","m":"why","t":"Question word","g":"","th":"Question words","cat":"Pronouns & questions","kj":false,"o":319},{"w":"どのぐらい","r":"","say":"どのぐらい","m":"about how much / how long","t":"Question word","g":"","th":"Question words","cat":"Pronouns & questions","kj":false,"o":325},{"w":"人","r":"ひと","say":"ひと","m":"person","t":"Noun","g":"","th":"People","cat":"Nouns","kj":true,"o":1},{"w":"男","r":"おとこ","say":"おとこ","m":"man, male","t":"Noun","g":"","th":"People","cat":"Nouns","kj":true,"o":3},{"w":"女","r":"おんな","say":"おんな","m":"woman, female","t":"Noun","g":"","th":"People","cat":"Nouns","kj":true,"o":6},{"w":"男の子","r":"おとこのこ","say":"おとこのこ","m":"boy","t":"Noun","g":"","th":"People","cat":"Nouns","kj":true,"o":9},{"w":"女の子","r":"おんなのこ","say":"おんなのこ","m":"girl","t":"Noun","g":"","th":"People","cat":"Nouns","kj":true,"o":11},{"w":"男の人","r":"おとこのひと","say":"おとこのひと","m":"man","t":"Noun","g":"","th":"People","cat":"Nouns","kj":true,"o":14},{"w":"女の人","r":"おんなのひと","say":"おんなのひと","m":"woman","t":"Noun","g":"","th":"People","cat":"Nouns","kj":true,"o":17},{"w":"こども","r":"","say":"こども","m":"child","t":"Noun","g":"","th":"People","cat":"Nouns","kj":false,"o":19},{"w":"大人","r":"おとな","say":"おとな","m":"adult","t":"Noun","g":"","th":"People","cat":"Nouns","kj":true,"o":22},{"w":"ともだち","r":"","say":"ともだち","m":"friend","t":"Noun","g":"","th":"People","cat":"Nouns","kj":false,"o":25},{"w":"先生","r":"せんせい","say":"せんせい","m":"teacher; doctor","t":"Noun","g":"","th":"People","cat":"Nouns","kj":true,"o":27},{"w":"学生","r":"がくせい","say":"がくせい","m":"student","t":"Noun","g":"","th":"People","cat":"Nouns","kj":true,"o":30},{"w":"せいと","r":"","say":"せいと","m":"pupil (school)","t":"Noun","g":"","th":"People","cat":"Nouns","kj":false,"o":33},{"w":"りゅうがくせい","r":"","say":"りゅうがくせい","m":"international student","t":"Noun","g":"","th":"People","cat":"Nouns","kj":false,"o":35},{"w":"いしゃ","r":"","say":"いしゃ","m":"doctor","t":"Noun","g":"","th":"People","cat":"Nouns","kj":false,"o":38},{"w":"かいしゃいん","r":"","say":"かいしゃいん","m":"company employee","t":"Noun","g":"","th":"People","cat":"Nouns","kj":false,"o":41},{"w":"けいかん","r":"","say":"けいかん","m":"police officer","t":"Noun","g":"","th":"People","cat":"Nouns","kj":false,"o":43},{"w":"おまわりさん","r":"","say":"おまわりさん","m":"police officer (friendly)","t":"Noun","g":"","th":"People","cat":"Nouns","kj":false,"o":46},{"w":"外国人","r":"がいこくじん","say":"がいこくじん","m":"foreigner","t":"Noun","g":"","th":"People","cat":"Nouns","kj":true,"o":49},{"w":"かぞく","r":"","say":"かぞく","m":"family","t":"Noun","g":"","th":"Family","cat":"Nouns","kj":false,"o":51},{"w":"りょうしん","r":"","say":"りょうしん","m":"parents","t":"Noun","g":"","th":"Family","cat":"Nouns","kj":false,"o":54},{"w":"父","r":"ちち","say":"ちち","m":"(my) father","t":"Noun","g":"","th":"Family","cat":"Nouns","kj":true,"o":57},{"w":"母","r":"はは","say":"はは","m":"(my) mother","t":"Noun","g":"","th":"Family","cat":"Nouns","kj":true,"o":59},{"w":"お父さん","r":"おとうさん","say":"おとうさん","m":"father; (someone's) father","t":"Noun","g":"","th":"Family","cat":"Nouns","kj":true,"o":62},{"w":"お母さん","r":"おかあさん","say":"おかあさん","m":"mother; (someone's) mother","t":"Noun","g":"","th":"Family","cat":"Nouns","kj":true,"o":65},{"w":"あに","r":"","say":"あに","m":"(my) older brother","t":"Noun","g":"","th":"Family","cat":"Nouns","kj":false,"o":67},{"w":"あね","r":"","say":"あね","m":"(my) older sister","t":"Noun","g":"","th":"Family","cat":"Nouns","kj":false,"o":70},{"w":"おとうと","r":"","say":"おとうと","m":"younger brother","t":"Noun","g":"","th":"Family","cat":"Nouns","kj":false,"o":73},{"w":"いもうと","r":"","say":"いもうと","m":"younger sister","t":"Noun","g":"","th":"Family","cat":"Nouns","kj":false,"o":75},{"w":"おにいさん","r":"","say":"おにいさん","m":"older brother (polite)","t":"Noun","g":"","th":"Family","cat":"Nouns","kj":false,"o":78},{"w":"おねえさん","r":"","say":"おねえさん","m":"older sister (polite)","t":"Noun","g":"","th":"Family","cat":"Nouns","kj":false,"o":81},{"w":"きょうだい","r":"","say":"きょうだい","m":"siblings","t":"Noun","g":"","th":"Family","cat":"Nouns","kj":false,"o":83},{"w":"そふ","r":"","say":"そふ","m":"(my) grandfather","t":"Noun","g":"","th":"Family","cat":"Nouns","kj":false,"o":86},{"w":"そぼ","r":"","say":"そぼ","m":"(my) grandmother","t":"Noun","g":"","th":"Family","cat":"Nouns","kj":false,"o":89},{"w":"おじいさん","r":"","say":"おじいさん","m":"grandfather; old man","t":"Noun","g":"","th":"Family","cat":"Nouns","kj":false,"o":91},{"w":"おばあさん","r":"","say":"おばあさん","m":"grandmother; old woman","t":"Noun","g":"","th":"Family","cat":"Nouns","kj":false,"o":94},{"w":"おじさん","r":"","say":"おじさん","m":"uncle; middle-aged man","t":"Noun","g":"","th":"Family","cat":"Nouns","kj":false,"o":97},{"w":"おばさん","r":"","say":"おばさん","m":"aunt; middle-aged woman","t":"Noun","g":"","th":"Family","cat":"Nouns","kj":false,"o":99},{"w":"しゅじん","r":"","say":"しゅじん","m":"(my) husband","t":"Noun","g":"","th":"Family","cat":"Nouns","kj":false,"o":102},{"w":"おくさん","r":"","say":"おくさん","m":"(someone's) wife","t":"Noun","g":"","th":"Family","cat":"Nouns","kj":false,"o":105},{"w":"〜さん","r":"","say":"さん","m":"Mr./Ms. ~","t":"Noun","g":"","th":"People","cat":"Nouns","kj":false,"o":107},{"w":"〜たち","r":"","say":"たち","m":"(plural for people)","t":"Noun","g":"","th":"People","cat":"Nouns","kj":false,"o":110},{"w":"名前","r":"なまえ","say":"なまえ","m":"name","t":"Noun","g":"","th":"People","cat":"Nouns","kj":true,"o":113},{"w":"からだ","r":"","say":"からだ","m":"body","t":"Noun","g":"","th":"Body","cat":"Nouns","kj":false,"o":115},{"w":"あたま","r":"","say":"あたま","m":"head","t":"Noun","g":"","th":"Body","cat":"Nouns","kj":false,"o":118},{"w":"かお","r":"","say":"かお","m":"face","t":"Noun","g":"","th":"Body","cat":"Nouns","kj":false,"o":121},{"w":"目","r":"め","say":"め","m":"eye","t":"Noun","g":"","th":"Body","cat":"Nouns","kj":true,"o":123},{"w":"耳","r":"みみ","say":"みみ","m":"ear","t":"Noun","g":"","th":"Body","cat":"Nouns","kj":true,"o":126},{"w":"はな","r":"","say":"はな","m":"nose","t":"Noun","g":"","th":"Body","cat":"Nouns","kj":false,"o":129},{"w":"口","r":"くち","say":"くち","m":"mouth","t":"Noun","g":"","th":"Body","cat":"Nouns","kj":true,"o":131},{"w":"は","r":"","say":"は","m":"tooth","t":"Noun","g":"","th":"Body","cat":"Nouns","kj":false,"o":134},{"w":"手","r":"て","say":"て","m":"hand","t":"Noun","g":"","th":"Body","cat":"Nouns","kj":true,"o":137},{"w":"足","r":"あし","say":"あし","m":"foot, leg","t":"Noun","g":"","th":"Body","cat":"Nouns","kj":true,"o":139},{"w":"おなか","r":"","say":"おなか","m":"stomach, belly","t":"Noun","g":"","th":"Body","cat":"Nouns","kj":false,"o":142},{"w":"せ","r":"","say":"せ","m":"height; back","t":"Noun","g":"","th":"Body","cat":"Nouns","kj":false,"o":145},{"w":"びょうき","r":"","say":"びょうき","m":"illness","t":"Noun","g":"","th":"Body","cat":"Nouns","kj":false,"o":147},{"w":"かぜ","r":"","say":"かぜ","m":"a cold; wind","t":"Noun","g":"","th":"Body","cat":"Nouns","kj":false,"o":150},{"w":"くすり","r":"","say":"くすり","m":"medicine","t":"Noun","g":"","th":"Body","cat":"Nouns","kj":false,"o":153},{"w":"たべもの","r":"","say":"たべもの","m":"food","t":"Noun","g":"","th":"Food & drink","cat":"Nouns","kj":false,"o":155},{"w":"のみもの","r":"","say":"のみもの","m":"drink","t":"Noun","g":"","th":"Food & drink","cat":"Nouns","kj":false,"o":158},{"w":"ごはん","r":"","say":"ごはん","m":"cooked rice; meal","t":"Noun","g":"","th":"Food & drink","cat":"Nouns","kj":false,"o":161},{"w":"あさごはん","r":"","say":"あさごはん","m":"breakfast","t":"Noun","g":"","th":"Food & drink","cat":"Nouns","kj":false,"o":163},{"w":"ひるごはん","r":"","say":"ひるごはん","m":"lunch","t":"Noun","g":"","th":"Food & drink","cat":"Nouns","kj":false,"o":166},{"w":"ばんごはん","r":"","say":"ばんごはん","m":"dinner","t":"Noun","g":"","th":"Food & drink","cat":"Nouns","kj":false,"o":169},{"w":"パン","r":"","say":"パン","m":"bread","t":"Noun","g":"","th":"Food & drink","cat":"Nouns","kj":false,"o":171},{"w":"にく","r":"","say":"にく","m":"meat","t":"Noun","g":"","th":"Food & drink","cat":"Nouns","kj":false,"o":174},{"w":"ぎゅうにく","r":"","say":"ぎゅうにく","m":"beef","t":"Noun","g":"","th":"Food & drink","cat":"Nouns","kj":false,"o":177},{"w":"ぶたにく","r":"","say":"ぶたにく","m":"pork","t":"Noun","g":"","th":"Food & drink","cat":"Nouns","kj":false,"o":179},{"w":"とりにく","r":"","say":"とりにく","m":"chicken (meat)","t":"Noun","g":"","th":"Food & drink","cat":"Nouns","kj":false,"o":182},{"w":"魚","r":"さかな","say":"さかな","m":"fish","t":"Noun","g":"","th":"Food & drink","cat":"Nouns","kj":true,"o":185},{"w":"やさい","r":"","say":"やさい","m":"vegetables","t":"Noun","g":"","th":"Food & drink","cat":"Nouns","kj":false,"o":187},{"w":"くだもの","r":"","say":"くだもの","m":"fruit","t":"Noun","g":"","th":"Food & drink","cat":"Nouns","kj":false,"o":190},{"w":"たまご","r":"","say":"たまご","m":"egg","t":"Noun","g":"","th":"Food & drink","cat":"Nouns","kj":false,"o":193},{"w":"りんご","r":"","say":"りんご","m":"apple","t":"Noun","g":"","th":"Food & drink","cat":"Nouns","kj":false,"o":195},{"w":"みかん","r":"","say":"みかん","m":"mandarin orange","t":"Noun","g":"","th":"Food & drink","cat":"Nouns","kj":false,"o":198},{"w":"バナナ","r":"","say":"バナナ","m":"banana","t":"Noun","g":"","th":"Food & drink","cat":"Nouns","kj":false,"o":201},{"w":"おかし","r":"","say":"おかし","m":"sweets, snacks","t":"Noun","g":"","th":"Food & drink","cat":"Nouns","kj":false,"o":203},{"w":"ケーキ","r":"","say":"ケーキ","m":"cake","t":"Noun","g":"","th":"Food & drink","cat":"Nouns","kj":false,"o":206},{"w":"カレー","r":"","say":"カレー","m":"curry","t":"Noun","g":"","th":"Food & drink","cat":"Nouns","kj":false,"o":209},{"w":"水","r":"みず","say":"みず","m":"water","t":"Noun","g":"","th":"Food & drink","cat":"Nouns","kj":true,"o":211},{"w":"おちゃ","r":"","say":"おちゃ","m":"tea; green tea","t":"Noun","g":"","th":"Food & drink","cat":"Nouns","kj":false,"o":214},{"w":"こうちゃ","r":"","say":"こうちゃ","m":"black tea","t":"Noun","g":"","th":"Food & drink","cat":"Nouns","kj":false,"o":217},{"w":"コーヒー","r":"","say":"コーヒー","m":"coffee","t":"Noun","g":"","th":"Food & drink","cat":"Nouns","kj":false,"o":219},{"w":"ぎゅうにゅう","r":"","say":"ぎゅうにゅう","m":"milk","t":"Noun","g":"","th":"Food & drink","cat":"Nouns","kj":false,"o":222},{"w":"ジュース","r":"","say":"ジュース","m":"juice","t":"Noun","g":"","th":"Food & drink","cat":"Nouns","kj":false,"o":225},{"w":"おさけ","r":"","say":"おさけ","m":"alcohol; sake","t":"Noun","g":"","th":"Food & drink","cat":"Nouns","kj":false,"o":227},{"w":"ビール","r":"","say":"ビール","m":"beer","t":"Noun","g":"","th":"Food & drink","cat":"Nouns","kj":false,"o":230},{"w":"ワイン","r":"","say":"ワイン","m":"wine","t":"Noun","g":"","th":"Food & drink","cat":"Nouns","kj":false,"o":233},{"w":"さとう","r":"","say":"さとう","m":"sugar","t":"Noun","g":"","th":"Food & drink","cat":"Nouns","kj":false,"o":235},{"w":"しお","r":"","say":"しお","m":"salt","t":"Noun","g":"","th":"Food & drink","cat":"Nouns","kj":false,"o":238},{"w":"しょうゆ","r":"","say":"しょうゆ","m":"soy sauce","t":"Noun","g":"","th":"Food & drink","cat":"Nouns","kj":false,"o":241},{"w":"りょうり","r":"","say":"りょうり","m":"cooking; dish","t":"Noun","g":"","th":"Food & drink","cat":"Nouns","kj":false,"o":243},{"w":"べんとう","r":"","say":"べんとう","m":"boxed lunch","t":"Noun","g":"","th":"Food & drink","cat":"Nouns","kj":false,"o":246},{"w":"はし","r":"","say":"はし","m":"chopsticks; bridge","t":"Noun","g":"","th":"Food & drink","cat":"Nouns","kj":false,"o":249},{"w":"スプーン","r":"","say":"スプーン","m":"spoon","t":"Noun","g":"","th":"Food & drink","cat":"Nouns","kj":false,"o":251},{"w":"ナイフ","r":"","say":"ナイフ","m":"knife","t":"Noun","g":"","th":"Food & drink","cat":"Nouns","kj":false,"o":254},{"w":"フォーク","r":"","say":"フォーク","m":"fork","t":"Noun","g":"","th":"Food & drink","cat":"Nouns","kj":false,"o":257},{"w":"コップ","r":"","say":"コップ","m":"glass, cup","t":"Noun","g":"","th":"Food & drink","cat":"Nouns","kj":false,"o":259},{"w":"カップ","r":"","say":"カップ","m":"cup","t":"Noun","g":"","th":"Food & drink","cat":"Nouns","kj":false,"o":262},{"w":"さら","r":"","say":"さら","m":"plate","t":"Noun","g":"","th":"Food & drink","cat":"Nouns","kj":false,"o":265},{"w":"おわん","r":"","say":"おわん","m":"bowl","t":"Noun","g":"","th":"Food & drink","cat":"Nouns","kj":false,"o":267},{"w":"いえ","r":"","say":"いえ","m":"house, home","t":"Noun","g":"","th":"Places","cat":"Nouns","kj":false,"o":270},{"w":"うち","r":"","say":"うち","m":"home; my house","t":"Noun","g":"","th":"Places","cat":"Nouns","kj":false,"o":273},{"w":"へや","r":"","say":"へや","m":"room","t":"Noun","g":"","th":"Places","cat":"Nouns","kj":false,"o":275},{"w":"学校","r":"がっこう","say":"がっこう","m":"school","t":"Noun","g":"","th":"Places","cat":"Nouns","kj":true,"o":278},{"w":"大学","r":"だいがく","say":"だいがく","m":"university","t":"Noun","g":"","th":"Places","cat":"Nouns","kj":true,"o":281},{"w":"きょうしつ","r":"","say":"きょうしつ","m":"classroom","t":"Noun","g":"","th":"Places","cat":"Nouns","kj":false,"o":283},{"w":"としょかん","r":"","say":"としょかん","m":"library","t":"Noun","g":"","th":"Places","cat":"Nouns","kj":false,"o":286},{"w":"会社","r":"かいしゃ","say":"かいしゃ","m":"company","t":"Noun","g":"","th":"Places","cat":"Nouns","kj":true,"o":288},{"w":"びょういん","r":"","say":"びょういん","m":"hospital","t":"Noun","g":"","th":"Places","cat":"Nouns","kj":false,"o":290},{"w":"ぎんこう","r":"","say":"ぎんこう","m":"bank","t":"Noun","g":"","th":"Places","cat":"Nouns","kj":false,"o":293},{"w":"ゆうびんきょく","r":"","say":"ゆうびんきょく","m":"post office","t":"Noun","g":"","th":"Places","cat":"Nouns","kj":false,"o":295},{"w":"駅","r":"えき","say":"えき","m":"station","t":"Noun","g":"","th":"Places","cat":"Nouns","kj":true,"o":297},{"w":"店","r":"みせ","say":"みせ","m":"shop, store","t":"Noun","g":"","th":"Places","cat":"Nouns","kj":true,"o":300},{"w":"ほんや","r":"","say":"ほんや","m":"bookstore","t":"Noun","g":"","th":"Places","cat":"Nouns","kj":false,"o":302},{"w":"やおや","r":"","say":"やおや","m":"greengrocer","t":"Noun","g":"","th":"Places","cat":"Nouns","kj":false,"o":304},{"w":"デパート","r":"","say":"デパート","m":"department store","t":"Noun","g":"","th":"Places","cat":"Nouns","kj":false,"o":307},{"w":"スーパー","r":"","say":"スーパー","m":"supermarket","t":"Noun","g":"","th":"Places","cat":"Nouns","kj":false,"o":309},{"w":"コンビニ","r":"","say":"コンビニ","m":"convenience store","t":"Noun","g":"","th":"Places","cat":"Nouns","kj":false,"o":311},{"w":"レストラン","r":"","say":"レストラン","m":"restaurant","t":"Noun","g":"","th":"Places","cat":"Nouns","kj":false,"o":314},{"w":"しょくどう","r":"","say":"しょくどう","m":"cafeteria, dining hall","t":"Noun","g":"","th":"Places","cat":"Nouns","kj":false,"o":315},{"w":"きっさてん","r":"","say":"きっさてん","m":"coffee shop","t":"Noun","g":"","th":"Places","cat":"Nouns","kj":false,"o":317},{"w":"ホテル","r":"","say":"ホテル","m":"hotel","t":"Noun","g":"","th":"Places","cat":"Nouns","kj":false,"o":320},{"w":"こうえん","r":"","say":"こうえん","m":"park","t":"Noun","g":"","th":"Places","cat":"Nouns","kj":false,"o":321},{"w":"えいがかん","r":"","say":"えいがかん","m":"movie theater","t":"Noun","g":"","th":"Places","cat":"Nouns","kj":false,"o":323},{"w":"たいしかん","r":"","say":"たいしかん","m":"embassy","t":"Noun","g":"","th":"Places","cat":"Nouns","kj":false,"o":326},{"w":"こうばん","r":"","say":"こうばん","m":"police box","t":"Noun","g":"","th":"Places","cat":"Nouns","kj":false,"o":327},{"w":"トイレ","r":"","say":"トイレ","m":"toilet, restroom","t":"Noun","g":"","th":"Places","cat":"Nouns","kj":false,"o":329},{"w":"おてあらい","r":"","say":"おてあらい","m":"restroom (polite)","t":"Noun","g":"","th":"Places","cat":"Nouns","kj":false,"o":332},{"w":"だいどころ","r":"","say":"だいどころ","m":"kitchen","t":"Noun","g":"","th":"Places","cat":"Nouns","kj":false,"o":333},{"w":"げんかん","r":"","say":"げんかん","m":"entrance hall","t":"Noun","g":"","th":"Places","cat":"Nouns","kj":false,"o":335},{"w":"にわ","r":"","say":"にわ","m":"garden, yard","t":"Noun","g":"","th":"Places","cat":"Nouns","kj":false,"o":337},{"w":"プール","r":"","say":"プール","m":"swimming pool","t":"Noun","g":"","th":"Places","cat":"Nouns","kj":false,"o":338},{"w":"ビル","r":"","say":"ビル","m":"building","t":"Noun","g":"","th":"Places","cat":"Nouns","kj":false,"o":340},{"w":"たてもの","r":"","say":"たてもの","m":"building","t":"Noun","g":"","th":"Places","cat":"Nouns","kj":false,"o":342},{"w":"国","r":"くに","say":"くに","m":"country","t":"Noun","g":"","th":"Places","cat":"Nouns","kj":true,"o":343},{"w":"外国","r":"がいこく","say":"がいこく","m":"foreign country","t":"Noun","g":"","th":"Places","cat":"Nouns","kj":true,"o":345},{"w":"まち","r":"","say":"まち","m":"town","t":"Noun","g":"","th":"Places","cat":"Nouns","kj":false,"o":347},{"w":"むら","r":"","say":"むら","m":"village","t":"Noun","g":"","th":"Places","cat":"Nouns","kj":false,"o":348},{"w":"道","r":"みち","say":"みち","m":"road, way","t":"Noun","g":"","th":"Places","cat":"Nouns","kj":true,"o":350},{"w":"ところ","r":"","say":"ところ","m":"place","t":"Noun","g":"","th":"Places","cat":"Nouns","kj":false,"o":352},{"w":"入口","r":"いりぐち","say":"いりぐち","m":"entrance","t":"Noun","g":"","th":"Places","cat":"Nouns","kj":true,"o":353},{"w":"出口","r":"でぐち","say":"でぐち","m":"exit","t":"Noun","g":"","th":"Places","cat":"Nouns","kj":true,"o":355},{"w":"かいだん","r":"","say":"かいだん","m":"stairs","t":"Noun","g":"","th":"Places","cat":"Nouns","kj":false,"o":357},{"w":"エレベーター","r":"","say":"エレベーター","m":"elevator","t":"Noun","g":"","th":"Places","cat":"Nouns","kj":false,"o":358},{"w":"かど","r":"","say":"かど","m":"corner","t":"Noun","g":"","th":"Places","cat":"Nouns","kj":false,"o":360},{"w":"こうさてん","r":"","say":"こうさてん","m":"intersection","t":"Noun","g":"","th":"Places","cat":"Nouns","kj":false,"o":362},{"w":"車","r":"くるま","say":"くるま","m":"car","t":"Noun","g":"","th":"Transport","cat":"Nouns","kj":true,"o":363},{"w":"電車","r":"でんしゃ","say":"でんしゃ","m":"train","t":"Noun","g":"","th":"Transport","cat":"Nouns","kj":true,"o":365},{"w":"ちかてつ","r":"","say":"ちかてつ","m":"subway","t":"Noun","g":"","th":"Transport","cat":"Nouns","kj":false,"o":367},{"w":"バス","r":"","say":"バス","m":"bus","t":"Noun","g":"","th":"Transport","cat":"Nouns","kj":false,"o":368},{"w":"タクシー","r":"","say":"タクシー","m":"taxi","t":"Noun","g":"","th":"Transport","cat":"Nouns","kj":false,"o":370},{"w":"じてんしゃ","r":"","say":"じてんしゃ","m":"bicycle","t":"Noun","g":"","th":"Transport","cat":"Nouns","kj":false,"o":372},{"w":"ひこうき","r":"","say":"ひこうき","m":"airplane","t":"Noun","g":"","th":"Transport","cat":"Nouns","kj":false,"o":373},{"w":"じどうしゃ","r":"","say":"じどうしゃ","m":"automobile","t":"Noun","g":"","th":"Transport","cat":"Nouns","kj":false,"o":375},{"w":"きっぷ","r":"","say":"きっぷ","m":"ticket","t":"Noun","g":"","th":"Transport","cat":"Nouns","kj":false,"o":377},{"w":"もの","r":"","say":"もの","m":"thing (physical)","t":"Noun","g":"","th":"Things","cat":"Nouns","kj":false,"o":378},{"w":"本","r":"ほん","say":"ほん","m":"book","t":"Noun","g":"","th":"Things","cat":"Nouns","kj":true,"o":380},{"w":"ノート","r":"","say":"ノート","m":"notebook","t":"Noun","g":"","th":"Things","cat":"Nouns","kj":false,"o":382},{"w":"じしょ","r":"","say":"じしょ","m":"dictionary","t":"Noun","g":"","th":"Things","cat":"Nouns","kj":false,"o":383},{"w":"新聞","r":"しんぶん","say":"しんぶん","m":"newspaper","t":"Noun","g":"","th":"Things","cat":"Nouns","kj":true,"o":385},{"w":"ざっし","r":"","say":"ざっし","m":"magazine","t":"Noun","g":"","th":"Things","cat":"Nouns","kj":false,"o":387},{"w":"てがみ","r":"","say":"てがみ","m":"letter","t":"Noun","g":"","th":"Things","cat":"Nouns","kj":false,"o":388},{"w":"かみ","r":"","say":"かみ","m":"paper","t":"Noun","g":"","th":"Things","cat":"Nouns","kj":false,"o":390},{"w":"はがき","r":"","say":"はがき","m":"postcard","t":"Noun","g":"","th":"Things","cat":"Nouns","kj":false,"o":392},{"w":"きって","r":"","say":"きって","m":"postage stamp","t":"Noun","g":"","th":"Things","cat":"Nouns","kj":false,"o":393},{"w":"ふうとう","r":"","say":"ふうとう","m":"envelope","t":"Noun","g":"","th":"Things","cat":"Nouns","kj":false,"o":395},{"w":"しゃしん","r":"","say":"しゃしん","m":"photograph","t":"Noun","g":"","th":"Things","cat":"Nouns","kj":false,"o":397},{"w":"えんぴつ","r":"","say":"えんぴつ","m":"pencil","t":"Noun","g":"","th":"Things","cat":"Nouns","kj":false,"o":398},{"w":"ペン","r":"","say":"ペン","m":"pen","t":"Noun","g":"","th":"Things","cat":"Nouns","kj":false,"o":400},{"w":"ボールペン","r":"","say":"ボールペン","m":"ballpoint pen","t":"Noun","g":"","th":"Things","cat":"Nouns","kj":false,"o":402},{"w":"まんねんひつ","r":"","say":"まんねんひつ","m":"fountain pen","t":"Noun","g":"","th":"Things","cat":"Nouns","kj":false,"o":403},{"w":"かばん","r":"","say":"かばん","m":"bag","t":"Noun","g":"","th":"Things","cat":"Nouns","kj":false,"o":405},{"w":"かさ","r":"","say":"かさ","m":"umbrella","t":"Noun","g":"","th":"Things","cat":"Nouns","kj":false,"o":407},{"w":"とけい","r":"","say":"とけい","m":"clock, watch","t":"Noun","g":"","th":"Things","cat":"Nouns","kj":false,"o":408},{"w":"めがね","r":"","say":"めがね","m":"glasses","t":"Noun","g":"","th":"Things","cat":"Nouns","kj":false,"o":410},{"w":"さいふ","r":"","say":"さいふ","m":"wallet","t":"Noun","g":"","th":"Things","cat":"Nouns","kj":false,"o":412},{"w":"かぎ","r":"","say":"かぎ","m":"key; lock","t":"Noun","g":"","th":"Things","cat":"Nouns","kj":false,"o":413},{"w":"つくえ","r":"","say":"つくえ","m":"desk","t":"Noun","g":"","th":"Things","cat":"Nouns","kj":false,"o":415},{"w":"いす","r":"","say":"いす","m":"chair","t":"Noun","g":"","th":"Things","cat":"Nouns","kj":false,"o":417},{"w":"テーブル","r":"","say":"テーブル","m":"table","t":"Noun","g":"","th":"Things","cat":"Nouns","kj":false,"o":418},{"w":"ベッド","r":"","say":"ベッド","m":"bed","t":"Noun","g":"","th":"Things","cat":"Nouns","kj":false,"o":420},{"w":"まど","r":"","say":"まど","m":"window","t":"Noun","g":"","th":"Things","cat":"Nouns","kj":false,"o":422},{"w":"と","r":"","say":"と","m":"door (Japanese style)","t":"Noun","g":"","th":"Things","cat":"Nouns","kj":false,"o":423},{"w":"ドア","r":"","say":"ドア","m":"door","t":"Noun","g":"","th":"Things","cat":"Nouns","kj":false,"o":425},{"w":"電気","r":"でんき","say":"でんき","m":"electricity; light","t":"Noun","g":"","th":"Things","cat":"Nouns","kj":true,"o":427},{"w":"電話","r":"でんわ","say":"でんわ","m":"telephone","t":"Noun","g":"","th":"Things","cat":"Nouns","kj":true,"o":428},{"w":"テレビ","r":"","say":"テレビ","m":"TV","t":"Noun","g":"","th":"Things","cat":"Nouns","kj":false,"o":430},{"w":"ラジオ","r":"","say":"ラジオ","m":"radio","t":"Noun","g":"","th":"Things","cat":"Nouns","kj":false,"o":432},{"w":"カメラ","r":"","say":"カメラ","m":"camera","t":"Noun","g":"","th":"Things","cat":"Nouns","kj":false,"o":433},{"w":"パソコン","r":"","say":"パソコン","m":"personal computer","t":"Noun","g":"","th":"Things","cat":"Nouns","kj":false,"o":435},{"w":"コンピューター","r":"","say":"コンピューター","m":"computer","t":"Noun","g":"","th":"Things","cat":"Nouns","kj":false,"o":437},{"w":"れいぞうこ","r":"","say":"れいぞうこ","m":"refrigerator","t":"Noun","g":"","th":"Things","cat":"Nouns","kj":false,"o":438},{"w":"ストーブ","r":"","say":"ストーブ","m":"heater","t":"Noun","g":"","th":"Things","cat":"Nouns","kj":false,"o":440},{"w":"シャワー","r":"","say":"シャワー","m":"shower","t":"Noun","g":"","th":"Things","cat":"Nouns","kj":false,"o":442},{"w":"おふろ","r":"","say":"おふろ","m":"bath","t":"Noun","g":"","th":"Things","cat":"Nouns","kj":false,"o":443},{"w":"はこ","r":"","say":"はこ","m":"box","t":"Noun","g":"","th":"Things","cat":"Nouns","kj":false,"o":445},{"w":"ボタン","r":"","say":"ボタン","m":"button","t":"Noun","g":"","th":"Things","cat":"Nouns","kj":false,"o":447},{"w":"テープ","r":"","say":"テープ","m":"tape","t":"Noun","g":"","th":"Things","cat":"Nouns","kj":false,"o":448},{"w":"レコード","r":"","say":"レコード","m":"record (music)","t":"Noun","g":"","th":"Things","cat":"Nouns","kj":false,"o":450},{"w":"ギター","r":"","say":"ギター","m":"guitar","t":"Noun","g":"","th":"Things","cat":"Nouns","kj":false,"o":452},{"w":"フィルム","r":"","say":"フィルム","m":"film","t":"Noun","g":"","th":"Things","cat":"Nouns","kj":false,"o":453},{"w":"かびん","r":"","say":"かびん","m":"vase","t":"Noun","g":"","th":"Things","cat":"Nouns","kj":false,"o":455},{"w":"はいざら","r":"","say":"はいざら","m":"ashtray","t":"Noun","g":"","th":"Things","cat":"Nouns","kj":false,"o":457},{"w":"たばこ","r":"","say":"たばこ","m":"cigarettes, tobacco","t":"Noun","g":"","th":"Things","cat":"Nouns","kj":false,"o":458},{"w":"マッチ","r":"","say":"マッチ","m":"match","t":"Noun","g":"","th":"Things","cat":"Nouns","kj":false,"o":460},{"w":"せっけん","r":"","say":"せっけん","m":"soap","t":"Noun","g":"","th":"Things","cat":"Nouns","kj":false,"o":462},{"w":"お金","r":"おかね","say":"おかね","m":"money","t":"Noun","g":"","th":"Things","cat":"Nouns","kj":true,"o":463},{"w":"にもつ","r":"","say":"にもつ","m":"luggage","t":"Noun","g":"","th":"Things","cat":"Nouns","kj":false,"o":465},{"w":"ふく","r":"","say":"ふく","m":"clothes; to blow","t":"Noun / Verb","g":"う-verb (Group 1)","th":"Clothing","cat":"Nouns","kj":false,"o":467},{"w":"ようふく","r":"","say":"ようふく","m":"Western clothes","t":"Noun","g":"","th":"Clothing","cat":"Nouns","kj":false,"o":468},{"w":"シャツ","r":"","say":"シャツ","m":"shirt","t":"Noun","g":"","th":"Clothing","cat":"Nouns","kj":false,"o":470},{"w":"ワイシャツ","r":"","say":"ワイシャツ","m":"dress shirt","t":"Noun","g":"","th":"Clothing","cat":"Nouns","kj":false,"o":472},{"w":"セーター","r":"","say":"セーター","m":"sweater","t":"Noun","g":"","th":"Clothing","cat":"Nouns","kj":false,"o":473},{"w":"うわぎ","r":"","say":"うわぎ","m":"jacket","t":"Noun","g":"","th":"Clothing","cat":"Nouns","kj":false,"o":475},{"w":"コート","r":"","say":"コート","m":"coat","t":"Noun","g":"","th":"Clothing","cat":"Nouns","kj":false,"o":477},{"w":"ズボン","r":"","say":"ズボン","m":"trousers","t":"Noun","g":"","th":"Clothing","cat":"Nouns","kj":false,"o":478},{"w":"スカート","r":"","say":"スカート","m":"skirt","t":"Noun","g":"","th":"Clothing","cat":"Nouns","kj":false,"o":480},{"w":"くつ","r":"","say":"くつ","m":"shoes","t":"Noun","g":"","th":"Clothing","cat":"Nouns","kj":false,"o":482},{"w":"くつした","r":"","say":"くつした","m":"socks","t":"Noun","g":"","th":"Clothing","cat":"Nouns","kj":false,"o":483},{"w":"ぼうし","r":"","say":"ぼうし","m":"hat","t":"Noun","g":"","th":"Clothing","cat":"Nouns","kj":false,"o":485},{"w":"ネクタイ","r":"","say":"ネクタイ","m":"necktie","t":"Noun","g":"","th":"Clothing","cat":"Nouns","kj":false,"o":487},{"w":"ポケット","r":"","say":"ポケット","m":"pocket","t":"Noun","g":"","th":"Clothing","cat":"Nouns","kj":false,"o":488},{"w":"天気","r":"てんき","say":"てんき","m":"weather","t":"Noun","g":"","th":"Nature & weather","cat":"Nouns","kj":true,"o":490},{"w":"雨","r":"あめ","say":"あめ","m":"rain","t":"Noun","g":"","th":"Nature & weather","cat":"Nouns","kj":true,"o":492},{"w":"ゆき","r":"","say":"ゆき","m":"snow","t":"Noun","g":"","th":"Nature & weather","cat":"Nouns","kj":false,"o":493},{"w":"空","r":"そら","say":"そら","m":"sky","t":"Noun","g":"","th":"Nature & weather","cat":"Nouns","kj":true,"o":495},{"w":"山","r":"やま","say":"やま","m":"mountain","t":"Noun","g":"","th":"Nature & weather","cat":"Nouns","kj":true,"o":497},{"w":"川","r":"かわ","say":"かわ","m":"river","t":"Noun","g":"","th":"Nature & weather","cat":"Nouns","kj":true,"o":498},{"w":"うみ","r":"","say":"うみ","m":"sea","t":"Noun","g":"","th":"Nature & weather","cat":"Nouns","kj":false,"o":500},{"w":"いけ","r":"","say":"いけ","m":"pond","t":"Noun","g":"","th":"Nature & weather","cat":"Nouns","kj":false,"o":502},{"w":"木","r":"き","say":"き","m":"tree; wood","t":"Noun","g":"","th":"Nature & weather","cat":"Nouns","kj":true,"o":503},{"w":"花","r":"はな","say":"はな","m":"flower","t":"Noun","g":"","th":"Nature & weather","cat":"Nouns","kj":true,"o":505},{"w":"どうぶつ","r":"","say":"どうぶつ","m":"animal","t":"Noun","g":"","th":"Nature & weather","cat":"Nouns","kj":false,"o":507},{"w":"いぬ","r":"","say":"いぬ","m":"dog","t":"Noun","g":"","th":"Nature & weather","cat":"Nouns","kj":false,"o":508},{"w":"ねこ","r":"","say":"ねこ","m":"cat","t":"Noun","g":"","th":"Nature & weather","cat":"Nouns","kj":false,"o":510},{"w":"鳥","r":"とり","say":"とり","m":"bird","t":"Noun","g":"","th":"Nature & weather","cat":"Nouns","kj":true,"o":512},{"w":"はる","r":"","say":"はる","m":"spring; to stick, paste","t":"Noun / Verb","g":"う-verb (Group 1)","th":"Nature & weather","cat":"Nouns","kj":false,"o":513},{"w":"なつ","r":"","say":"なつ","m":"summer","t":"Noun","g":"","th":"Nature & weather","cat":"Nouns","kj":false,"o":515},{"w":"あき","r":"","say":"あき","m":"autumn","t":"Noun","g":"","th":"Nature & weather","cat":"Nouns","kj":false,"o":517},{"w":"ふゆ","r":"","say":"ふゆ","m":"winter","t":"Noun","g":"","th":"Nature & weather","cat":"Nouns","kj":false,"o":518},{"w":"時間","r":"じかん","say":"じかん","m":"time; hours","t":"Noun","g":"","th":"Time","cat":"Nouns","kj":true,"o":520},{"w":"時","r":"とき","say":"とき","m":"time, when ~","t":"Noun","g":"","th":"Time","cat":"Nouns","kj":true,"o":521},{"w":"今","r":"いま","say":"いま","m":"now","t":"Noun","g":"","th":"Time","cat":"Nouns","kj":true,"o":522},{"w":"今日","r":"きょう","say":"きょう","m":"today","t":"Noun","g":"","th":"Time","cat":"Nouns","kj":true,"o":524},{"w":"あした","r":"","say":"あした","m":"tomorrow","t":"Noun","g":"","th":"Time","cat":"Nouns","kj":false,"o":525},{"w":"きのう","r":"","say":"きのう","m":"yesterday","t":"Noun","g":"","th":"Time","cat":"Nouns","kj":false,"o":526},{"w":"あさって","r":"","say":"あさって","m":"day after tomorrow","t":"Noun","g":"","th":"Time","cat":"Nouns","kj":false,"o":528},{"w":"おととい","r":"","say":"おととい","m":"day before yesterday","t":"Noun","g":"","th":"Time","cat":"Nouns","kj":false,"o":529},{"w":"毎日","r":"まいにち","say":"まいにち","m":"every day","t":"Noun","g":"","th":"Time","cat":"Nouns","kj":true,"o":530},{"w":"あさ","r":"","say":"あさ","m":"morning","t":"Noun","g":"","th":"Time","cat":"Nouns","kj":false,"o":532},{"w":"けさ","r":"","say":"けさ","m":"this morning","t":"Noun","g":"","th":"Time","cat":"Nouns","kj":false,"o":533},{"w":"まいあさ","r":"","say":"まいあさ","m":"every morning","t":"Noun","g":"","th":"Time","cat":"Nouns","kj":false,"o":534},{"w":"ひる","r":"","say":"ひる","m":"noon; daytime","t":"Noun","g":"","th":"Time","cat":"Nouns","kj":false,"o":536},{"w":"午前","r":"ごぜん","say":"ごぜん","m":"a.m.","t":"Noun","g":"","th":"Time","cat":"Nouns","kj":true,"o":537},{"w":"午後","r":"ごご","say":"ごご","m":"p.m.; afternoon","t":"Noun","g":"","th":"Time","cat":"Nouns","kj":true,"o":538},{"w":"ゆうがた","r":"","say":"ゆうがた","m":"evening","t":"Noun","g":"","th":"Time","cat":"Nouns","kj":false,"o":540},{"w":"ばん","r":"","say":"ばん","m":"evening, night","t":"Noun","g":"","th":"Time","cat":"Nouns","kj":false,"o":541},{"w":"こんばん","r":"","say":"こんばん","m":"tonight","t":"Noun","g":"","th":"Time","cat":"Nouns","kj":false,"o":542},{"w":"まいばん","r":"","say":"まいばん","m":"every night","t":"Noun","g":"","th":"Time","cat":"Nouns","kj":false,"o":544},{"w":"よる","r":"","say":"よる","m":"night","t":"Noun","g":"","th":"Time","cat":"Nouns","kj":false,"o":545},{"w":"ゆうべ","r":"","say":"ゆうべ","m":"last night","t":"Noun","g":"","th":"Time","cat":"Nouns","kj":false,"o":546},{"w":"週","r":"しゅう","say":"しゅう","m":"week","t":"Noun","g":"","th":"Time","cat":"Nouns","kj":true,"o":548},{"w":"今週","r":"こんしゅう","say":"こんしゅう","m":"this week","t":"Noun","g":"","th":"Time","cat":"Nouns","kj":true,"o":549},{"w":"先週","r":"せんしゅう","say":"せんしゅう","m":"last week","t":"Noun","g":"","th":"Time","cat":"Nouns","kj":true,"o":550},{"w":"来週","r":"らいしゅう","say":"らいしゅう","m":"next week","t":"Noun","g":"","th":"Time","cat":"Nouns","kj":true,"o":552},{"w":"毎週","r":"まいしゅう","say":"まいしゅう","m":"every week","t":"Noun","g":"","th":"Time","cat":"Nouns","kj":true,"o":553},{"w":"月","r":"つき","say":"つき","m":"month; moon","t":"Noun","g":"","th":"Time","cat":"Nouns","kj":true,"o":554},{"w":"今月","r":"こんげつ","say":"こんげつ","m":"this month","t":"Noun","g":"","th":"Time","cat":"Nouns","kj":true,"o":556},{"w":"先月","r":"せんげつ","say":"せんげつ","m":"last month","t":"Noun","g":"","th":"Time","cat":"Nouns","kj":true,"o":557},{"w":"来月","r":"らいげつ","say":"らいげつ","m":"next month","t":"Noun","g":"","th":"Time","cat":"Nouns","kj":true,"o":558},{"w":"毎月","r":"まいつき","say":"まいつき","m":"every month","t":"Noun","g":"","th":"Time","cat":"Nouns","kj":true,"o":560},{"w":"年","r":"とし","say":"とし","m":"year; age","t":"Noun","g":"","th":"Time","cat":"Nouns","kj":true,"o":561},{"w":"今年","r":"ことし","say":"ことし","m":"this year","t":"Noun","g":"","th":"Time","cat":"Nouns","kj":true,"o":562},{"w":"きょねん","r":"","say":"きょねん","m":"last year","t":"Noun","g":"","th":"Time","cat":"Nouns","kj":false,"o":564},{"w":"来年","r":"らいねん","say":"らいねん","m":"next year","t":"Noun","g":"","th":"Time","cat":"Nouns","kj":true,"o":565},{"w":"毎年","r":"まいとし","say":"まいとし","m":"every year","t":"Noun","g":"","th":"Time","cat":"Nouns","kj":true,"o":566},{"w":"たんじょうび","r":"","say":"たんじょうび","m":"birthday","t":"Noun","g":"","th":"Time","cat":"Nouns","kj":false,"o":568},{"w":"休み","r":"やすみ","say":"やすみ","m":"rest; holiday; day off","t":"Noun","g":"","th":"Time","cat":"Nouns","kj":true,"o":569},{"w":"なつやすみ","r":"","say":"なつやすみ","m":"summer vacation","t":"Noun","g":"","th":"Time","cat":"Nouns","kj":false,"o":570},{"w":"後","r":"あと","say":"あと","m":"after; later","t":"Noun","g":"","th":"Time","cat":"Nouns","kj":true,"o":572},{"w":"半","r":"はん","say":"はん","m":"half (past the hour)","t":"Noun","g":"","th":"Time","cat":"Nouns","kj":true,"o":573},{"w":"げつようび","r":"","say":"げつようび","m":"Monday","t":"Noun","g":"","th":"Days & months","cat":"Nouns","kj":false,"o":574},{"w":"かようび","r":"","say":"かようび","m":"Tuesday","t":"Noun","g":"","th":"Days & months","cat":"Nouns","kj":false,"o":576},{"w":"すいようび","r":"","say":"すいようび","m":"Wednesday","t":"Noun","g":"","th":"Days & months","cat":"Nouns","kj":false,"o":577},{"w":"もくようび","r":"","say":"もくようび","m":"Thursday","t":"Noun","g":"","th":"Days & months","cat":"Nouns","kj":false,"o":578},{"w":"きんようび","r":"","say":"きんようび","m":"Friday","t":"Noun","g":"","th":"Days & months","cat":"Nouns","kj":false,"o":580},{"w":"どようび","r":"","say":"どようび","m":"Saturday","t":"Noun","g":"","th":"Days & months","cat":"Nouns","kj":false,"o":581},{"w":"にちようび","r":"","say":"にちようび","m":"Sunday","t":"Noun","g":"","th":"Days & months","cat":"Nouns","kj":false,"o":582},{"w":"なんようび","r":"","say":"なんようび","m":"what day of the week","t":"Question word","g":"","th":"Question words","cat":"Pronouns & questions","kj":false,"o":331},{"w":"べんきょう","r":"","say":"べんきょう","m":"study","t":"Noun","g":"","th":"School & work","cat":"Nouns","kj":false,"o":584},{"w":"じゅぎょう","r":"","say":"じゅぎょう","m":"class, lesson","t":"Noun","g":"","th":"School & work","cat":"Nouns","kj":false,"o":585},{"w":"しゅくだい","r":"","say":"しゅくだい","m":"homework","t":"Noun","g":"","th":"School & work","cat":"Nouns","kj":false,"o":586},{"w":"しけん","r":"","say":"しけん","m":"exam","t":"Noun","g":"","th":"School & work","cat":"Nouns","kj":false,"o":588},{"w":"テスト","r":"","say":"テスト","m":"test","t":"Noun","g":"","th":"School & work","cat":"Nouns","kj":false,"o":589},{"w":"もんだい","r":"","say":"もんだい","m":"problem, question","t":"Noun","g":"","th":"School & work","cat":"Nouns","kj":false,"o":590},{"w":"しつもん","r":"","say":"しつもん","m":"question","t":"Noun","g":"","th":"School & work","cat":"Nouns","kj":false,"o":592},{"w":"こたえ","r":"","say":"こたえ","m":"answer","t":"Noun","g":"","th":"School & work","cat":"Nouns","kj":false,"o":593},{"w":"れんしゅう","r":"","say":"れんしゅう","m":"practice","t":"Noun","g":"","th":"School & work","cat":"Nouns","kj":false,"o":594},{"w":"ことば","r":"","say":"ことば","m":"word; language","t":"Noun","g":"","th":"School & work","cat":"Nouns","kj":false,"o":596},{"w":"ぶんしょう","r":"","say":"ぶんしょう","m":"sentence, text","t":"Noun","g":"","th":"School & work","cat":"Nouns","kj":false,"o":597},{"w":"さくぶん","r":"","say":"さくぶん","m":"composition, essay","t":"Noun","g":"","th":"School & work","cat":"Nouns","kj":false,"o":598},{"w":"かんじ","r":"","say":"かんじ","m":"kanji","t":"Noun","g":"","th":"School & work","cat":"Nouns","kj":false,"o":600},{"w":"ひらがな","r":"","say":"ひらがな","m":"hiragana","t":"Noun","g":"","th":"School & work","cat":"Nouns","kj":false,"o":601},{"w":"カタカナ","r":"","say":"カタカナ","m":"katakana","t":"Noun","g":"","th":"School & work","cat":"Nouns","kj":false,"o":602},{"w":"日本語","r":"にほんご","say":"にほんご","m":"Japanese language","t":"Noun","g":"","th":"School & work","cat":"Nouns","kj":true,"o":604},{"w":"えいご","r":"","say":"えいご","m":"English","t":"Noun","g":"","th":"School & work","cat":"Nouns","kj":false,"o":605},{"w":"外国語","r":"がいこくご","say":"がいこくご","m":"foreign language","t":"Noun","g":"","th":"School & work","cat":"Nouns","kj":true,"o":606},{"w":"いみ","r":"","say":"いみ","m":"meaning","t":"Noun","g":"","th":"School & work","cat":"Nouns","kj":false,"o":608},{"w":"話","r":"はなし","say":"はなし","m":"talk, story","t":"Noun","g":"","th":"School & work","cat":"Nouns","kj":true,"o":609},{"w":"しごと","r":"","say":"しごと","m":"work, job","t":"Noun","g":"","th":"School & work","cat":"Nouns","kj":false,"o":610},{"w":"クラス","r":"","say":"クラス","m":"class","t":"Noun","g":"","th":"School & work","cat":"Nouns","kj":false,"o":612},{"w":"ページ","r":"","say":"ページ","m":"page","t":"Noun","g":"","th":"School & work","cat":"Nouns","kj":false,"o":613},{"w":"ばんごう","r":"","say":"ばんごう","m":"number","t":"Noun","g":"","th":"School & work","cat":"Nouns","kj":false,"o":614},{"w":"えいが","r":"","say":"えいが","m":"movie","t":"Noun","g":"","th":"Hobbies","cat":"Nouns","kj":false,"o":616},{"w":"おんがく","r":"","say":"おんがく","m":"music","t":"Noun","g":"","th":"Hobbies","cat":"Nouns","kj":false,"o":617},{"w":"うた","r":"","say":"うた","m":"song","t":"Noun","g":"","th":"Hobbies","cat":"Nouns","kj":false,"o":618},{"w":"え","r":"","say":"え","m":"picture, painting","t":"Noun","g":"","th":"Hobbies","cat":"Nouns","kj":false,"o":620},{"w":"スポーツ","r":"","say":"スポーツ","m":"sports","t":"Noun","g":"","th":"Hobbies","cat":"Nouns","kj":false,"o":621},{"w":"ゲーム","r":"","say":"ゲーム","m":"game","t":"Noun","g":"","th":"Hobbies","cat":"Nouns","kj":false,"o":622},{"w":"りょこう","r":"","say":"りょこう","m":"travel, trip","t":"Noun","g":"","th":"Hobbies","cat":"Nouns","kj":false,"o":624},{"w":"さんぽ","r":"","say":"さんぽ","m":"walk, stroll","t":"Noun","g":"","th":"Hobbies","cat":"Nouns","kj":false,"o":625},{"w":"かいもの","r":"","say":"かいもの","m":"shopping","t":"Noun","g":"","th":"Hobbies","cat":"Nouns","kj":false,"o":626},{"w":"パーティー","r":"","say":"パーティー","m":"party","t":"Noun","g":"","th":"Hobbies","cat":"Nouns","kj":false,"o":628},{"w":"ニュース","r":"","say":"ニュース","m":"news","t":"Noun","g":"","th":"Hobbies","cat":"Nouns","kj":false,"o":629},{"w":"いろ","r":"","say":"いろ","m":"color","t":"Noun","g":"","th":"Colors","cat":"Nouns","kj":false,"o":630},{"w":"あか","r":"","say":"あか","m":"red","t":"Noun","g":"","th":"Colors","cat":"Nouns","kj":false,"o":632},{"w":"あお","r":"","say":"あお","m":"blue","t":"Noun","g":"","th":"Colors","cat":"Nouns","kj":false,"o":633},{"w":"白","r":"しろ","say":"しろ","m":"white","t":"Noun","g":"","th":"Colors","cat":"Nouns","kj":true,"o":634},{"w":"くろ","r":"","say":"くろ","m":"black","t":"Noun","g":"","th":"Colors","cat":"Nouns","kj":false,"o":636},{"w":"きいろ","r":"","say":"きいろ","m":"yellow","t":"Noun","g":"","th":"Colors","cat":"Nouns","kj":false,"o":637},{"w":"ちゃいろ","r":"","say":"ちゃいろ","m":"brown","t":"Noun","g":"","th":"Colors","cat":"Nouns","kj":false,"o":638},{"w":"みどり","r":"","say":"みどり","m":"green","t":"Noun","g":"","th":"Colors","cat":"Nouns","kj":false,"o":640},{"w":"上","r":"うえ","say":"うえ","m":"above, on top","t":"Noun","g":"","th":"Position","cat":"Nouns","kj":true,"o":641},{"w":"下","r":"した","say":"した","m":"below, under","t":"Noun","g":"","th":"Position","cat":"Nouns","kj":true,"o":642},{"w":"中","r":"なか","say":"なか","m":"inside, middle","t":"Noun","g":"","th":"Position","cat":"Nouns","kj":true,"o":644},{"w":"外","r":"そと","say":"そと","m":"outside","t":"Noun","g":"","th":"Position","cat":"Nouns","kj":true,"o":645},{"w":"右","r":"みぎ","say":"みぎ","m":"right","t":"Noun","g":"","th":"Position","cat":"Nouns","kj":true,"o":646},{"w":"左","r":"ひだり","say":"ひだり","m":"left","t":"Noun","g":"","th":"Position","cat":"Nouns","kj":true,"o":648},{"w":"前","r":"まえ","say":"まえ","m":"front; before","t":"Noun","g":"","th":"Position","cat":"Nouns","kj":true,"o":649},{"w":"後ろ","r":"うしろ","say":"うしろ","m":"behind","t":"Noun","g":"","th":"Position","cat":"Nouns","kj":true,"o":650},{"w":"よこ","r":"","say":"よこ","m":"side; next to","t":"Noun","g":"","th":"Position","cat":"Nouns","kj":false,"o":652},{"w":"となり","r":"","say":"となり","m":"next door, next to","t":"Noun","g":"","th":"Position","cat":"Nouns","kj":false,"o":653},{"w":"そば","r":"","say":"そば","m":"near, beside","t":"Noun","g":"","th":"Position","cat":"Nouns","kj":false,"o":654},{"w":"ちかく","r":"","say":"ちかく","m":"nearby","t":"Noun","g":"","th":"Position","cat":"Nouns","kj":false,"o":656},{"w":"間","r":"あいだ","say":"あいだ","m":"between","t":"Noun","g":"","th":"Position","cat":"Nouns","kj":true,"o":657},{"w":"東","r":"ひがし","say":"ひがし","m":"east","t":"Noun","g":"","th":"Position","cat":"Nouns","kj":true,"o":658},{"w":"西","r":"にし","say":"にし","m":"west","t":"Noun","g":"","th":"Position","cat":"Nouns","kj":true,"o":660},{"w":"南","r":"みなみ","say":"みなみ","m":"south","t":"Noun","g":"","th":"Position","cat":"Nouns","kj":true,"o":661},{"w":"北","r":"きた","say":"きた","m":"north","t":"Noun","g":"","th":"Position","cat":"Nouns","kj":true,"o":662},{"w":"むこう","r":"","say":"むこう","m":"the other side, over there","t":"Noun","g":"","th":"Position","cat":"Nouns","kj":false,"o":663},{"w":"会う","r":"あう","say":"あう","m":"to meet","t":"Verb","g":"う-verb (Group 1)","th":"Verbs","cat":"Verbs","kj":true,"o":2},{"w":"あそぶ","r":"","say":"あそぶ","m":"to play, hang out","t":"Verb","g":"う-verb (Group 1)","th":"Verbs","cat":"Verbs","kj":false,"o":10},{"w":"あらう","r":"","say":"あらう","m":"to wash","t":"Verb","g":"う-verb (Group 1)","th":"Verbs","cat":"Verbs","kj":false,"o":18},{"w":"ある","r":"","say":"ある","m":"to exist, have (things)","t":"Verb","g":"う-verb (Group 1)","th":"Verbs","cat":"Verbs","kj":false,"o":26},{"w":"あるく","r":"","say":"あるく","m":"to walk","t":"Verb","g":"う-verb (Group 1)","th":"Verbs","cat":"Verbs","kj":false,"o":34},{"w":"言う","r":"いう","say":"いう","m":"to say","t":"Verb","g":"う-verb (Group 1)","th":"Verbs","cat":"Verbs","kj":true,"o":42},{"w":"行く","r":"いく","say":"いく","m":"to go","t":"Verb","g":"う-verb (Group 1)","th":"Verbs","cat":"Verbs","kj":true,"o":50},{"w":"いる","r":"","say":"いる","m":"to need; to exist, be (people, animals)","t":"Verb","g":"う-verb (Group 1) / る-verb (Group 2)","th":"Verbs","cat":"Verbs","kj":false,"o":58},{"w":"うたう","r":"","say":"うたう","m":"to sing","t":"Verb","g":"う-verb (Group 1)","th":"Verbs","cat":"Verbs","kj":false,"o":66},{"w":"うる","r":"","say":"うる","m":"to sell","t":"Verb","g":"う-verb (Group 1)","th":"Verbs","cat":"Verbs","kj":false,"o":74},{"w":"おく","r":"","say":"おく","m":"to put, place","t":"Verb","g":"う-verb (Group 1)","th":"Verbs","cat":"Verbs","kj":false,"o":82},{"w":"おす","r":"","say":"おす","m":"to push, press","t":"Verb","g":"う-verb (Group 1)","th":"Verbs","cat":"Verbs","kj":false,"o":90},{"w":"およぐ","r":"","say":"およぐ","m":"to swim","t":"Verb","g":"う-verb (Group 1)","th":"Verbs","cat":"Verbs","kj":false,"o":98},{"w":"おわる","r":"","say":"おわる","m":"to end, finish","t":"Verb","g":"う-verb (Group 1)","th":"Verbs","cat":"Verbs","kj":false,"o":106},{"w":"買う","r":"かう","say":"かう","m":"to buy","t":"Verb","g":"う-verb (Group 1)","th":"Verbs","cat":"Verbs","kj":true,"o":114},{"w":"かえす","r":"","say":"かえす","m":"to return (something)","t":"Verb","g":"う-verb (Group 1)","th":"Verbs","cat":"Verbs","kj":false,"o":122},{"w":"かえる","r":"","say":"かえる","m":"to go home, return","t":"Verb","g":"う-verb (Group 1)","th":"Verbs","cat":"Verbs","kj":false,"o":130},{"w":"かかる","r":"","say":"かかる","m":"to take (time, money)","t":"Verb","g":"う-verb (Group 1)","th":"Verbs","cat":"Verbs","kj":false,"o":138},{"w":"書く","r":"かく","say":"かく","m":"to write","t":"Verb","g":"う-verb (Group 1)","th":"Verbs","cat":"Verbs","kj":true,"o":146},{"w":"かす","r":"","say":"かす","m":"to lend","t":"Verb","g":"う-verb (Group 1)","th":"Verbs","cat":"Verbs","kj":false,"o":154},{"w":"かぶる","r":"","say":"かぶる","m":"to put on (a hat)","t":"Verb","g":"う-verb (Group 1)","th":"Verbs","cat":"Verbs","kj":false,"o":162},{"w":"聞く","r":"きく","say":"きく","m":"to listen; to ask","t":"Verb","g":"う-verb (Group 1)","th":"Verbs","cat":"Verbs","kj":true,"o":170},{"w":"きる","r":"","say":"きる","m":"to cut; to wear (on the body)","t":"Verb","g":"う-verb (Group 1) / る-verb (Group 2)","th":"Verbs","cat":"Verbs","kj":false,"o":178},{"w":"くもる","r":"","say":"くもる","m":"to become cloudy","t":"Verb","g":"う-verb (Group 1)","th":"Verbs","cat":"Verbs","kj":false,"o":186},{"w":"こまる","r":"","say":"こまる","m":"to be troubled","t":"Verb","g":"う-verb (Group 1)","th":"Verbs","cat":"Verbs","kj":false,"o":194},{"w":"さく","r":"","say":"さく","m":"to bloom","t":"Verb","g":"う-verb (Group 1)","th":"Verbs","cat":"Verbs","kj":false,"o":202},{"w":"さす","r":"","say":"さす","m":"to put up (an umbrella)","t":"Verb","g":"う-verb (Group 1)","th":"Verbs","cat":"Verbs","kj":false,"o":210},{"w":"しぬ","r":"","say":"しぬ","m":"to die","t":"Verb","g":"う-verb (Group 1)","th":"Verbs","cat":"Verbs","kj":false,"o":218},{"w":"しまる","r":"","say":"しまる","m":"to close (by itself)","t":"Verb","g":"う-verb (Group 1)","th":"Verbs","cat":"Verbs","kj":false,"o":226},{"w":"しる","r":"","say":"しる","m":"to know (しっています)","t":"Verb","g":"う-verb (Group 1)","th":"Verbs","cat":"Verbs","kj":false,"o":234},{"w":"すう","r":"","say":"すう","m":"to smoke; to breathe in","t":"Verb","g":"う-verb (Group 1)","th":"Verbs","cat":"Verbs","kj":false,"o":242},{"w":"すむ","r":"","say":"すむ","m":"to live (somewhere)","t":"Verb","g":"う-verb (Group 1)","th":"Verbs","cat":"Verbs","kj":false,"o":250},{"w":"すわる","r":"","say":"すわる","m":"to sit","t":"Verb","g":"う-verb (Group 1)","th":"Verbs","cat":"Verbs","kj":false,"o":258},{"w":"出す","r":"だす","say":"だす","m":"to take out; to send","t":"Verb","g":"う-verb (Group 1)","th":"Verbs","cat":"Verbs","kj":true,"o":266},{"w":"立つ","r":"たつ","say":"たつ","m":"to stand","t":"Verb","g":"う-verb (Group 1)","th":"Verbs","cat":"Verbs","kj":true,"o":274},{"w":"たのむ","r":"","say":"たのむ","m":"to ask for, request","t":"Verb","g":"う-verb (Group 1)","th":"Verbs","cat":"Verbs","kj":false,"o":282},{"w":"ちがう","r":"","say":"ちがう","m":"to be different; to be wrong","t":"Verb","g":"う-verb (Group 1)","th":"Verbs","cat":"Verbs","kj":false,"o":289},{"w":"つかう","r":"","say":"つかう","m":"to use","t":"Verb","g":"う-verb (Group 1)","th":"Verbs","cat":"Verbs","kj":false,"o":296},{"w":"つく","r":"","say":"つく","m":"to arrive","t":"Verb","g":"う-verb (Group 1)","th":"Verbs","cat":"Verbs","kj":false,"o":303},{"w":"つくる","r":"","say":"つくる","m":"to make","t":"Verb","g":"う-verb (Group 1)","th":"Verbs","cat":"Verbs","kj":false,"o":310},{"w":"てつだう","r":"","say":"てつだう","m":"to help","t":"Verb","g":"う-verb (Group 1)","th":"Verbs","cat":"Verbs","kj":false,"o":316},{"w":"とぶ","r":"","say":"とぶ","m":"to fly","t":"Verb","g":"う-verb (Group 1)","th":"Verbs","cat":"Verbs","kj":false,"o":322},{"w":"とまる","r":"","say":"とまる","m":"to stop","t":"Verb","g":"う-verb (Group 1)","th":"Verbs","cat":"Verbs","kj":false,"o":328},{"w":"とる","r":"","say":"とる","m":"to take; to pick up; to take (a photo)","t":"Verb","g":"う-verb (Group 1)","th":"Verbs","cat":"Verbs","kj":false,"o":334},{"w":"ならう","r":"","say":"ならう","m":"to learn (from someone)","t":"Verb","g":"う-verb (Group 1)","th":"Verbs","cat":"Verbs","kj":false,"o":339},{"w":"ならぶ","r":"","say":"ならぶ","m":"to line up","t":"Verb","g":"う-verb (Group 1)","th":"Verbs","cat":"Verbs","kj":false,"o":344},{"w":"なる","r":"","say":"なる","m":"to become","t":"Verb","g":"う-verb (Group 1)","th":"Verbs","cat":"Verbs","kj":false,"o":349},{"w":"ぬぐ","r":"","say":"ぬぐ","m":"to take off (clothes)","t":"Verb","g":"う-verb (Group 1)","th":"Verbs","cat":"Verbs","kj":false,"o":354},{"w":"のぼる","r":"","say":"のぼる","m":"to climb","t":"Verb","g":"う-verb (Group 1)","th":"Verbs","cat":"Verbs","kj":false,"o":359},{"w":"飲む","r":"のむ","say":"のむ","m":"to drink; to take (medicine)","t":"Verb","g":"う-verb (Group 1)","th":"Verbs","cat":"Verbs","kj":true,"o":364},{"w":"のる","r":"","say":"のる","m":"to ride, get on","t":"Verb","g":"う-verb (Group 1)","th":"Verbs","cat":"Verbs","kj":false,"o":369},{"w":"入る","r":"はいる","say":"はいる","m":"to enter; to take (a bath)","t":"Verb","g":"う-verb (Group 1)","th":"Verbs","cat":"Verbs","kj":true,"o":374},{"w":"はく","r":"","say":"はく","m":"to put on (shoes, trousers)","t":"Verb","g":"う-verb (Group 1)","th":"Verbs","cat":"Verbs","kj":false,"o":379},{"w":"はじまる","r":"","say":"はじまる","m":"to begin","t":"Verb","g":"う-verb (Group 1)","th":"Verbs","cat":"Verbs","kj":false,"o":384},{"w":"はしる","r":"","say":"はしる","m":"to run","t":"Verb","g":"う-verb (Group 1)","th":"Verbs","cat":"Verbs","kj":false,"o":389},{"w":"はたらく","r":"","say":"はたらく","m":"to work","t":"Verb","g":"う-verb (Group 1)","th":"Verbs","cat":"Verbs","kj":false,"o":394},{"w":"話す","r":"はなす","say":"はなす","m":"to speak, talk","t":"Verb","g":"う-verb (Group 1)","th":"Verbs","cat":"Verbs","kj":true,"o":399},{"w":"はれる","r":"","say":"はれる","m":"to clear up (weather)","t":"Verb","g":"る-verb (Group 2)","th":"Verbs","cat":"Verbs","kj":false,"o":404},{"w":"ひく","r":"","say":"ひく","m":"to play (piano, guitar); to pull","t":"Verb","g":"う-verb (Group 1)","th":"Verbs","cat":"Verbs","kj":false,"o":409},{"w":"ふる","r":"","say":"ふる","m":"to fall (rain, snow)","t":"Verb","g":"う-verb (Group 1)","th":"Verbs","cat":"Verbs","kj":false,"o":414},{"w":"まがる","r":"","say":"まがる","m":"to turn","t":"Verb","g":"う-verb (Group 1)","th":"Verbs","cat":"Verbs","kj":false,"o":419},{"w":"まつ","r":"","say":"まつ","m":"to wait","t":"Verb","g":"う-verb (Group 1)","th":"Verbs","cat":"Verbs","kj":false,"o":424},{"w":"みがく","r":"","say":"みがく","m":"to brush, polish","t":"Verb","g":"う-verb (Group 1)","th":"Verbs","cat":"Verbs","kj":false,"o":429},{"w":"もつ","r":"","say":"もつ","m":"to hold; to have","t":"Verb","g":"う-verb (Group 1)","th":"Verbs","cat":"Verbs","kj":false,"o":434},{"w":"休む","r":"やすむ","say":"やすむ","m":"to rest; to take time off","t":"Verb","g":"う-verb (Group 1)","th":"Verbs","cat":"Verbs","kj":true,"o":439},{"w":"やる","r":"","say":"やる","m":"to do (casual)","t":"Verb","g":"う-verb (Group 1)","th":"Verbs","cat":"Verbs","kj":false,"o":444},{"w":"よぶ","r":"","say":"よぶ","m":"to call","t":"Verb","g":"う-verb (Group 1)","th":"Verbs","cat":"Verbs","kj":false,"o":449},{"w":"読む","r":"よむ","say":"よむ","m":"to read","t":"Verb","g":"う-verb (Group 1)","th":"Verbs","cat":"Verbs","kj":true,"o":454},{"w":"分かる","r":"わかる","say":"わかる","m":"to understand","t":"Verb","g":"う-verb (Group 1)","th":"Verbs","cat":"Verbs","kj":true,"o":459},{"w":"わたる","r":"","say":"わたる","m":"to cross","t":"Verb","g":"う-verb (Group 1)","th":"Verbs","cat":"Verbs","kj":false,"o":464},{"w":"あく","r":"","say":"あく","m":"to open (by itself)","t":"Verb","g":"う-verb (Group 1)","th":"Verbs","cat":"Verbs","kj":false,"o":469},{"w":"もらう","r":"","say":"もらう","m":"to receive","t":"Verb","g":"う-verb (Group 1)","th":"Verbs","cat":"Verbs","kj":false,"o":474},{"w":"おくる","r":"","say":"おくる","m":"to send","t":"Verb","g":"う-verb (Group 1)","th":"Verbs","cat":"Verbs","kj":false,"o":479},{"w":"あける","r":"","say":"あける","m":"to open (something)","t":"Verb","g":"る-verb (Group 2)","th":"Verbs","cat":"Verbs","kj":false,"o":484},{"w":"上げる","r":"あげる","say":"あげる","m":"to give; to raise","t":"Verb","g":"る-verb (Group 2)","th":"Verbs","cat":"Verbs","kj":true,"o":489},{"w":"あびる","r":"","say":"あびる","m":"to take (a shower)","t":"Verb","g":"る-verb (Group 2)","th":"Verbs","cat":"Verbs","kj":false,"o":494},{"w":"入れる","r":"いれる","say":"いれる","m":"to put in","t":"Verb","g":"る-verb (Group 2)","th":"Verbs","cat":"Verbs","kj":true,"o":499},{"w":"生まれる","r":"うまれる","say":"うまれる","m":"to be born","t":"Verb","g":"る-verb (Group 2)","th":"Verbs","cat":"Verbs","kj":true,"o":504},{"w":"おきる","r":"","say":"おきる","m":"to get up, wake up","t":"Verb","g":"る-verb (Group 2)","th":"Verbs","cat":"Verbs","kj":false,"o":509},{"w":"おしえる","r":"","say":"おしえる","m":"to teach; to tell","t":"Verb","g":"る-verb (Group 2)","th":"Verbs","cat":"Verbs","kj":false,"o":514},{"w":"おぼえる","r":"","say":"おぼえる","m":"to remember, memorize","t":"Verb","g":"る-verb (Group 2)","th":"Verbs","cat":"Verbs","kj":false,"o":519},{"w":"おりる","r":"","say":"おりる","m":"to get off","t":"Verb","g":"る-verb (Group 2)","th":"Verbs","cat":"Verbs","kj":false,"o":523},{"w":"かける","r":"","say":"かける","m":"to make (a phone call); to put on (glasses)","t":"Verb","g":"る-verb (Group 2)","th":"Verbs","cat":"Verbs","kj":false,"o":527},{"w":"かりる","r":"","say":"かりる","m":"to borrow","t":"Verb","g":"る-verb (Group 2)","th":"Verbs","cat":"Verbs","kj":false,"o":531},{"w":"きえる","r":"","say":"きえる","m":"to go out, disappear","t":"Verb","g":"る-verb (Group 2)","th":"Verbs","cat":"Verbs","kj":false,"o":535},{"w":"くれる","r":"","say":"くれる","m":"to give (to me)","t":"Verb","g":"る-verb (Group 2)","th":"Verbs","cat":"Verbs","kj":false,"o":539},{"w":"こたえる","r":"","say":"こたえる","m":"to answer","t":"Verb","g":"る-verb (Group 2)","th":"Verbs","cat":"Verbs","kj":false,"o":543},{"w":"しめる","r":"","say":"しめる","m":"to close (something); to tie, fasten","t":"Verb","g":"る-verb (Group 2)","th":"Verbs","cat":"Verbs","kj":false,"o":547},{"w":"しらべる","r":"","say":"しらべる","m":"to look up, investigate","t":"Verb","g":"る-verb (Group 2)","th":"Verbs","cat":"Verbs","kj":false,"o":551},{"w":"食べる","r":"たべる","say":"たべる","m":"to eat","t":"Verb","g":"る-verb (Group 2)","th":"Verbs","cat":"Verbs","kj":true,"o":555},{"w":"つかれる","r":"","say":"つかれる","m":"to get tired","t":"Verb","g":"る-verb (Group 2)","th":"Verbs","cat":"Verbs","kj":false,"o":559},{"w":"つける","r":"","say":"つける","m":"to turn on; to attach","t":"Verb","g":"る-verb (Group 2)","th":"Verbs","cat":"Verbs","kj":false,"o":563},{"w":"つとめる","r":"","say":"つとめる","m":"to work for (a company)","t":"Verb","g":"る-verb (Group 2)","th":"Verbs","cat":"Verbs","kj":false,"o":567},{"w":"出かける","r":"でかける","say":"でかける","m":"to go out","t":"Verb","g":"る-verb (Group 2)","th":"Verbs","cat":"Verbs","kj":true,"o":571},{"w":"出来る","r":"できる","say":"できる","m":"to be able to; to be done","t":"Verb","g":"る-verb (Group 2)","th":"Verbs","cat":"Verbs","kj":true,"o":575},{"w":"出る","r":"でる","say":"でる","m":"to leave, go out; to attend","t":"Verb","g":"る-verb (Group 2)","th":"Verbs","cat":"Verbs","kj":true,"o":579},{"w":"ねる","r":"","say":"ねる","m":"to sleep, go to bed","t":"Verb","g":"る-verb (Group 2)","th":"Verbs","cat":"Verbs","kj":false,"o":583},{"w":"はじめる","r":"","say":"はじめる","m":"to begin (something)","t":"Verb","g":"る-verb (Group 2)","th":"Verbs","cat":"Verbs","kj":false,"o":587},{"w":"見せる","r":"みせる","say":"みせる","m":"to show","t":"Verb","g":"る-verb (Group 2)","th":"Verbs","cat":"Verbs","kj":true,"o":591},{"w":"見る","r":"みる","say":"みる","m":"to see, watch","t":"Verb","g":"る-verb (Group 2)","th":"Verbs","cat":"Verbs","kj":true,"o":595},{"w":"わすれる","r":"","say":"わすれる","m":"to forget","t":"Verb","g":"る-verb (Group 2)","th":"Verbs","cat":"Verbs","kj":false,"o":599},{"w":"ならべる","r":"","say":"ならべる","m":"to line up (things)","t":"Verb","g":"る-verb (Group 2)","th":"Verbs","cat":"Verbs","kj":false,"o":603},{"w":"けす","r":"","say":"けす","m":"to turn off; to erase","t":"Verb","g":"う-verb (Group 1)","th":"Verbs","cat":"Verbs","kj":false,"o":607},{"w":"する","r":"","say":"する","m":"to do","t":"Verb","g":"Irregular (Group 3)","th":"Verbs","cat":"Verbs","kj":false,"o":611},{"w":"来る","r":"くる","say":"くる","m":"to come","t":"Verb","g":"Irregular (Group 3)","th":"Verbs","cat":"Verbs","kj":true,"o":615},{"w":"べんきょうする","r":"","say":"べんきょうする","m":"to study","t":"Verb","g":"Irregular (Group 3)","th":"Verbs","cat":"Verbs","kj":false,"o":619},{"w":"けっこんする","r":"","say":"けっこんする","m":"to marry","t":"Verb","g":"Irregular (Group 3)","th":"Verbs","cat":"Verbs","kj":false,"o":623},{"w":"さんぽする","r":"","say":"さんぽする","m":"to take a walk","t":"Verb","g":"Irregular (Group 3)","th":"Verbs","cat":"Verbs","kj":false,"o":627},{"w":"せんたくする","r":"","say":"せんたくする","m":"to do laundry","t":"Verb","g":"Irregular (Group 3)","th":"Verbs","cat":"Verbs","kj":false,"o":631},{"w":"そうじする","r":"","say":"そうじする","m":"to clean","t":"Verb","g":"Irregular (Group 3)","th":"Verbs","cat":"Verbs","kj":false,"o":635},{"w":"りょうりする","r":"","say":"りょうりする","m":"to cook","t":"Verb","g":"Irregular (Group 3)","th":"Verbs","cat":"Verbs","kj":false,"o":639},{"w":"かいものする","r":"","say":"かいものする","m":"to shop","t":"Verb","g":"Irregular (Group 3)","th":"Verbs","cat":"Verbs","kj":false,"o":643},{"w":"電話する","r":"でんわする","say":"でんわする","m":"to phone","t":"Verb","g":"Irregular (Group 3)","th":"Verbs","cat":"Verbs","kj":true,"o":647},{"w":"りょこうする","r":"","say":"りょこうする","m":"to travel","t":"Verb","g":"Irregular (Group 3)","th":"Verbs","cat":"Verbs","kj":false,"o":651},{"w":"れんしゅうする","r":"","say":"れんしゅうする","m":"to practice","t":"Verb","g":"Irregular (Group 3)","th":"Verbs","cat":"Verbs","kj":false,"o":655},{"w":"しつもんする","r":"","say":"しつもんする","m":"to ask a question","t":"Verb","g":"Irregular (Group 3)","th":"Verbs","cat":"Verbs","kj":false,"o":659},{"w":"あかい","r":"","say":"あかい","m":"red","t":"い-adjective","g":"","th":"Adjectives","cat":"Adjectives","kj":false,"o":4},{"w":"あおい","r":"","say":"あおい","m":"blue","t":"い-adjective","g":"","th":"Adjectives","cat":"Adjectives","kj":false,"o":12},{"w":"白い","r":"しろい","say":"しろい","m":"white","t":"い-adjective","g":"","th":"Adjectives","cat":"Adjectives","kj":true,"o":20},{"w":"くろい","r":"","say":"くろい","m":"black","t":"い-adjective","g":"","th":"Adjectives","cat":"Adjectives","kj":false,"o":28},{"w":"きいろい","r":"","say":"きいろい","m":"yellow","t":"い-adjective","g":"","th":"Adjectives","cat":"Adjectives","kj":false,"o":36},{"w":"あかるい","r":"","say":"あかるい","m":"bright","t":"い-adjective","g":"","th":"Adjectives","cat":"Adjectives","kj":false,"o":44},{"w":"くらい","r":"","say":"くらい","m":"dark","t":"い-adjective","g":"","th":"Adjectives","cat":"Adjectives","kj":false,"o":52},{"w":"あたたかい","r":"","say":"あたたかい","m":"warm","t":"い-adjective","g":"","th":"Adjectives","cat":"Adjectives","kj":false,"o":60},{"w":"あつい","r":"","say":"あつい","m":"hot (weather); hot (to the touch); thick","t":"い-adjective","g":"","th":"Adjectives","cat":"Adjectives","kj":false,"o":68},{"w":"さむい","r":"","say":"さむい","m":"cold (weather)","t":"い-adjective","g":"","th":"Adjectives","cat":"Adjectives","kj":false,"o":76},{"w":"つめたい","r":"","say":"つめたい","m":"cold (to the touch)","t":"い-adjective","g":"","th":"Adjectives","cat":"Adjectives","kj":false,"o":84},{"w":"すずしい","r":"","say":"すずしい","m":"cool","t":"い-adjective","g":"","th":"Adjectives","cat":"Adjectives","kj":false,"o":92},{"w":"新しい","r":"あたらしい","say":"あたらしい","m":"new","t":"い-adjective","g":"","th":"Adjectives","cat":"Adjectives","kj":true,"o":100},{"w":"古い","r":"ふるい","say":"ふるい","m":"old (things)","t":"い-adjective","g":"","th":"Adjectives","cat":"Adjectives","kj":true,"o":108},{"w":"うすい","r":"","say":"うすい","m":"thin; weak (taste)","t":"い-adjective","g":"","th":"Adjectives","cat":"Adjectives","kj":false,"o":116},{"w":"あまい","r":"","say":"あまい","m":"sweet","t":"い-adjective","g":"","th":"Adjectives","cat":"Adjectives","kj":false,"o":124},{"w":"からい","r":"","say":"からい","m":"spicy","t":"い-adjective","g":"","th":"Adjectives","cat":"Adjectives","kj":false,"o":132},{"w":"おいしい","r":"","say":"おいしい","m":"delicious","t":"い-adjective","g":"","th":"Adjectives","cat":"Adjectives","kj":false,"o":140},{"w":"まずい","r":"","say":"まずい","m":"bad-tasting","t":"い-adjective","g":"","th":"Adjectives","cat":"Adjectives","kj":false,"o":148},{"w":"いい","r":"","say":"いい","m":"good","t":"い-adjective","g":"","th":"Adjectives","cat":"Adjectives","kj":false,"o":156},{"w":"よい","r":"","say":"よい","m":"good (formal)","t":"い-adjective","g":"","th":"Adjectives","cat":"Adjectives","kj":false,"o":164},{"w":"わるい","r":"","say":"わるい","m":"bad","t":"い-adjective","g":"","th":"Adjectives","cat":"Adjectives","kj":false,"o":172},{"w":"大きい","r":"おおきい","say":"おおきい","m":"big","t":"い-adjective","g":"","th":"Adjectives","cat":"Adjectives","kj":true,"o":180},{"w":"小さい","r":"ちいさい","say":"ちいさい","m":"small","t":"い-adjective","g":"","th":"Adjectives","cat":"Adjectives","kj":true,"o":188},{"w":"高い","r":"たかい","say":"たかい","m":"tall; expensive","t":"い-adjective","g":"","th":"Adjectives","cat":"Adjectives","kj":true,"o":196},{"w":"ひくい","r":"","say":"ひくい","m":"low, short","t":"い-adjective","g":"","th":"Adjectives","cat":"Adjectives","kj":false,"o":204},{"w":"安い","r":"やすい","say":"やすい","m":"cheap","t":"い-adjective","g":"","th":"Adjectives","cat":"Adjectives","kj":true,"o":212},{"w":"長い","r":"ながい","say":"ながい","m":"long","t":"い-adjective","g":"","th":"Adjectives","cat":"Adjectives","kj":true,"o":220},{"w":"みじかい","r":"","say":"みじかい","m":"short","t":"い-adjective","g":"","th":"Adjectives","cat":"Adjectives","kj":false,"o":228},{"w":"ふとい","r":"","say":"ふとい","m":"thick, fat","t":"い-adjective","g":"","th":"Adjectives","cat":"Adjectives","kj":false,"o":236},{"w":"ほそい","r":"","say":"ほそい","m":"thin, slender","t":"い-adjective","g":"","th":"Adjectives","cat":"Adjectives","kj":false,"o":244},{"w":"ひろい","r":"","say":"ひろい","m":"wide, spacious","t":"い-adjective","g":"","th":"Adjectives","cat":"Adjectives","kj":false,"o":252},{"w":"せまい","r":"","say":"せまい","m":"narrow, cramped","t":"い-adjective","g":"","th":"Adjectives","cat":"Adjectives","kj":false,"o":260},{"w":"おもい","r":"","say":"おもい","m":"heavy","t":"い-adjective","g":"","th":"Adjectives","cat":"Adjectives","kj":false,"o":268},{"w":"かるい","r":"","say":"かるい","m":"light (weight)","t":"い-adjective","g":"","th":"Adjectives","cat":"Adjectives","kj":false,"o":276},{"w":"ちかい","r":"","say":"ちかい","m":"near","t":"い-adjective","g":"","th":"Adjectives","cat":"Adjectives","kj":false,"o":284},{"w":"とおい","r":"","say":"とおい","m":"far","t":"い-adjective","g":"","th":"Adjectives","cat":"Adjectives","kj":false,"o":291},{"w":"早い","r":"はやい","say":"はやい","m":"early","t":"い-adjective","g":"","th":"Adjectives","cat":"Adjectives","kj":true,"o":298},{"w":"はやい","r":"","say":"はやい","m":"fast","t":"い-adjective","g":"","th":"Adjectives","cat":"Adjectives","kj":false,"o":305},{"w":"おそい","r":"","say":"おそい","m":"late; slow","t":"い-adjective","g":"","th":"Adjectives","cat":"Adjectives","kj":false,"o":312},{"w":"多い","r":"おおい","say":"おおい","m":"many, a lot","t":"い-adjective","g":"","th":"Adjectives","cat":"Adjectives","kj":true,"o":318},{"w":"少ない","r":"すくない","say":"すくない","m":"few, a little","t":"い-adjective","g":"","th":"Adjectives","cat":"Adjectives","kj":true,"o":324},{"w":"つよい","r":"","say":"つよい","m":"strong","t":"い-adjective","g":"","th":"Adjectives","cat":"Adjectives","kj":false,"o":330},{"w":"よわい","r":"","say":"よわい","m":"weak","t":"い-adjective","g":"","th":"Adjectives","cat":"Adjectives","kj":false,"o":336},{"w":"むずかしい","r":"","say":"むずかしい","m":"difficult","t":"い-adjective","g":"","th":"Adjectives","cat":"Adjectives","kj":false,"o":341},{"w":"やさしい","r":"","say":"やさしい","m":"easy; kind, gentle","t":"い-adjective","g":"","th":"Adjectives","cat":"Adjectives","kj":false,"o":346},{"w":"おもしろい","r":"","say":"おもしろい","m":"interesting, funny","t":"い-adjective","g":"","th":"Adjectives","cat":"Adjectives","kj":false,"o":351},{"w":"つまらない","r":"","say":"つまらない","m":"boring","t":"い-adjective","g":"","th":"Adjectives","cat":"Adjectives","kj":false,"o":356},{"w":"たのしい","r":"","say":"たのしい","m":"fun, enjoyable","t":"い-adjective","g":"","th":"Adjectives","cat":"Adjectives","kj":false,"o":361},{"w":"いそがしい","r":"","say":"いそがしい","m":"busy","t":"い-adjective","g":"","th":"Adjectives","cat":"Adjectives","kj":false,"o":366},{"w":"いたい","r":"","say":"いたい","m":"painful","t":"い-adjective","g":"","th":"Adjectives","cat":"Adjectives","kj":false,"o":371},{"w":"かわいい","r":"","say":"かわいい","m":"cute","t":"い-adjective","g":"","th":"Adjectives","cat":"Adjectives","kj":false,"o":376},{"w":"きたない","r":"","say":"きたない","m":"dirty","t":"い-adjective","g":"","th":"Adjectives","cat":"Adjectives","kj":false,"o":381},{"w":"わかい","r":"","say":"わかい","m":"young","t":"い-adjective","g":"","th":"Adjectives","cat":"Adjectives","kj":false,"o":386},{"w":"まるい","r":"","say":"まるい","m":"round","t":"い-adjective","g":"","th":"Adjectives","cat":"Adjectives","kj":false,"o":391},{"w":"ほしい","r":"","say":"ほしい","m":"wanted, desired","t":"い-adjective","g":"","th":"Adjectives","cat":"Adjectives","kj":false,"o":396},{"w":"うるさい","r":"","say":"うるさい","m":"noisy, annoying","t":"い-adjective","g":"","th":"Adjectives","cat":"Adjectives","kj":false,"o":401},{"w":"すき","r":"","say":"すき","m":"liked","t":"な-adjective","g":"","th":"Adjectives","cat":"Adjectives","kj":false,"o":406},{"w":"きらい","r":"","say":"きらい","m":"disliked","t":"な-adjective","g":"","th":"Adjectives","cat":"Adjectives","kj":false,"o":411},{"w":"だいすき","r":"","say":"だいすき","m":"loved, really like","t":"な-adjective","g":"","th":"Adjectives","cat":"Adjectives","kj":false,"o":416},{"w":"だいきらい","r":"","say":"だいきらい","m":"hated","t":"な-adjective","g":"","th":"Adjectives","cat":"Adjectives","kj":false,"o":421},{"w":"上手","r":"じょうず","say":"じょうず","m":"skillful, good at","t":"な-adjective","g":"","th":"Adjectives","cat":"Adjectives","kj":true,"o":426},{"w":"下手","r":"へた","say":"へた","m":"unskillful, bad at","t":"な-adjective","g":"","th":"Adjectives","cat":"Adjectives","kj":true,"o":431},{"w":"げんき","r":"","say":"げんき","m":"healthy, energetic","t":"な-adjective","g":"","th":"Adjectives","cat":"Adjectives","kj":false,"o":436},{"w":"しずか","r":"","say":"しずか","m":"quiet","t":"な-adjective","g":"","th":"Adjectives","cat":"Adjectives","kj":false,"o":441},{"w":"にぎやか","r":"","say":"にぎやか","m":"lively","t":"な-adjective","g":"","th":"Adjectives","cat":"Adjectives","kj":false,"o":446},{"w":"きれい","r":"","say":"きれい","m":"pretty; clean","t":"な-adjective","g":"","th":"Adjectives","cat":"Adjectives","kj":false,"o":451},{"w":"ゆうめい","r":"","say":"ゆうめい","m":"famous","t":"な-adjective","g":"","th":"Adjectives","cat":"Adjectives","kj":false,"o":456},{"w":"しんせつ","r":"","say":"しんせつ","m":"kind","t":"な-adjective","g":"","th":"Adjectives","cat":"Adjectives","kj":false,"o":461},{"w":"べんり","r":"","say":"べんり","m":"convenient","t":"な-adjective","g":"","th":"Adjectives","cat":"Adjectives","kj":false,"o":466},{"w":"ふべん","r":"","say":"ふべん","m":"inconvenient","t":"な-adjective","g":"","th":"Adjectives","cat":"Adjectives","kj":false,"o":471},{"w":"ひま","r":"","say":"ひま","m":"free (time)","t":"な-adjective","g":"","th":"Adjectives","cat":"Adjectives","kj":false,"o":476},{"w":"だいじょうぶ","r":"","say":"だいじょうぶ","m":"all right, OK","t":"な-adjective","g":"","th":"Adjectives","cat":"Adjectives","kj":false,"o":481},{"w":"たいせつ","r":"","say":"たいせつ","m":"important, precious","t":"な-adjective","g":"","th":"Adjectives","cat":"Adjectives","kj":false,"o":486},{"w":"たいへん","r":"","say":"たいへん","m":"tough, hard; very","t":"な-adjective","g":"","th":"Adjectives","cat":"Adjectives","kj":false,"o":491},{"w":"じょうぶ","r":"","say":"じょうぶ","m":"sturdy, strong","t":"な-adjective","g":"","th":"Adjectives","cat":"Adjectives","kj":false,"o":496},{"w":"おなじ","r":"","say":"おなじ","m":"same","t":"な-adjective","g":"","th":"Adjectives","cat":"Adjectives","kj":false,"o":501},{"w":"いろいろ","r":"","say":"いろいろ","m":"various","t":"な-adjective","g":"","th":"Adjectives","cat":"Adjectives","kj":false,"o":506},{"w":"いや","r":"","say":"いや","m":"unpleasant, no thanks","t":"な-adjective","g":"","th":"Adjectives","cat":"Adjectives","kj":false,"o":511},{"w":"けっこう","r":"","say":"けっこう","m":"fine; no thank you","t":"な-adjective","g":"","th":"Adjectives","cat":"Adjectives","kj":false,"o":516},{"w":"とても","r":"","say":"とても","m":"very","t":"Adverb","g":"","th":"Adverbs","cat":"Adverbs & conjunctions","kj":false,"o":7},{"w":"たくさん","r":"","say":"たくさん","m":"a lot, many","t":"Adverb","g":"","th":"Adverbs","cat":"Adverbs & conjunctions","kj":false,"o":15},{"w":"少し","r":"すこし","say":"すこし","m":"a little","t":"Adverb","g":"","th":"Adverbs","cat":"Adverbs & conjunctions","kj":true,"o":23},{"w":"ちょっと","r":"","say":"ちょっと","m":"a little; a moment","t":"Adverb","g":"","th":"Adverbs","cat":"Adverbs & conjunctions","kj":false,"o":31},{"w":"よく","r":"","say":"よく","m":"well; often","t":"Adverb","g":"","th":"Adverbs","cat":"Adverbs & conjunctions","kj":false,"o":39},{"w":"あまり","r":"","say":"あまり","m":"not very (+ negative)","t":"Adverb","g":"","th":"Adverbs","cat":"Adverbs & conjunctions","kj":false,"o":47},{"w":"ぜんぜん","r":"","say":"ぜんぜん","m":"not at all (+ negative)","t":"Adverb","g":"","th":"Adverbs","cat":"Adverbs & conjunctions","kj":false,"o":55},{"w":"いつも","r":"","say":"いつも","m":"always","t":"Adverb","g":"","th":"Adverbs","cat":"Adverbs & conjunctions","kj":false,"o":63},{"w":"ときどき","r":"","say":"ときどき","m":"sometimes","t":"Adverb","g":"","th":"Adverbs","cat":"Adverbs & conjunctions","kj":false,"o":71},{"w":"たいてい","r":"","say":"たいてい","m":"usually","t":"Adverb","g":"","th":"Adverbs","cat":"Adverbs & conjunctions","kj":false,"o":79},{"w":"もう","r":"","say":"もう","m":"already; more","t":"Adverb","g":"","th":"Adverbs","cat":"Adverbs & conjunctions","kj":false,"o":87},{"w":"まだ","r":"","say":"まだ","m":"still; not yet","t":"Adverb","g":"","th":"Adverbs","cat":"Adverbs & conjunctions","kj":false,"o":95},{"w":"すぐ","r":"","say":"すぐ","m":"immediately; soon","t":"Adverb","g":"","th":"Adverbs","cat":"Adverbs & conjunctions","kj":false,"o":103},{"w":"ゆっくり","r":"","say":"ゆっくり","m":"slowly","t":"Adverb","g":"","th":"Adverbs","cat":"Adverbs & conjunctions","kj":false,"o":111},{"w":"だんだん","r":"","say":"だんだん","m":"gradually","t":"Adverb","g":"","th":"Adverbs","cat":"Adverbs & conjunctions","kj":false,"o":119},{"w":"まっすぐ","r":"","say":"まっすぐ","m":"straight","t":"Adverb","g":"","th":"Adverbs","cat":"Adverbs & conjunctions","kj":false,"o":127},{"w":"また","r":"","say":"また","m":"again","t":"Adverb","g":"","th":"Adverbs","cat":"Adverbs & conjunctions","kj":false,"o":135},{"w":"もっと","r":"","say":"もっと","m":"more","t":"Adverb","g":"","th":"Adverbs","cat":"Adverbs & conjunctions","kj":false,"o":143},{"w":"いちばん","r":"","say":"いちばん","m":"the most; number one","t":"Adverb","g":"","th":"Adverbs","cat":"Adverbs & conjunctions","kj":false,"o":151},{"w":"多分","r":"たぶん","say":"たぶん","m":"probably","t":"Adverb","g":"","th":"Adverbs","cat":"Adverbs & conjunctions","kj":true,"o":159},{"w":"ほんとうに","r":"","say":"ほんとうに","m":"really, truly","t":"Adverb","g":"","th":"Adverbs","cat":"Adverbs & conjunctions","kj":false,"o":167},{"w":"いっしょに","r":"","say":"いっしょに","m":"together","t":"Adverb","g":"","th":"Adverbs","cat":"Adverbs & conjunctions","kj":false,"o":175},{"w":"はじめて","r":"","say":"はじめて","m":"for the first time","t":"Adverb","g":"","th":"Adverbs","cat":"Adverbs & conjunctions","kj":false,"o":183},{"w":"先に","r":"さきに","say":"さきに","m":"ahead, first","t":"Adverb","g":"","th":"Adverbs","cat":"Adverbs & conjunctions","kj":true,"o":191},{"w":"だいたい","r":"","say":"だいたい","m":"mostly, roughly","t":"Adverb","g":"","th":"Adverbs","cat":"Adverbs & conjunctions","kj":false,"o":199},{"w":"ほんとう","r":"","say":"ほんとう","m":"truth, real","t":"Noun","g":"","th":"Adverbs","cat":"Nouns","kj":false,"o":664},{"w":"ぐらい","r":"","say":"ぐらい","m":"about, approximately","t":"Adverb","g":"","th":"Adverbs","cat":"Adverbs & conjunctions","kj":false,"o":207},{"w":"だけ","r":"","say":"だけ","m":"only","t":"Adverb","g":"","th":"Adverbs","cat":"Adverbs & conjunctions","kj":false,"o":215},{"w":"ぜんぶ","r":"","say":"ぜんぶ","m":"all, everything","t":"Noun","g":"","th":"Adverbs","cat":"Nouns","kj":false,"o":665},{"w":"半分","r":"はんぶん","say":"はんぶん","m":"half","t":"Noun","g":"","th":"Adverbs","cat":"Nouns","kj":true,"o":666},{"w":"一人で","r":"ひとりで","say":"ひとりで","m":"alone, by oneself","t":"Adverb","g":"","th":"Adverbs","cat":"Adverbs & conjunctions","kj":true,"o":223},{"w":"そして","r":"","say":"そして","m":"and then","t":"Conjunction","g":"","th":"Conjunctions","cat":"Adverbs & conjunctions","kj":false,"o":231},{"w":"それから","r":"","say":"それから","m":"after that","t":"Conjunction","g":"","th":"Conjunctions","cat":"Adverbs & conjunctions","kj":false,"o":239},{"w":"でも","r":"","say":"でも","m":"but","t":"Conjunction","g":"","th":"Conjunctions","cat":"Adverbs & conjunctions","kj":false,"o":247},{"w":"しかし","r":"","say":"しかし","m":"however","t":"Conjunction","g":"","th":"Conjunctions","cat":"Adverbs & conjunctions","kj":false,"o":255},{"w":"じゃあ","r":"","say":"じゃあ","m":"well then","t":"Conjunction","g":"","th":"Conjunctions","cat":"Adverbs & conjunctions","kj":false,"o":263},{"w":"では","r":"","say":"では","m":"well then (formal)","t":"Conjunction","g":"","th":"Conjunctions","cat":"Adverbs & conjunctions","kj":false,"o":271},{"w":"だから","r":"","say":"だから","m":"so, therefore","t":"Conjunction","g":"","th":"Conjunctions","cat":"Adverbs & conjunctions","kj":false,"o":279},{"w":"おはようございます","r":"","say":"おはようございます","m":"good morning","t":"Phrase","g":"","th":"Phrases","cat":"Phrases","kj":false,"o":0},{"w":"こんにちは","r":"","say":"こんにちは","m":"hello, good afternoon","t":"Phrase","g":"","th":"Phrases","cat":"Phrases","kj":false,"o":8},{"w":"こんばんは","r":"","say":"こんばんは","m":"good evening","t":"Phrase","g":"","th":"Phrases","cat":"Phrases","kj":false,"o":16},{"w":"おやすみなさい","r":"","say":"おやすみなさい","m":"good night","t":"Phrase","g":"","th":"Phrases","cat":"Phrases","kj":false,"o":24},{"w":"さようなら","r":"","say":"さようなら","m":"goodbye","t":"Phrase","g":"","th":"Phrases","cat":"Phrases","kj":false,"o":32},{"w":"じゃあ、また","r":"","say":"じゃあ、また","m":"see you","t":"Phrase","g":"","th":"Phrases","cat":"Phrases","kj":false,"o":40},{"w":"ありがとうございます","r":"","say":"ありがとうございます","m":"thank you (very much)","t":"Phrase","g":"","th":"Phrases","cat":"Phrases","kj":false,"o":48},{"w":"どうも","r":"","say":"どうも","m":"thanks; hello","t":"Phrase","g":"","th":"Phrases","cat":"Phrases","kj":false,"o":56},{"w":"どういたしまして","r":"","say":"どういたしまして","m":"you're welcome","t":"Phrase","g":"","th":"Phrases","cat":"Phrases","kj":false,"o":64},{"w":"すみません","r":"","say":"すみません","m":"excuse me; I'm sorry","t":"Phrase","g":"","th":"Phrases","cat":"Phrases","kj":false,"o":72},{"w":"ごめんなさい","r":"","say":"ごめんなさい","m":"I'm sorry","t":"Phrase","g":"","th":"Phrases","cat":"Phrases","kj":false,"o":80},{"w":"はじめまして","r":"","say":"はじめまして","m":"nice to meet you","t":"Phrase","g":"","th":"Phrases","cat":"Phrases","kj":false,"o":88},{"w":"どうぞよろしくおねがいします","r":"","say":"どうぞよろしくおねがいします","m":"please treat me well (introductions)","t":"Phrase","g":"","th":"Phrases","cat":"Phrases","kj":false,"o":96},{"w":"どうぞ","r":"","say":"どうぞ","m":"please (go ahead, have this)","t":"Phrase","g":"","th":"Phrases","cat":"Phrases","kj":false,"o":104},{"w":"おねがいします","r":"","say":"おねがいします","m":"please (requesting)","t":"Phrase","g":"","th":"Phrases","cat":"Phrases","kj":false,"o":112},{"w":"ください","r":"","say":"ください","m":"please give me","t":"Phrase","g":"","th":"Phrases","cat":"Phrases","kj":false,"o":120},{"w":"いただきます","r":"","say":"いただきます","m":"(said before eating)","t":"Phrase","g":"","th":"Phrases","cat":"Phrases","kj":false,"o":128},{"w":"ごちそうさまでした","r":"","say":"ごちそうさまでした","m":"(said after eating)","t":"Phrase","g":"","th":"Phrases","cat":"Phrases","kj":false,"o":136},{"w":"いってきます","r":"","say":"いってきます","m":"I'm off (leaving home)","t":"Phrase","g":"","th":"Phrases","cat":"Phrases","kj":false,"o":144},{"w":"いってらっしゃい","r":"","say":"いってらっしゃい","m":"see you later (to someone leaving)","t":"Phrase","g":"","th":"Phrases","cat":"Phrases","kj":false,"o":152},{"w":"ただいま","r":"","say":"ただいま","m":"I'm home","t":"Phrase","g":"","th":"Phrases","cat":"Phrases","kj":false,"o":160},{"w":"おかえりなさい","r":"","say":"おかえりなさい","m":"welcome home","t":"Phrase","g":"","th":"Phrases","cat":"Phrases","kj":false,"o":168},{"w":"いらっしゃいませ","r":"","say":"いらっしゃいませ","m":"welcome (in shops)","t":"Phrase","g":"","th":"Phrases","cat":"Phrases","kj":false,"o":176},{"w":"しつれいします","r":"","say":"しつれいします","m":"excuse me (entering, leaving)","t":"Phrase","g":"","th":"Phrases","cat":"Phrases","kj":false,"o":184},{"w":"しつれいしました","r":"","say":"しつれいしました","m":"sorry to have bothered you","t":"Phrase","g":"","th":"Phrases","cat":"Phrases","kj":false,"o":192},{"w":"おげんきですか","r":"","say":"おげんきですか","m":"how are you?","t":"Phrase","g":"","th":"Phrases","cat":"Phrases","kj":false,"o":200},{"w":"おかげさまで","r":"","say":"おかげさまで","m":"I'm fine, thanks (to you)","t":"Phrase","g":"","th":"Phrases","cat":"Phrases","kj":false,"o":208},{"w":"そうですね","r":"","say":"そうですね","m":"that's right; let me see","t":"Phrase","g":"","th":"Phrases","cat":"Phrases","kj":false,"o":216},{"w":"そうですか","r":"","say":"そうですか","m":"is that so?","t":"Phrase","g":"","th":"Phrases","cat":"Phrases","kj":false,"o":224},{"w":"はい","r":"","say":"はい","m":"yes","t":"Phrase","g":"","th":"Phrases","cat":"Phrases","kj":false,"o":232},{"w":"ええ","r":"","say":"ええ","m":"yes (softer)","t":"Phrase","g":"","th":"Phrases","cat":"Phrases","kj":false,"o":240},{"w":"いいえ","r":"","say":"いいえ","m":"no","t":"Phrase","g":"","th":"Phrases","cat":"Phrases","kj":false,"o":248},{"w":"ちょっとまってください","r":"","say":"ちょっとまってください","m":"please wait a moment","t":"Phrase","g":"","th":"Phrases","cat":"Phrases","kj":false,"o":256},{"w":"もういちどおねがいします","r":"","say":"もういちどおねがいします","m":"once more, please","t":"Phrase","g":"","th":"Phrases","cat":"Phrases","kj":false,"o":264},{"w":"わかりました","r":"","say":"わかりました","m":"I understand; certainly","t":"Phrase","g":"","th":"Phrases","cat":"Phrases","kj":false,"o":272},{"w":"わかりません","r":"","say":"わかりません","m":"I don't understand","t":"Phrase","g":"","th":"Phrases","cat":"Phrases","kj":false,"o":280},{"w":"だいじょうぶです","r":"","say":"だいじょうぶです","m":"it's OK; I'm fine","t":"Phrase","g":"","th":"Phrases","cat":"Phrases","kj":false,"o":287},{"w":"おだいじに","r":"","say":"おだいじに","m":"get well soon","t":"Phrase","g":"","th":"Phrases","cat":"Phrases","kj":false,"o":294},{"w":"おめでとうございます","r":"","say":"おめでとうございます","m":"congratulations","t":"Phrase","g":"","th":"Phrases","cat":"Phrases","kj":false,"o":301},{"w":"よろしく","r":"","say":"よろしく","m":"(casual) nice to meet you; please","t":"Phrase","g":"","th":"Phrases","cat":"Phrases","kj":false,"o":308}],"cats":["Nouns","Verbs","Adjectives","Pronouns & questions","Adverbs & conjunctions","Phrases"],"themes":["Pronouns","Question words","People","Family","Body","Food & drink","Places","Transport","Things","Clothing","Nature & weather","Time","Days & months","School & work","Hobbies","Colors","Position","Verbs","Adjectives","Adverbs","Conjunctions","Phrases"],"source":"N5_Vocabulary.apkg"};
+const PWA = /*PWA*/false;     // true in the installable build
+const W = DATA.words.slice().sort((a, b) => a.o - b.o);     // learning order: mixes parts of speech
+const BY = Object.fromEntries(W.map(x => [x.w, x]));
+const CATS = DATA.cats, THEMES = DATA.themes;
+const KANJI_WORDS = W.filter(x => x.kj);
+
+/* ---------------- state & persistence ---------------- */
+const DEFAULT = () => ({ v: 1, cards: {}, xp: 0, days: [], best: { speed: 0, pairs: 0 },
+  settings: { sound: true, voice: true, listenQs: true, frontReading: false, direction: "jp", newPerDay: 10, boardBy: "cat" }, newToday: { d: "", n: 0 }, updatedAt: 0 });
+const LS = "n5vocab:progress";
+function loadLocal() { try { const v = JSON.parse(localStorage.getItem(LS) || "null"); return v && v.v === 1 ? v : null; } catch (e) { return null; } }
+let S = Object.assign(DEFAULT(), loadLocal() || {});
+S.settings = Object.assign(DEFAULT().settings, S.settings);
+let filter = "all";            // "all" | "cat:<name>" | "th:<name>"
+const open = new Set();        // board sections expanded past the first rows
+const sync = { ref: null, saving: false, again: false, timer: null, mode: "local" };
+
+function save() {
+  S.updatedAt = Date.now();
+  try { localStorage.setItem(LS, JSON.stringify(S)); } catch (e) {}
+  clearTimeout(sync.timer);
+  sync.timer = setTimeout(pushRemote, 1200);
+}
+async function pushRemote() {
+  if (!sync.ref) return;
+  if (sync.saving) { sync.again = true; return; }
+  sync.saving = true;
+  try { await sync.ref.set(JSON.parse(JSON.stringify(S))); sync.mode = "account"; } catch (e) { sync.mode = "local"; }
+  sync.saving = false; renderFooter();
+  if (sync.again) { sync.again = false; pushRemote(); }
+}
+(async function connect() {
+  if (PWA) return;
+  try {
+    const [db, user] = await Promise.all([window.claude?.use?.("db"), window.claude?.use?.("user")]);
+    if (!db || !user) return;
+    const id = await user.id(); if (!id) return;
+    sync.ref = db.doc("data/users/" + id + "/progress-kotoba");
+    const snap = await sync.ref.get();
+    const remote = snap.exists ? snap.data() : null;
+    if (remote && remote.v === 1 && (remote.updatedAt || 0) > (S.updatedAt || 0)) {
+      S = Object.assign(DEFAULT(), JSON.parse(JSON.stringify(remote)));
+      S.settings = Object.assign(DEFAULT().settings, S.settings);
+      try { localStorage.setItem(LS, JSON.stringify(S)); } catch (e) {}
+      sync.mode = "account";
+      if (!busy()) render(); else renderBar();
+    } else if (S.updatedAt) await pushRemote();
+    else sync.mode = "account";
+    renderFooter();
+  } catch (e) { /* stays local */ }
+})();
+
+/* ---------------- helpers ---------------- */
+const $ = (s, r = document) => r.querySelector(s);
+const esc = s => String(s).replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+const shuffle = a => { a = a.slice(); for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; };
+const pick = (a, n) => shuffle(a).slice(0, n);
+const dayStr = (d = new Date()) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+const now = () => Date.now();
+const MIN = 60e3, DAY = 864e5;
+const INTERVAL = [0, 10 * MIN, 1 * DAY, 3 * DAY, 7 * DAY, 16 * DAY, 35 * DAY];
+const STAGE_NAME = ["New", "Learning", "Learning", "Getting there", "合格 · Mastered", "合格 · Mastered", "合格 · Mastered"];
+const card = k => S.cards[k] || { s: 0, due: 0, r: 0, w: 0 };
+const stage = k => card(k).s;
+const mastered = k => stage(k) >= 4;
+const isDue = k => stage(k) > 0 && card(k).due <= now();
+const inPool = x => filter === "all" || filter === "cat:" + x.cat || filter === "th:" + x.th;
+const pool = () => W.filter(inPool);
+const filterLabel = () => filter.slice(filter.indexOf(":") + 1);
+const len = s => s.length > 9 ? "l2" : s.length > 5 ? "l1" : "";
+// meanings overlap if any comma/semicolon chunk is shared (わたし "I, me" vs ぼく "I, me (male…)")
+const chunks = m => m.toLowerCase().split(/[;,]/).map(s => s.replace(/\(.*?\)/g, "").replace(/^(to|a|the) /, "").trim()).filter(Boolean);
+const overlaps = (a, b) => { const A = new Set(chunks(a.m)); return chunks(b.m).some(c => A.has(c)); };
+
+function streak() {
+  const set = new Set(S.days); let n = 0; const d = new Date();
+  if (!set.has(dayStr(d))) d.setDate(d.getDate() - 1);
+  while (set.has(dayStr(d))) { n++; d.setDate(d.getDate() - 1); }
+  return n;
+}
+function markToday() { const t = dayStr(); if (!S.days.includes(t)) { S.days.push(t); S.days = S.days.slice(-400); } }
+const level = () => Math.floor(S.xp / 250) + 1;
+function addXP(n, ev) { S.xp += n; markToday(); if (ev) floatXP(n, ev); renderBar(); }
+function newLeft() { return S.newToday.d === dayStr() ? Math.max(0, S.settings.newPerDay - S.newToday.n) : S.settings.newPerDay; }
+function useNew() { if (S.newToday.d !== dayStr()) S.newToday = { d: dayStr(), n: 0 }; S.newToday.n++; }
+
+/* ---------------- sound & voice ---------------- */
+let actx = null;
+function tone(seq) {
+  if (!S.settings.sound) return;
+  try {
+    actx = actx || new (window.AudioContext || window.webkitAudioContext)();
+    let t = actx.currentTime;
+    seq.forEach(([f, d, type = "sine", g = .12]) => {
+      const o = actx.createOscillator(), v = actx.createGain();
+      o.type = type; o.frequency.value = f; v.gain.setValueAtTime(g, t); v.gain.exponentialRampToValueAtTime(.0001, t + d);
+      o.connect(v); v.connect(actx.destination); o.start(t); o.stop(t + d); t += d * .7;
+    });
+  } catch (e) {}
+}
+const sfx = { ok: () => tone([[660, .09], [990, .14]]), no: () => tone([[220, .18, "triangle", .1]]), stamp: () => tone([[120, .12, "square", .08], [520, .1], [780, .18]]), done: () => tone([[523, .1], [659, .1], [784, .1], [1046, .24]]) };
+// Japanese voice from the device (Kyoko on Apple devices). Prefers enhanced/premium voices, skips novelty ones.
+let jaVoice = null;
+function findVoice() {
+  try {
+    const vs = speechSynthesis.getVoices().filter(v => /^ja/i.test(v.lang) && !/eloquence|eddy|flo|grandma|grandpa|reed|rocko|sandy|shelley/i.test(v.name));
+    const score = v => (/premium|enhanced|拡張/i.test(v.name) ? 4 : 0) + (/kyoko|o-ren|nanami|google/i.test(v.name) ? 2 : 0) + (v.localService ? 1 : 0);
+    jaVoice = vs.sort((a, b) => score(b) - score(a))[0] || null;
+  } catch (e) { jaVoice = null; }
+}
+const canSpeak = () => "speechSynthesis" in window && !!jaVoice;
+if ("speechSynthesis" in window) { findVoice(); speechSynthesis.onvoiceschanged = () => { findVoice(); if (!busy()) render(); }; }
+function speak(x, force) {
+  if ((!S.settings.voice && !force) || !canSpeak()) return;
+  try {
+    speechSynthesis.cancel();
+    const u = new SpeechSynthesisUtterance(x.say); u.lang = "ja-JP"; u.voice = jaVoice; u.rate = .9;
+    speechSynthesis.speak(u);
+  } catch (e) {}
+}
+const speakBtn = x => canSpeak() ? `<button class="icon-btn speak" data-say="${esc(x.w)}" aria-label="Hear ${esc(x.say)}"><svg><use href="#i-speak"/></svg></button>` : "";
+function bindSpeak(root = document) { root.querySelectorAll("[data-say]").forEach(b => b.addEventListener("click", e => { e.stopPropagation(); speak(BY[b.dataset.say], true); })); }
+
+/* ---------------- celebrations ---------------- */
+function floatXP(n, ev) {
+  const el = document.createElement("div"); el.className = "xpfloat"; el.textContent = `+${n} XP`;
+  const r = ev.getBoundingClientRect ? ev.getBoundingClientRect() : { left: innerWidth / 2, top: innerHeight / 2, width: 0 };
+  el.style.left = (r.left + r.width / 2 - 24) + "px"; el.style.top = (r.top - 8) + "px";
+  document.body.appendChild(el); setTimeout(() => el.remove(), 1000);
+}
+function hanamaru() {
+  const fx = document.createElement("div"); fx.className = "fx fade";
+  fx.innerHTML = `<svg class="hanamaru" viewBox="0 0 200 200" aria-hidden="true"><path d="M100 52c26 0 46 20 46 46s-20 48-46 48-46-20-46-46c0-24 18-44 42-46 22-2 40 14 42 36 2 20-12 38-32 40-18 2-34-10-36-28-1-15 10-28 25-29 12-1 22 8 22 20"/><path d="M100 20c18 0 22 22 8 30M152 34c14 12 4 32-12 30M182 92c4 18-16 28-28 18M168 152c-6 16-28 12-28-4M100 182c-18 0-22-22-8-30M48 166c-14-12-4-32 12-30M18 108c-4-18 16-28 28-18M32 48c6-16 28-12 28 4"/></svg>`;
+  document.body.appendChild(fx); setTimeout(() => fx.remove(), 1500);
+}
+function bigStamp(k) {
+  const fx = document.createElement("div"); fx.className = "fx fade";
+  fx.innerHTML = `<div style="display:grid;justify-items:center;gap:8px"><svg class="bigstamp" aria-hidden="true"><use href="#i-stamp"/></svg>
+    <div style="font-family:var(--kanji);font-size:1.6rem;font-weight:600;background:var(--sheet);padding:2px 14px;border-radius:10px">${esc(k)} 合格</div></div>`;
+  document.body.appendChild(fx); setTimeout(() => fx.remove(), 1500); sfx.stamp();
+}
+
+/* ---------------- spaced repetition ---------------- */
+function grade(k, g) {            // g: 0 again, 1 good, 2 easy
+  const c = Object.assign({ s: 0, due: 0, r: 0, w: 0 }, S.cards[k]);
+  const before = c.s;
+  if (g === 0) { c.s = Math.max(1, c.s - 2); c.w++; } else { c.s = Math.min(6, c.s + (g === 2 ? 2 : 1)); c.r++; }
+  c.due = now() + (g === 0 ? MIN : INTERVAL[c.s]);
+  S.cards[k] = c;
+  return before < 4 && c.s >= 4;
+}
+function quizResult(k, ok) {
+  const c = Object.assign({ s: 0, due: 0, r: 0, w: 0 }, S.cards[k]);
+  if (ok) c.r++; else { c.w++; if (c.s > 0) { c.s = Math.max(1, c.s - 1); c.due = now(); } }
+  S.cards[k] = c;
+}
+function sessionQueue() {
+  const due = pool().filter(x => isDue(x.w)).sort((a, b) => card(a.w).due - card(b.w).due).map(x => x.w);
+  const fresh = pool().filter(x => stage(x.w) === 0).map(x => x.w).slice(0, newLeft());
+  return { due: due.slice(0, 40), fresh };
+}
+
+/* ---------------- home ---------------- */
+let current = null;
+const busy = () => !!current;
+function renderBar() { $("#streak-n").textContent = streak(); $("#level-pill").textContent = `Lv ${level()} · ${S.xp} XP`; }
+function renderFooter() {
+  const f = $("#sync-note");
+  if (f) f.textContent = PWA ? "Progress is saved on this device. To move it, use Settings → Back up, then Restore on the other device."
+    : sync.mode === "account" ? "Progress is saved to your Claude account, so it follows you between devices." : "Progress is saved in this browser.";
+}
+const SHOW = 30;   // tiles shown per section before "Show all"
+function render() {
+  current = null; renderBar();
+  const all = W.length, m = W.filter(x => mastered(x.w)).length;
+  const { due, fresh } = sessionQueue();
+  const total = due.length + fresh.length;
+  const unseen = pool().filter(x => stage(x.w) === 0).length;
+  const xpIn = S.xp % 250;
+  const byTheme = S.settings.boardBy === "theme";
+  const sections = (byTheme ? THEMES.map(t => ({ id: "th:" + t, title: t, xs: W.filter(x => x.th === t) }))
+    : CATS.map(c => ({ id: "cat:" + c, title: c, xs: W.filter(x => x.cat === c) })))
+    .map(s => ({ ...s, xs: s.xs.slice().sort((a, b) => (a.g || "").localeCompare(b.g || "") || a.w.localeCompare(b.w, "ja")) }));
+  const sectionsHtml = sections.filter(sec => filter === "all" || sec.id === filter || !sections.some(z => z.id === filter)).map(sec => {
+    const xs = sec.xs.filter(inPool); if (!xs.length) return "";
+    const gm = xs.filter(x => mastered(x.w)).length;
+    const shown = open.has(sec.id) || filter === sec.id ? xs : xs.slice(0, SHOW);
+    return `<div class="group"><div class="group-h"><span>${esc(sec.title)} <span style="font-weight:500">· ${xs.length} words</span></span><span>${gm}/${xs.length} 合格</span></div>
+      <div class="board">${shown.map(x => `<button class="tile s${stage(x.w)} ${x.w.length > 6 ? "long" : ""}" data-k="${esc(x.w)}" aria-label="${esc(x.w)}: ${esc(x.m)}, ${STAGE_NAME[stage(x.w)]}"><span class="k">${esc(x.w)}</span>${mastered(x.w) ? `<svg class="stamp" aria-hidden="true"><use href="#i-stamp"/></svg>` : ""}${isDue(x.w) ? `<span class="due"></span>` : ""}</button>`).join("")}</div>
+      ${shown.length < xs.length ? `<button class="ghost more" data-open="${esc(sec.id)}" style="padding:6px 14px">Show all ${xs.length}</button>` : ""}</div>`;
+  }).join("");
+  const best = S.best || {};
+  $("#view").innerHTML = `
+    <section class="hero">
+      <div><h1>The ${all} words and phrases of N5, a few a day.</h1>
+        <p>Every word comes from your N5 Vocabulary deck. Words are in kanji only when you need those kanji for N5. Mastered words earn a 合格 stamp.</p></div>
+      <div class="tally"><div class="lbl">合格 · Mastered</div><div class="big">${m}<span> / ${all}</span></div></div>
+    </section>
+    <div class="levelbar"><span>Level <b>${level()}</b></span><div class="track"><div class="fill" style="width:${xpIn / 2.5}%"></div></div><span>${xpIn}/250 XP</span></div>
+    <section class="today">
+      <div><h2>${total ? "Today's practice" : "All caught up"}</h2>
+        <p>${total ? `${due.length} to review · ${fresh.length} new${filter !== "all" ? ` · from ${esc(filterLabel())}` : ""}` : unseen ? `Today's new words are done. ${unseen} still to meet, or play a game below.` : "Nothing is due right now. Play a game below, or come back later for reviews."}</p></div>
+      ${total ? `<button class="cta" id="start-flash">Start</button>` : unseen ? `<button class="cta" id="more-new">Learn 5 more</button>` : ""}
+    </section>
+    <div class="section-h"><h2>Games</h2><span class="hint">Mistakes in games send that word back for review.</span></div>
+    ${superCard()}
+    <div class="games">
+      <button class="game" data-game="meaning"><span class="gk">たべる → ?</span><b>Meaning match</b><span>Pick the meaning, or the word for a meaning. 10 questions.</span></button>
+      <button class="game" data-game="listen" ${canSpeak() ? "" : "disabled"}><span class="gk">♪ → ?</span><b>Listen &amp; pick</b><span>${canSpeak() ? "Hear a word, pick what it means. Good for the listening section." : "Needs a Japanese voice on this device."}</span></button>
+      <button class="game" data-game="kanji"><span class="gk">電車 → ?</span><b>Kanji words</b><span>How is it read? The ${KANJI_WORDS.length} words written with your N5 kanji.</span></button>
+      <button class="game" data-game="speed"><span class="gk">60s</span><b>Speed round</b><span>As many as you can in a minute.${best.speed ? ` <span class="best">Best ${best.speed}</span>` : ""}</span></button>
+      <button class="game" data-game="pairs"><span class="gk">山 ⇄ mountain</span><b>Pairs</b><span>Match six words to their meanings.${best.pairs ? ` <span class="best">Best ${best.pairs}</span>` : ""}</span></button>
+    </div>
+    <div class="section-h"><h2>Your words</h2>
+      <div class="seg" role="group" aria-label="Group words by"><button data-by="cat" aria-pressed="${!byTheme}">Part of speech</button><button data-by="theme" aria-pressed="${byTheme}">Theme</button></div></div>
+    <p style="margin:6px 0 0;font-size:.82rem;color:var(--muted)">Pick a group to practise just those words. Tap a word to see its card.</p>
+    <div class="chips" role="group" aria-label="Which words">
+      <button class="chip" data-f="all" aria-pressed="${filter === "all"}">All ${all}</button>
+      ${sections.map(s => `<button class="chip" data-f="${esc(s.id)}" aria-pressed="${filter === s.id}">${esc(s.title)}</button>`).join("")}
+    </div>
+    ${sectionsHtml}
+    <div class="legend"><span><i style="background:var(--faint)"></i>New</span><span><i style="background:color-mix(in srgb,var(--ink) 60%,var(--faint))"></i>Learning</span><span><i style="background:var(--ink)"></i>Known</span><span><svg width="12" height="12" style="vertical-align:-1px;margin-right:5px"><use href="#i-stamp"/></svg>合格 mastered</span><span><i style="background:var(--gold);border-radius:50%"></i>Due for review</span></div>
+    <footer><span id="sync-note"></span><span>Source: ${esc(DATA.source)} · ${W.length} words · ${KANJI_WORDS.length} written in kanji.</span></footer>`;
+  renderFooter();
+  if ($("#start-flash")) $("#start-flash").addEventListener("click", startFlash);
+  if ($("#more-new")) $("#more-new").addEventListener("click", () => { if (S.newToday.d !== dayStr()) S.newToday = { d: dayStr(), n: 0 }; S.newToday.n -= 5; save(); startFlash(); });
+  $("#super").addEventListener("click", () => startSuper());
+  document.querySelectorAll(".game").forEach(b => b.addEventListener("click", () => ({ meaning: () => startQuiz("meaning"), listen: () => startQuiz("listen"), kanji: () => startQuiz("kanji"), speed: startSpeed, pairs: startPairs })[b.dataset.game]()));
+  document.querySelectorAll(".chip").forEach(b => b.addEventListener("click", () => { filter = b.dataset.f; render(); }));
+  document.querySelectorAll("[data-open]").forEach(b => b.addEventListener("click", () => { open.add(b.dataset.open); render(); }));
+  document.querySelectorAll("[data-by]").forEach(b => b.addEventListener("click", () => { if (S.settings.boardBy === b.dataset.by) return; S.settings.boardBy = b.dataset.by; filter = "all"; save(); render(); }));
+  document.querySelectorAll(".tile").forEach(b => b.addEventListener("click", () => openDetail(b.dataset.k)));
+}
+
+/* ---------------- detail & settings sheets ---------------- */
+function backHtml(x) {
+  return `${x.r ? `<div class="rrow"><span class="lab">Reading</span><div class="reading">${esc(x.r)}</div></div>` : ""}
+    <div class="rrow"><span class="lab">Meaning</span><div class="meaning">${esc(x.m)}</div></div>
+    <div class="rrow"><span class="lab">Type</span><div class="tags"><span>${esc(x.t)}</span>${x.g ? `<span>${esc(x.g)}</span>` : ""}<span>${esc(x.th)}</span></div></div>`;
+}
+function openOverlay(html, onMount) {
+  const root = $("#overlay-root");
+  root.innerHTML = `<div class="overlay" id="ov"><div class="sheet" role="dialog" aria-modal="true">${html}</div></div>`;
+  const close = () => { root.innerHTML = ""; document.removeEventListener("keydown", escKey); };
+  const escKey = e => { if (e.key === "Escape") close(); };
+  document.addEventListener("keydown", escKey);
+  $("#ov").addEventListener("click", e => { if (e.target.id === "ov") close(); });
+  root.querySelectorAll("[data-close]").forEach(b => b.addEventListener("click", close));
+  bindSpeak(root);
+  onMount && onMount(close);
+}
+function fmtDur(ms) {
+  if (ms < 60 * MIN) return Math.max(1, Math.round(ms / MIN)) + " min";
+  if (ms < DAY) return Math.round(ms / (60 * MIN)) + " h";
+  return Math.round(ms / DAY) + " days";
+}
+function openDetail(k) {
+  const x = BY[k], c = card(k), acc = c.r + c.w ? Math.round(100 * c.r / (c.r + c.w)) + "%" : "—";
+  const next = c.s === 0 ? "Not started" : c.due <= now() ? "Due now" : `in ${fmtDur(c.due - now())}`;
+  openOverlay(`
+    <div class="sheet-h"><h2>${STAGE_NAME[c.s]}</h2><button class="icon-btn" data-close aria-label="Close"><svg><use href="#i-close"/></svg></button></div>
+    <div style="display:flex;align-items:center;gap:12px;justify-content:space-between"><div class="detail-w">${esc(x.w)}</div>${speakBtn(x)}</div>
+    <div class="back" style="border:0;padding:0">${backHtml(x)}</div>
+    <div class="kv"><div><b>${c.r}</b><span>Right</span></div><div><b>${acc}</b><span>Accuracy</span></div><div><b>${next}</b><span>Next review</span></div></div>
+    <div class="nextrow" style="justify-content:stretch"><button class="ghost" id="pr-cat" style="flex:1">Practise ${esc(x.cat)}</button><button class="ghost" id="pr-th" style="flex:1">Practise ${esc(x.th)}</button></div>`,
+    close => {
+      const go = (by, f) => { S.settings.boardBy = by; filter = f; save(); close(); render(); window.scrollTo({ top: 0, behavior: "smooth" }); };
+      $("#pr-cat").addEventListener("click", () => go("cat", "cat:" + x.cat));
+      $("#pr-th").addEventListener("click", () => go("theme", "th:" + x.th));
+    });
+}
+function openSettings() {
+  const sw = (id, on, label, sub) => `<div class="setrow"><div><b>${label}</b><div style="font-size:.82rem;color:var(--muted)">${sub}</div></div><button class="switch" id="${id}" role="switch" aria-checked="${on}" aria-label="${label}"></button></div>`;
+  const seg = (name, cur, opts) => `<div class="seg" role="group" data-seg="${name}">${opts.map(([v, l]) => `<button data-v="${v}" aria-pressed="${cur === v}">${l}</button>`).join("")}</div>`;
+  openOverlay(`
+    <div class="sheet-h"><h2>Settings</h2><button class="icon-btn" data-close aria-label="Close"><svg><use href="#i-close"/></svg></button></div>
+    <div class="setrow"><div><b>Flashcard direction</b><div style="font-size:.82rem;color:var(--muted)">Japanese → English to recognise words, English → Japanese to recall them.</div></div>
+      ${seg("direction", S.settings.direction, [["jp", "JP → EN"], ["en", "EN → JP"], ["mix", "Mixed"]])}</div>
+    ${sw("set-front", S.settings.frontReading, "Show readings on the front", "Puts the hiragana under kanji words before you flip the card.")}
+    ${sw("set-voice", S.settings.voice, "Speak words", canSpeak() ? `Reads each word aloud with ${esc(jaVoice.name)}.` : "No Japanese voice found on this device.")}
+    ${sw("set-listen", S.settings.listenQs, "Listening questions in Super mode", "About 1 in 5 Super mode questions are audio only. Turn off to skip them.")}
+    ${sw("set-sound", S.settings.sound, "Sound effects", "Short chimes for right answers and stamps.")}
+    <div class="setrow"><div><b>New words per day</b><div style="font-size:.82rem;color:var(--muted)">How many unseen words each day's practice adds.</div></div>
+      ${seg("newPerDay", S.settings.newPerDay, [[5, 5], [10, 10], [15, 15], [20, 20], [30, 30]])}</div>
+    <div class="setrow"><div><b>Back up progress</b><div style="font-size:.82rem;color:var(--muted)">Saves a small file you can restore here or in the other version of this app.</div></div><button class="ghost" id="backup">Back up</button></div>
+    <div class="setrow"><div><b>Restore from a backup</b><div style="font-size:.82rem;color:var(--muted)" id="restore-note">Replaces your current progress with the file's.</div></div>
+      <button class="ghost" id="restore">Restore</button><input type="file" id="restore-file" accept=".json,application/json" hidden></div>
+    ${S.run ? `<div class="setrow"><div><b>Restart Super mode</b><div style="font-size:.82rem;color:var(--muted)">Drops the current run (${S.run.i}/${S.run.order.length}) and shuffles all words again.</div></div><button class="ghost" id="super-reset">Restart</button></div>` : ""}
+    <div class="setrow"><div><b>Reset progress</b><div style="font-size:.82rem;color:var(--muted)">Clears stages, XP and streak. Can't be undone.</div></div><button class="ghost danger" id="reset">Reset</button></div>`, close => {
+    const toggle = (id, key) => $(id).addEventListener("click", e => { S.settings[key] = !S.settings[key]; e.currentTarget.setAttribute("aria-checked", S.settings[key]); save(); });
+    toggle("#set-front", "frontReading"); toggle("#set-voice", "voice"); toggle("#set-sound", "sound"); toggle("#set-listen", "listenQs");
+    document.querySelectorAll("[data-seg]").forEach(g => g.querySelectorAll("button").forEach(b => b.addEventListener("click", () => {
+      const key = g.dataset.seg; S.settings[key] = key === "newPerDay" ? +b.dataset.v : b.dataset.v;
+      g.querySelectorAll("button").forEach(z => z.setAttribute("aria-pressed", z === b)); save();
+    })));
+    if ($("#super-reset")) $("#super-reset").addEventListener("click", () => { S.run = null; save(); close(); render(); });
+    $("#backup").addEventListener("click", backupProgress);
+    $("#restore").addEventListener("click", () => $("#restore-file").click());
+    $("#restore-file").addEventListener("change", e => restoreProgress(e.target.files[0], close));
+    $("#reset").addEventListener("click", e => {
+      const b = e.currentTarget;
+      if (b.dataset.armed) { S = DEFAULT(); save(); close(); render(); return; }
+      b.dataset.armed = "1"; b.textContent = "Tap again to reset";
+    });
+  });
+}
+const backupName = () => `n5-words-progress-${dayStr()}.json`;
+async function backupProgress() {
+  const text = JSON.stringify(Object.assign({ app: "n5-kotoba-renshu" }, S));
+  const btn = $("#backup");
+  try {
+    if (!PWA) {
+      const dl = await window.claude?.use?.("downloads");
+      if (!dl) { btn.textContent = "Not available here"; btn.disabled = true; return; }
+      await dl.save({ filename: backupName(), data: text }); btn.textContent = "Saved"; return;
+    }
+    const file = new File([text], backupName(), { type: "application/json" });
+    if (navigator.canShare && navigator.canShare({ files: [file] })) await navigator.share({ files: [file], title: "N5 words progress" });
+    else { const a = document.createElement("a"); a.href = URL.createObjectURL(file); a.download = backupName(); document.body.appendChild(a); a.click(); a.remove(); }
+    btn.textContent = "Saved";
+  } catch (e) { if (e && (e.code === "declined" || e.name === "AbortError")) return; btn.textContent = "Couldn't save"; }
+}
+function restoreProgress(file, close) {
+  if (!file) return;
+  const note = $("#restore-note"), r = new FileReader();
+  r.onload = () => {
+    try {
+      const d = JSON.parse(r.result);
+      if (!d || d.v !== 1 || typeof d.cards !== "object" || (d.app && d.app !== "n5-kotoba-renshu")) throw new Error("format");
+      const known = Object.keys(d.cards).filter(k => BY[k]).length;
+      S = Object.assign(DEFAULT(), d); delete S.app; S.settings = Object.assign(DEFAULT().settings, S.settings);
+      save(); close(); render(); toast(`Restored progress for ${known} words`);
+    } catch (e) { note.textContent = "That file isn't a progress backup from this app."; note.style.color = "var(--bad)"; }
+  };
+  r.readAsText(file);
+}
+function toast(msg) {
+  const t = document.createElement("div"); t.setAttribute("role", "status");
+  t.style.cssText = "position:fixed;left:50%;bottom:calc(20px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--ink);color:var(--paper);padding:8px 16px;border-radius:999px;font-weight:700;z-index:70";
+  t.textContent = msg; document.body.appendChild(t); setTimeout(() => t.remove(), 2600);
+}
+$("#settings-btn").addEventListener("click", openSettings);
+$("#home-btn").addEventListener("click", () => { stopTimers(); render(); });
+
+/* ---------------- shared stage chrome ---------------- */
+let timers = [];
+const stopTimers = () => { timers.forEach(clearInterval); timers.forEach(clearTimeout); timers = []; document.onkeydown = null; try { speechSynthesis.cancel(); } catch (e) {} };
+function stageShell(inner) {
+  $("#view").innerHTML = `<section class="stage">
+    <div class="stage-top"><button class="ghost" id="quit" style="padding:6px 12px">Quit</button><div class="progress" id="prog"><div class="fill" style="width:0%"></div></div><span class="counter" id="ctr"></span></div>
+    <div class="combo" id="combo" aria-live="polite"></div>${inner}</section>`;
+  $("#quit").addEventListener("click", () => { stopTimers(); save(); render(); if (S.run) toast(`Paused at ${S.run.i}/${S.run.order.length}`); });
+  window.scrollTo({ top: 0 });
+}
+const setProg = (p, txt) => { $("#prog .fill").style.width = Math.min(100, p * 100) + "%"; $("#ctr").textContent = txt; };
+// the word on the practice sheet (reading below kanji words when asked for, or always after answering)
+const wordSheet = (x, showReading, extra = "") => `<div class="sheetq">${speakBtn(x)}<div class="w ${len(x.w)}">${esc(x.w)}</div>${x.r && showReading ? `<div class="rd">${esc(x.r)}</div>` : ""}${extra}</div>`;
+const enSheet = (x, label = "") => `<div class="sheetq"><div class="en">${esc(x.m)}</div><div class="tag">${esc(label || x.t)}</div></div>`;
+
+/* ---------------- flashcards (SRS) ---------------- */
+function startFlash() {
+  const { due, fresh } = sessionQueue();
+  const queue = [...due, ...fresh].map(k => ({ k, isNew: stage(k) === 0 }));
+  if (!queue.length) return;
+  current = { kind: "flash", queue, done: 0, total: queue.length, right: 0, missed: new Set(), xp: 0, mastered: [] };
+  stopTimers();
+  stageShell(`<div class="q-label" id="fl-label"></div><div id="fl-front" style="display:contents"></div>
+    <div id="fl-back" class="back" hidden></div>
+    <div class="nextrow" id="fl-reveal-row"><button class="cta" id="fl-reveal">Show answer <span style="opacity:.6;font-weight:500">· space</span></button></div>
+    <div class="grades" id="fl-grades" hidden>
+      <button class="grade again" data-g="0">Again<small>soon</small></button>
+      <button class="grade good" data-g="1">Good<small id="g1"></small></button>
+      <button class="grade easy" data-g="2">Easy<small id="g2"></small></button></div>`);
+  $("#fl-reveal").addEventListener("click", reveal);
+  document.querySelectorAll(".grade").forEach(b => b.addEventListener("click", () => answerFlash(+b.dataset.g, b)));
+  document.onkeydown = e => {
+    if (e.key === " ") { e.preventDefault(); if ($("#fl-back").hidden) reveal(); return; }
+    if (!$("#fl-grades").hidden && ["1", "2", "3"].includes(e.key)) answerFlash(+e.key - 1, document.querySelector(`.grade[data-g="${+e.key - 1}"]`));
+  };
+  showFlash();
+}
+function showFlash() {
+  const g = current, item = g.queue[0];
+  if (!item) return endSession();
+  setProg(g.done / g.total, `${g.done}/${g.total}`);
+  const x = BY[item.k];
+  const dir = S.settings.direction === "mix" ? (item.dir = item.dir || (Math.random() < .5 ? "jp" : "en")) : S.settings.direction;
+  item.showDir = item.isNew ? "jp" : dir;                    // a brand-new word is always introduced Japanese-first
+  $("#fl-label").textContent = item.isNew ? "New word" : item.showDir === "en" ? "Say it in Japanese" : "Review";
+  $("#fl-front").innerHTML = item.showDir === "en" ? enSheet(x) : wordSheet(x, S.settings.frontReading);
+  bindSpeak($("#fl-front"));
+  $("#fl-back").hidden = true; $("#fl-grades").hidden = true; $("#fl-reveal-row").hidden = false;
+  const c = card(item.k);
+  $("#g1").textContent = fmtDur(INTERVAL[Math.min(6, c.s + 1)]);
+  $("#g2").textContent = fmtDur(INTERVAL[Math.min(6, c.s + 2)]);
+  if (item.showDir === "jp") speak(x);
+  if (item.isNew) reveal();
+}
+function reveal() {
+  const item = current.queue[0], x = BY[item.k];
+  if (item.showDir === "en") { $("#fl-front").innerHTML = wordSheet(x, true); bindSpeak($("#fl-front")); speak(x); }
+  else if (x.r && !S.settings.frontReading) { $("#fl-front").innerHTML = wordSheet(x, true); bindSpeak($("#fl-front")); }
+  $("#fl-back").innerHTML = backHtml(x);
+  $("#fl-back").hidden = false; $("#fl-reveal-row").hidden = true; $("#fl-grades").hidden = false;
+}
+function answerFlash(g, btn) {
+  if (document.activeElement && document.activeElement.blur) document.activeElement.blur();
+  const cur = current, item = cur.queue.shift();
+  if (item.isNew && !item.counted) { useNew(); item.counted = true; }
+  const justMastered = grade(item.k, g);
+  if (g === 0) { cur.missed.add(item.k); sfx.no(); cur.queue.splice(Math.min(cur.queue.length, 3), 0, Object.assign(item, { isNew: false })); }
+  else { cur.done++; cur.right++; sfx.ok(); const xp = g === 2 ? 10 : 8; cur.xp += xp; addXP(xp, btn); }
+  if (justMastered) { cur.mastered.push(item.k); addXP(25); setTimeout(() => bigStamp(item.k), 150); }
+  save(); showFlash();
+}
+
+/* ---------------- quiz questions ---------------- */
+// distractors: same part of speech when possible, never a word whose meaning overlaps the answer's
+function distractors(x, poolW, n, extra = () => true) {
+  const ok = y => y.w !== x.w && !overlaps(x, y) && extra(y);
+  let cands = shuffle(poolW.filter(y => ok(y) && y.cat === x.cat));
+  if (cands.length < n) cands = cands.concat(shuffle(W.filter(y => ok(y) && y.cat === x.cat && !cands.includes(y))));
+  if (cands.length < n) cands = cands.concat(shuffle(W.filter(y => ok(y) && !cands.includes(y))));
+  const out = [];
+  for (const y of cands) { if (out.length === n) break; if (!out.some(z => overlaps(z, y) || z.m === y.m)) out.push(y); }
+  return out;
+}
+function makeQuestion(kind, x, poolW) {
+  if (kind === "w2m" || kind === "listen") {
+    const opts = distractors(x, poolW, 3);
+    return { kind, x, label: kind === "listen" ? "What did you hear?" : "What does it mean?", options: shuffle([x, ...opts]).map(y => ({ y, text: y.m })) };
+  }
+  if (kind === "m2w") {
+    const opts = distractors(x, poolW, 3);
+    return { kind, x, label: "Which word means…", options: shuffle([x, ...opts]).map(y => ({ y, jp: y.w })) };
+  }
+  // k2r: kanji word → its reading; distractors are readings of other kanji words of similar length
+  const others = shuffle(KANJI_WORDS.filter(y => y.w !== x.w && y.r !== x.r)).sort((a, b) => Math.abs(a.r.length - x.r.length) - Math.abs(b.r.length - x.r.length));
+  const opts = [];
+  for (const y of others) { if (opts.length === 3) break; if (!opts.some(z => z.r === y.r)) opts.push(y); }
+  return { kind, x, label: "How is it read?", options: shuffle([x, ...opts]).map(y => ({ y, jp: y.r })) };
+}
+function quizPool(kind) {
+  const base = kind === "kanji" ? pool().filter(x => x.kj) : pool();
+  const src = base.length >= 4 ? base : kind === "kanji" ? KANJI_WORDS : W;
+  const seen = src.filter(x => stage(x.w) > 0);
+  return seen.length >= 8 ? seen : src;
+}
+function promptHtml(q) {
+  if (q.kind === "m2w") return enSheet(q.x);
+  if (q.kind === "listen") return `<div class="sheetq"><button class="cta" id="replay" style="font-size:1.1rem">♪ Play again</button><div class="tag" id="listen-tag">Listen, then pick the meaning</div></div>`;
+  return wordSheet(q.x, q.kind === "w2m" && S.settings.frontReading);
+}
+function optionsHtml(q) {
+  return q.options.map((o, i) => o.jp !== undefined
+    ? `<button class="opt jp ${len(o.jp)}" data-i="${i}"><span class="n">${i + 1}</span><span class="jp">${esc(o.jp)}</span></button>`
+    : `<button class="opt" data-i="${i}"><span class="n">${i + 1}</span>${esc(o.text)}</button>`).join("");
+}
+function mountPrompt(q) {
+  $("#q-label").textContent = q.label;
+  $("#q-prompt").innerHTML = promptHtml(q);
+  bindSpeak($("#q-prompt"));
+  if (q.kind === "listen") { $("#replay").addEventListener("click", () => speak(q.x, true)); setTimeout(() => speak(q.x, true), 150); }
+  $("#q-opts").innerHTML = optionsHtml(q);
+}
+function revealPrompt(q) {   // after answering, show the word with its reading
+  if (q.kind !== "m2w") { $("#q-prompt").innerHTML = wordSheet(q.x, true); bindSpeak($("#q-prompt")); }
+}
+
+/* ---------------- quizzes: meaning, listening, kanji words ---------------- */
+function startQuiz(type) {
+  const pw = quizPool(type);
+  const xs = pick(pw, Math.min(10, pw.length));
+  const kinds = type === "meaning" ? ["w2m", "m2w"] : type === "listen" ? ["listen"] : ["k2r"];
+  current = { kind: "quiz", type, qs: xs.map((x, i) => makeQuestion(kinds[i % kinds.length], x, pw)), i: 0, right: 0, combo: 0, best: 0, xp: 0, missed: new Set() };
+  stopTimers();
+  stageShell(`<div class="q-label" id="q-label"></div><div id="q-prompt" style="display:contents"></div><div class="options" id="q-opts"></div><div class="feedback" id="q-fb" aria-live="polite"></div><div class="nextrow" id="q-next"></div>`);
+  showQuestion();
+}
+function showQuestion() {
+  const g = current, q = g.qs[g.i];
+  if (!q) return endSession();
+  setProg(g.i / g.qs.length, `${g.i + 1}/${g.qs.length}`);
+  mountPrompt(q);
+  if (q.kind === "w2m" || q.kind === "k2r") speak(q.x);
+  $("#q-fb").textContent = ""; $("#q-fb").className = "feedback"; $("#q-next").innerHTML = "";
+  document.querySelectorAll("#q-opts .opt").forEach(b => b.addEventListener("click", () => answerQuestion(+b.dataset.i)));
+  document.onkeydown = e => {
+    if (["1", "2", "3", "4"].includes(e.key) && !g.answered) answerQuestion(+e.key - 1);
+    else if ((e.key === "Enter" || e.key === " ") && g.answered) { e.preventDefault(); nextQuestion(); }
+  };
+  g.answered = false;
+}
+function answerQuestion(i) {
+  const g = current, q = g.qs[g.i];
+  if (g.answered) return; g.answered = true;
+  const right = q.options.findIndex(o => o.y === q.x), ok = i === right;
+  const btns = document.querySelectorAll("#q-opts .opt");
+  btns.forEach(b => b.disabled = true); btns[right].classList.add("right");
+  quizResult(q.x.w, ok); revealPrompt(q);
+  if (q.kind === "m2w") speak(q.x);
+  const line = `${q.x.w}${q.x.r ? ` (${q.x.r})` : ""} · ${q.x.m}`;
+  if (ok) {
+    g.right++; g.combo++; g.best = Math.max(g.best, g.combo);
+    const xp = 10 + (g.combo >= 3 ? 5 : 0); g.xp += xp; addXP(xp, btns[i]); sfx.ok();
+    $("#q-fb").className = "feedback ok"; $("#q-fb").textContent = `正解! ${line}`;
+    $("#combo").textContent = g.combo >= 2 ? `${g.combo} in a row` : "";
+    if (g.combo % 5 === 0) hanamaru();
+    timers.push(setTimeout(nextQuestion, q.kind === "listen" ? 1500 : 1100));
+  } else {
+    btns[i].classList.add("wrong"); g.combo = 0; g.missed.add(q.x.w); sfx.no(); $("#combo").textContent = "";
+    $("#q-fb").className = "feedback no"; $("#q-fb").textContent = line;
+    $("#q-next").innerHTML = `<button class="cta" id="q-go">Next</button>`;
+    $("#q-go").addEventListener("click", nextQuestion); $("#q-go").focus();
+  }
+  save();
+}
+function nextQuestion() { stopTimers(); current.i++; showQuestion(); }
+
+/* ---------------- super mode: every word, once, shuffled; resumable ---------------- */
+// S.run = { order: [word…], i, right, wrong: [word…], lap: 1 (all words) | 2+ (missed only), total }
+function superCard() {
+  const r = S.run, best = S.best.super;
+  const sub = r ? `${r.lap > 1 ? "Missed words · " : ""}${r.i} of ${r.order.length} done · ${r.right} right so far`
+    : `Every one of the ${W.length} words, shuffled, in one long quiz. Stop anytime; it picks up where you left off.${best ? ` <span style="color:var(--gold);opacity:1">Best ${best}%</span>` : ""}`;
+  return `<button class="super" id="super"><span class="gk">全</span>
+    <span><b>Super mode</b><span>${sub}</span>${r ? `<div class="track"><i style="width:${r.i / r.order.length * 100}%"></i></div>` : ""}</span>
+    <span class="go">${r ? "Resume →" : "Start →"}</span></button>`;
+}
+function newRun(words, lap) { S.run = { order: shuffle(words.map(x => x.w)), i: 0, right: 0, wrong: [], lap, total: words.length }; save(); }
+function superKind(x) {
+  const r = Math.random();
+  if (canSpeak() && S.settings.listenQs && r < .2) return "listen";
+  if (x.kj && r < .45) return "k2r";
+  return Math.random() < .5 ? "w2m" : "m2w";
+}
+function startSuper() {
+  if (!S.run) newRun(W, 1);
+  current = { kind: "super", xp: 0, combo: 0, best: 0 };
+  stopTimers();
+  stageShell(`<div class="runstats" id="run-stats"></div><div class="q-label" id="q-label"></div><div id="q-prompt" style="display:contents"></div><div class="options" id="q-opts"></div><div class="feedback" id="q-fb" aria-live="polite"></div><div class="nextrow" id="q-next"></div>`);
+  $("#quit").textContent = "Pause";
+  showSuper();
+}
+function showSuper() {
+  const g = current, r = S.run;
+  if (r.i >= r.order.length) return finishSuper();
+  const x = BY[r.order[r.i]];
+  if (!x) { r.i++; return showSuper(); }          // word removed from a later deck version
+  g.q = makeQuestion(superKind(x), x, W);
+  setProg(r.i / r.order.length, `${r.i + 1}/${r.order.length}`);
+  const done = r.i, acc = done ? Math.round(100 * r.right / done) : 0;
+  $("#run-stats").textContent = `${r.lap > 1 ? "Missed words · " : ""}${r.right} right · ${r.wrong.length} missed${done ? ` · ${acc}%` : ""}`;
+  mountPrompt(g.q);
+  if (g.q.kind === "w2m" || g.q.kind === "k2r") speak(x);
+  $("#q-fb").textContent = ""; $("#q-fb").className = "feedback"; $("#q-next").innerHTML = "";
+  if (g.q.kind === "listen") {
+    $("#q-next").innerHTML = `<button class="ghost" id="skip-listen">Can't listen now</button><button class="ghost" id="no-listen">Turn off listening questions</button>`;
+    const swap = () => { stopTimers(); g.q = makeQuestion(x.kj && Math.random() < .4 ? "k2r" : Math.random() < .5 ? "w2m" : "m2w", x, W); remountSuper(x); };
+    $("#skip-listen").addEventListener("click", swap);
+    $("#no-listen").addEventListener("click", () => { S.settings.listenQs = false; save(); toast("Listening questions off · turn back on in Settings"); swap(); });
+  }
+  bindSuperOptions();
+}
+function remountSuper(x) {           // same word, new question type; nothing is scored
+  mountPrompt(current.q);
+  if (current.q.kind === "w2m" || current.q.kind === "k2r") speak(x);
+  $("#q-next").innerHTML = "";
+  bindSuperOptions();
+}
+function bindSuperOptions() {
+  const g = current;
+  g.answered = false;
+  document.querySelectorAll("#q-opts .opt").forEach(b => b.addEventListener("click", () => answerSuper(+b.dataset.i)));
+  document.onkeydown = e => {
+    if (e.key === "s" && g.q.kind === "listen" && !g.answered && $("#skip-listen")) { $("#skip-listen").click(); return; }
+    if (["1", "2", "3", "4"].includes(e.key) && !g.answered) answerSuper(+e.key - 1);
+    else if ((e.key === "Enter" || e.key === " ") && g.answered) { e.preventDefault(); nextSuper(); }
+  };
+}
+function answerSuper(i) {
+  const g = current, q = g.q, r = S.run;
+  if (g.answered) return; g.answered = true;
+  const right = q.options.findIndex(o => o.y === q.x), ok = i === right;
+  const btns = document.querySelectorAll("#q-opts .opt");
+  btns.forEach(b => b.disabled = true); btns[right].classList.add("right");
+  quizResult(q.x.w, ok); revealPrompt(q);
+  if (q.kind === "m2w") speak(q.x);
+  $("#q-next").innerHTML = "";
+  const line = `${q.x.w}${q.x.r ? ` (${q.x.r})` : ""} · ${q.x.m}`;
+  r.i++;
+  if (ok) {
+    r.right++; g.combo++; g.best = Math.max(g.best, g.combo);
+    const xp = 5 + (g.combo >= 5 ? 3 : 0); g.xp += xp; addXP(xp, btns[i]); sfx.ok();
+    $("#q-fb").className = "feedback ok"; $("#q-fb").textContent = `正解! ${line}`;
+    $("#combo").textContent = g.combo >= 2 ? `${g.combo} in a row` : "";
+    if (g.combo % 10 === 0) hanamaru();
+    timers.push(setTimeout(nextSuper, q.kind === "listen" ? 1400 : 900));
+  } else {
+    r.wrong.push(q.x.w); g.combo = 0; sfx.no(); btns[i].classList.add("wrong"); $("#combo").textContent = "";
+    $("#q-fb").className = "feedback no"; $("#q-fb").textContent = line;
+    $("#q-next").innerHTML = `<button class="cta" id="q-go">Next</button>`;
+    $("#q-go").addEventListener("click", nextSuper); $("#q-go").focus();
+  }
+  save();
+}
+function nextSuper() { stopTimers(); showSuper(); }
+function finishSuper() {
+  const r = S.run, g = current; stopTimers();
+  const acc = Math.round(100 * r.right / r.order.length);
+  let isBest = false;
+  if (r.lap === 1 && acc > (S.best.super || 0)) { S.best.super = acc; isBest = true; }
+  const missed = r.wrong.slice();
+  S.run = null; markToday(); save();
+  sfx.done(); if (!missed.length) setTimeout(hanamaru, 200);
+  const title = !missed.length ? (r.lap === 1 ? "全部正解! Every word" : "全部できた!") : r.lap === 1 ? "Super mode complete" : "Round done";
+  $("#view").innerHTML = `<section class="stage"><div class="summary"><h2>${title}</h2>
+    <div class="stats3"><div><b>${r.right}/${r.order.length}</b><span>${r.lap === 1 ? "words right" : "missed words now right"}</span></div><div><b>${acc}%</b><span>${isBest ? "new best" : "accuracy"}</span></div><div><b>${missed.length}</b><span>still missed</span></div></div>
+    ${missed.length ? `<div><div class="q-label" style="margin-bottom:6px">Missed</div><div class="missed">${missed.slice(0, 60).map(k => `<button data-k="${esc(k)}">${esc(k)}</button>`).join("")}${missed.length > 60 ? `<span style="color:var(--muted);align-self:center">+${missed.length - 60} more</span>` : ""}</div></div>` : ""}
+    <div class="nextrow">${missed.length ? `<button class="cta" id="retry">Quiz the ${missed.length} missed</button>` : ""}<button class="${missed.length ? "ghost" : "cta"}" id="again">Start over</button><button class="ghost" id="home">Words</button></div></div></section>`;
+  current = null;
+  if ($("#retry")) $("#retry").addEventListener("click", () => { newRun(missed.map(k => BY[k]).filter(Boolean), r.lap + 1); startSuper(); });
+  $("#again").addEventListener("click", () => { newRun(W, 1); startSuper(); });
+  $("#home").addEventListener("click", render);
+  document.querySelectorAll(".missed button").forEach(b => b.addEventListener("click", () => openDetail(b.dataset.k)));
+  renderBar();
+}
+
+/* ---------------- speed round ---------------- */
+function startSpeed() {
+  const pw = quizPool();
+  current = { kind: "speed", pw, right: 0, total: 0, combo: 0, best: 0, score: 0, xp: 0, missed: new Set(), end: now() + 60e3 };
+  stopTimers();
+  stageShell(`<div class="q-label" id="q-label"></div><div id="q-prompt" style="display:contents"></div><div class="options" id="q-opts"></div><div class="feedback" id="q-fb" aria-live="polite"></div>`);
+  $("#prog").classList.add("timer");
+  const tick = () => { const left = Math.max(0, current.end - now()); setProg(left / 60e3, `${Math.ceil(left / 1000)}s · ${current.score} pts`); if (left <= 0) { stopTimers(); endSession(); } };
+  timers.push(setInterval(tick, 250)); tick();
+  nextSpeed();
+}
+function nextSpeed() {
+  const g = current, x = g.pw[Math.floor(Math.random() * g.pw.length)];
+  g.q = makeQuestion(Math.random() < .5 ? "w2m" : "m2w", x, g.pw);
+  mountPrompt(g.q); g.answered = false;
+  document.querySelectorAll("#q-opts .opt").forEach(b => b.addEventListener("click", () => answerSpeed(+b.dataset.i)));
+  document.onkeydown = e => { if (["1", "2", "3", "4"].includes(e.key)) answerSpeed(+e.key - 1); };
+}
+function answerSpeed(i) {
+  const g = current; if (g.answered || now() > g.end) return;
+  g.answered = true; g.total++;
+  const right = g.q.options.findIndex(o => o.y === g.q.x), ok = i === right;
+  const btns = document.querySelectorAll("#q-opts .opt");
+  btns[right].classList.add("right"); quizResult(g.q.x.w, ok);
+  if (ok) {
+    g.right++; g.combo++; g.best = Math.max(g.best, g.combo);
+    const mult = Math.min(4, 1 + Math.floor(g.combo / 3)); g.score += 10 * mult;
+    $("#combo").textContent = g.combo >= 3 ? `${g.combo} combo · ×${mult}` : "";
+    sfx.ok(); if (g.combo % 10 === 0) hanamaru();
+    timers.push(setTimeout(nextSpeed, 250));
+  } else {
+    btns[i].classList.add("wrong"); g.combo = 0; g.missed.add(g.q.x.w); sfx.no(); $("#combo").textContent = "";
+    $("#q-fb").className = "feedback no"; $("#q-fb").textContent = `${g.q.x.w} = ${g.q.x.m}`;
+    timers.push(setTimeout(() => { $("#q-fb").textContent = ""; nextSpeed(); }, 1200));
+  }
+}
+
+/* ---------------- pairs ---------------- */
+function startPairs() {
+  const pw = quizPool(); const xs = [];
+  for (const x of shuffle(pw)) { if (xs.length === 6) break; if (!xs.some(y => overlaps(x, y))) xs.push(x); }
+  for (const x of shuffle(W)) { if (xs.length === 6) break; if (!xs.includes(x) && !xs.some(y => overlaps(x, y))) xs.push(x); }
+  const cards = shuffle([...xs.map(x => ({ x, side: "w" })), ...xs.map(x => ({ x, side: "m" }))]);
+  current = { kind: "pairs", xs, cards, sel: null, matched: 0, misses: 0, start: now(), missed: new Set(), xp: 0 };
+  stopTimers();
+  stageShell(`<div class="q-label">Match each word to its meaning</div><div class="pairs" id="pairs">${cards.map((c, i) =>
+    `<button class="pcard ${c.side === "w" ? "jp " + len(c.x.w) : ""}" data-i="${i}">${esc(c.side === "w" ? c.x.w : c.x.m)}</button>`).join("")}</div>`);
+  const tick = () => setProg(current.matched / 6, `${current.matched}/6 · ${Math.floor((now() - current.start) / 1000)}s`);
+  timers.push(setInterval(tick, 500)); tick();
+  document.querySelectorAll(".pcard").forEach(b => b.addEventListener("click", () => tapPair(+b.dataset.i, b)));
+}
+function tapPair(i, btn) {
+  const g = current, c = g.cards[i];
+  if (c.done || btn.classList.contains("miss")) return;
+  if (c.side === "w") speak(c.x);
+  if (g.sel === null) { g.sel = i; btn.classList.add("sel"); return; }
+  if (g.sel === i) { g.sel = null; btn.classList.remove("sel"); return; }
+  const a = g.cards[g.sel], aBtn = document.querySelector(`.pcard[data-i="${g.sel}"]`);
+  g.sel = null; aBtn.classList.remove("sel");
+  if (a.x === c.x && a.side !== c.side) {
+    a.done = c.done = true; aBtn.classList.add("done"); btn.classList.add("done"); g.matched++;
+    quizResult(c.x.w, true); sfx.ok(); addXP(8, btn); g.xp += 8;
+    if (g.matched === 6) { stopTimers(); setTimeout(endSession, 500); }
+  } else {
+    g.misses++; sfx.no();
+    [a, c].forEach(z => { if (z.side === "w") g.missed.add(z.x.w); });
+    aBtn.classList.add("miss"); btn.classList.add("miss");
+    setTimeout(() => { aBtn.classList.remove("miss"); btn.classList.remove("miss"); }, 450);
+  }
+  save();
+}
+
+/* ---------------- end of a session ---------------- */
+function endSession() {
+  const g = current; stopTimers();
+  let title, s1, s2, s3, extra = "";
+  if (g.kind === "flash") {
+    title = g.mastered.length ? "合格!" : "お疲れさま!";
+    s1 = [g.right, "cards done"]; s2 = [g.missed.size, "needed another look"]; s3 = [g.xp, "XP"];
+    if (g.mastered.length) extra = `<p>Newly mastered: <b style="font-family:var(--kanji);font-size:1.15rem">${g.mastered.map(esc).join("、")}</b></p>`;
+  } else if (g.kind === "quiz") {
+    title = g.right === g.qs.length ? "満点! Perfect" : g.right >= g.qs.length * .7 ? "よくできました" : "もう一度!";
+    s1 = [`${g.right}/${g.qs.length}`, "correct"]; s2 = [g.best, "best streak"]; s3 = [g.xp, "XP"];
+  } else if (g.kind === "speed") {
+    const isBest = g.score > (S.best.speed || 0); if (isBest) S.best.speed = g.score;
+    const xp = Math.round(g.score / 2); addXP(xp); g.xp = xp;
+    title = isBest ? "New best!" : "Time!";
+    s1 = [g.score, "points"]; s2 = [`${g.right}/${g.total}`, "correct"]; s3 = [g.best, "best combo"];
+  } else {
+    const secs = Math.round((now() - g.start) / 1000), score = Math.max(10, 300 - secs * 3 - g.misses * 15);
+    const isBest = score > (S.best.pairs || 0); if (isBest) S.best.pairs = score;
+    title = isBest ? "New best!" : "All matched";
+    s1 = [secs + "s", "time"]; s2 = [g.misses, "misses"]; s3 = [score, "score"];
+  }
+  markToday(); save();
+  if (g.kind !== "flash" || g.right) sfx.done();
+  if ((g.kind === "quiz" && g.right === g.qs.length) || (g.kind === "flash" && g.mastered.length)) setTimeout(hanamaru, 200);
+  const missed = [...g.missed];
+  $("#view").innerHTML = `<section class="stage"><div class="summary"><h2>${title}</h2>
+    <div class="stats3"><div><b>${s1[0]}</b><span>${s1[1]}</span></div><div><b>${s2[0]}</b><span>${s2[1]}</span></div><div><b>${s3[0]}</b><span>${s3[1]}</span></div></div>
+    ${extra}
+    ${missed.length ? `<div><div class="q-label" style="margin-bottom:6px">Review these</div><div class="missed">${missed.map(k => `<button data-k="${esc(k)}">${esc(k)}</button>`).join("")}</div></div>` : ""}
+    <div class="nextrow"><button class="cta" id="again">Play again</button><button class="ghost" id="home">Words</button></div></div></section>`;
+  current = null;
+  let again = { flash: startFlash, quiz: () => startQuiz(g.type), speed: startSpeed, pairs: startPairs }[g.kind];
+  const q = sessionQueue();
+  if (g.kind === "flash" && !(q.due.length + q.fresh.length)) { $("#again").textContent = "Play Meaning match"; again = () => startQuiz("meaning"); }
+  $("#again").addEventListener("click", again);
+  $("#home").addEventListener("click", render);
+  document.querySelectorAll(".missed button").forEach(b => b.addEventListener("click", () => openDetail(b.dataset.k)));
+  renderBar();
+}
+
+render();
+</script>
+
+
+<style>
+.n5hub-back{position:fixed;z-index:9999;left:calc(12px + env(safe-area-inset-left,0px));bottom:calc(12px + env(safe-area-inset-bottom,0px));
+display:inline-flex;align-items:center;gap:6px;padding:7px 14px 7px 10px;border-radius:999px;text-decoration:none;
+font:700 13px/1 "Zen Kaku Gothic New","Hiragino Sans",system-ui,sans-serif;
+background:var(--ink,#1d2220);color:var(--paper,#f5f6f3);box-shadow:0 4px 14px rgba(0,0,0,.18);opacity:.92}
+.n5hub-back:hover,.n5hub-back:focus-visible{opacity:1}
+.n5hub-back:focus-visible{outline:2px solid var(--hanko,#c43d2b);outline-offset:2px}
+.n5hub-back b{font-family:"Klee One","Hiragino Mincho ProN",serif;font-weight:600;font-size:15px}
+body{padding-bottom:56px}
+</style>
+<a class="n5hub-back" href="index.html" aria-label="Back to all exercises">&#8592; <b>道場</b> All exercises</a>
+</body></html>

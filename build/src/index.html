@@ -1,0 +1,245 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<title>N5 Renshū Dōjō</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Klee+One:wght@400;600&family=Zen+Kaku+Gothic+New:wght@400;500;700&display=swap">
+<style>
+/* Layout: one column. Sticky bar, a short hero with the "pick up where you left off" card, then four skill
+   shelves (characters, words, counters, listening); each exercise is a card fronted by a practice-paper square.
+   Same sumi ink / practice-paper green / hanko red system as the exercises themselves. */
+:root {
+  --paper: #f5f6f3; --sheet: #ffffff; --ink: #1d2220; --muted: #5d6762; --faint: #c9cfcb;
+  --guide: #9cc3ad; --guide-soft: #e6f1ea; --hanko: #c43d2b; --hanko-soft: #fbe9e6;
+  --ok: #2f7d55; --gold: #b9842a;
+  --kanji: "Klee One", "Hiragino Mincho ProN", "Yu Mincho", serif;
+  --ui: "Zen Kaku Gothic New", "Hiragino Sans", "Yu Gothic", "Noto Sans JP", system-ui, sans-serif;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --paper: #141816; --sheet: #1c211f; --ink: #e9ece9; --muted: #9aa49f; --faint: #3a423e;
+    --guide: #3f6a54; --guide-soft: #1e2b24; --hanko: #e2614c; --hanko-soft: #3a211d;
+    --ok: #6cc596; --gold: #ddb062; color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --paper: #141816; --sheet: #1c211f; --ink: #e9ece9; --muted: #9aa49f; --faint: #3a423e;
+  --guide: #3f6a54; --guide-soft: #1e2b24; --hanko: #e2614c; --hanko-soft: #3a211d;
+  --ok: #6cc596; --gold: #ddb062; color-scheme: dark;
+}
+* { box-sizing: border-box; }
+html, body { background: var(--paper); }
+body { color: var(--ink); font-family: var(--ui); font-size: 16px; line-height: 1.6; }
+body::before { content: ""; position: fixed; inset: 0 0 auto; height: env(safe-area-inset-top, 0px); z-index: 10; background: var(--paper); }
+h1, h2, h3 { margin: 0; text-wrap: balance; }
+a { color: inherit; }
+.wrap, .bar-in { max-width: 900px; margin: 0 auto; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
+.wrap { padding-block: 0 56px; }
+
+.bar { position: sticky; top: env(safe-area-inset-top, 0px); z-index: 20; background: var(--paper); border-bottom: 1px solid var(--faint); }
+.bar-in { padding-block: 10px; display: flex; align-items: center; gap: 10px; }
+.brand { font-family: var(--kanji); font-weight: 600; font-size: 1.3rem; margin-right: auto; display: flex; align-items: baseline; gap: 8px; }
+.brand small { font-family: var(--ui); font-size: .72rem; letter-spacing: .14em; text-transform: uppercase; color: var(--muted); font-weight: 700; }
+.pill { display: inline-flex; align-items: center; gap: 6px; font-size: .82rem; font-weight: 700; padding: 3px 10px; border-radius: 999px; background: var(--sheet); border: 1px solid var(--faint); font-variant-numeric: tabular-nums; white-space: nowrap; }
+.pill svg { width: 14px; height: 14px; }
+.pill.streak { color: var(--hanko); }
+
+.hero { padding-block: 28px 4px; display: grid; gap: 8px; }
+.hero h1 { font-family: var(--kanji); font-weight: 600; font-size: clamp(1.9rem, 6vw, 2.7rem); line-height: 1.15; }
+.hero p { margin: 0; color: var(--muted); max-width: 58ch; }
+
+.resume { margin-top: 18px; display: grid; grid-template-columns: auto minmax(0, 1fr) auto; gap: 14px; align-items: center; text-decoration: none;
+  background: var(--ink); color: var(--paper); border-radius: 16px; padding: 14px 18px; }
+.resume .gk { font-family: var(--kanji); font-weight: 600; font-size: 1.7rem; line-height: 1; background: var(--hanko); color: #fff; border-radius: 8px; width: 50px; height: 50px; display: grid; place-items: center; }
+.resume small { display: block; font-size: .72rem; letter-spacing: .12em; text-transform: uppercase; opacity: .75; font-weight: 700; }
+.resume b { font-size: 1.05rem; }
+.resume .go { font-weight: 700; white-space: nowrap; }
+.resume:focus-visible { outline: 3px solid var(--guide); outline-offset: 3px; }
+
+.shelf { margin-top: 32px; }
+.shelf-h { display: flex; align-items: baseline; gap: 12px; flex-wrap: wrap; padding-bottom: 8px; border-bottom: 2px solid var(--ink); }
+.shelf-h .ja { font-family: var(--kanji); font-weight: 600; font-size: 1.35rem; line-height: 1.2; }
+.shelf-h h2 { font-size: .78rem; letter-spacing: .14em; text-transform: uppercase; color: var(--muted); font-weight: 700; }
+.cards { margin-top: 12px; display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 260px), 1fr)); gap: 12px; }
+
+.card { position: relative; display: grid; grid-template-columns: 76px minmax(0, 1fr); gap: 14px; align-items: start; text-decoration: none;
+  background: var(--sheet); border: 1px solid var(--faint); border-radius: 14px; padding: 14px; transition: transform .15s ease, border-color .15s ease; }
+.card:hover { transform: translateY(-2px); border-color: var(--guide); }
+.card:focus-visible { outline: 2px solid var(--ink); outline-offset: 2px; }
+.sq { position: relative; width: 76px; aspect-ratio: 1; max-width: 100%; border: 2px solid var(--guide); border-radius: 5px; background: var(--paper); display: grid; place-items: center; }
+.sq::before { content: ""; position: absolute; left: 50%; top: 7%; bottom: 7%; border-left: 1.5px dashed var(--guide-soft); }
+.sq::after { content: ""; position: absolute; top: 50%; left: 7%; right: 7%; border-top: 1.5px dashed var(--guide-soft); }
+.sq span { position: relative; z-index: 1; font-family: var(--kanji); font-weight: 600; font-size: 2.6rem; line-height: 1; }
+.sq span.two { font-size: 1.7rem; letter-spacing: -.02em; }
+.body { display: grid; gap: 4px; min-width: 0; }
+.name { display: flex; align-items: baseline; gap: 8px; flex-wrap: wrap; }
+.name b { font-size: 1.02rem; }
+.name .ja { font-family: var(--kanji); font-size: .95rem; color: var(--muted); }
+.what { font-size: .88rem; color: var(--muted); line-height: 1.45; }
+.meta { margin-top: 4px; display: flex; gap: 6px; flex-wrap: wrap; align-items: center; }
+.chip { font-size: .74rem; font-weight: 700; border: 1px solid var(--faint); border-radius: 999px; padding: 1px 9px; white-space: nowrap; font-variant-numeric: tabular-nums; }
+.chip.prog { border-color: var(--guide); background: var(--guide-soft); color: var(--ink); }
+.chip.new { border-color: transparent; color: var(--muted); font-weight: 500; padding-inline: 0; }
+.track { height: 5px; border-radius: 999px; background: var(--guide-soft); overflow: hidden; margin-top: 6px; }
+.track i { display: block; height: 100%; background: var(--guide); border-radius: 999px; }
+.stamp { position: absolute; top: 10px; right: 10px; width: 22px; height: 22px; border-radius: 4px; background: var(--hanko); color: #fff; font-family: var(--kanji); font-weight: 600; font-size: .85rem; display: grid; place-items: center; transform: rotate(-8deg); }
+
+footer { margin-top: 40px; font-size: .8rem; color: var(--muted); display: grid; gap: 6px; max-width: 70ch; }
+@media (max-width: 460px) {
+  .brand small { display: none; }
+  .card { grid-template-columns: 62px minmax(0, 1fr); }
+  .sq { width: 62px; }
+  .sq span { font-size: 2.1rem; }
+  .sq span.two { font-size: 1.4rem; }
+  .resume { grid-template-columns: auto minmax(0, 1fr); }
+  .resume .go { display: none; }
+}
+@media (prefers-reduced-motion: reduce) { .card { transition: none; } .card:hover { transform: none; } }
+</style>
+
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <symbol id="i-flame" viewBox="0 0 24 24"><path fill="currentColor" d="M12 2c1 3.5-1.6 5-1.6 7.6 0 1.4 1 2.4 2.2 2.4 1.6 0 2.4-1.4 2-3.4 2.4 1.6 4.4 4.3 4.4 7.4A7 7 0 0 1 12 23a7 7 0 0 1-7-7c0-4.9 4.6-7.6 7-14z"/></symbol>
+</svg>
+
+<header class="bar"><div class="bar-in">
+  <div class="brand">練習道場 <small>N5 all exercises</small></div>
+  <span class="pill streak" title="Days in a row with practice in Kanji, Kotoba or Keiyōshi"><svg><use href="#i-flame"/></svg><span id="streak">0</span></span>
+</div></header>
+
+<main class="wrap">
+  <section class="hero">
+    <h1>Every N5 exercise, one door.</h1>
+    <p>Eight practice apps for the JLPT N5: kanji, vocabulary, adjective forms, counters, dates and listening. Pick one below; the button in the bottom corner of each exercise brings you back here.</p>
+    <a class="resume" id="resume" href="kanji.html" data-app="kanji">
+      <span class="gk" id="resume-gk">漢</span>
+      <span><small id="resume-lbl">Start here</small><b id="resume-name">N5 Kanji Renshū</b></span>
+      <span class="go">Open →</span>
+    </a>
+  </section>
+
+  <div id="shelves"></div>
+
+  <footer>
+    <span>Progress is kept separately for each exercise in this browser, and the Kanji, Kotoba and Keiyōshi apps also sync it to your account. Progress from the original standalone apps doesn't carry over automatically: use Backup there and Restore here (in each app's settings).</span>
+  </footer>
+</main>
+
+<script>
+const APPS = [
+  { shelf: "chars", id: "kanji", href: "kanji.html", glyph: "漢", name: "Kanji Renshū", ja: "漢字練習",
+    what: "Spaced-repetition flashcards, meaning and reading quizzes, a speed round and pairs for all 110 N5 kanji.", scope: "110 kanji" },
+  { shelf: "chars", id: "asobiba", href: "asobiba.html", glyph: "遊", name: "Asobiba", ja: "遊び場",
+    what: "Hands-on games built for iPad: write kanji with your finger, sort words, match cards, build words and switch readings.", scope: "5 games" },
+  { shelf: "words", id: "kotoba", href: "kotoba.html", glyph: "言", name: "Kotoba Renshū", ja: "言葉練習",
+    what: "The N5 vocabulary list as flashcards, with meaning match, listen and pick, kanji words, a speed round and pairs.", scope: "667 words" },
+  { shelf: "words", id: "keiyoshi", href: "keiyoshi.html", glyph: "形", name: "Keiyōshi Renshū", ja: "形容詞練習",
+    what: "い and な adjectives: fill-in sentences, a form drill (くない, かった, くて…), い or な sorting and listening.", scope: "80 adjectives" },
+  { shelf: "count", id: "countersort", href: "counter-sort.html", glyph: "本", name: "Counter Sort", ja: "数え方",
+    what: "Learn which counter a thing takes by its shape. Four stages, from 本・枚・冊 up to all ten thing counters.", scope: "4 stages" },
+  { shelf: "count", id: "kazoeru", href: "kazoeru.html", glyph: "三本", two: true, name: "Kazoeru", ja: "数える",
+    what: "Twelve-question rounds on the sound changes: いっぽん, さんぼん, ろっぴき. Counters you miss come back more often.", scope: "26 counters" },
+  { shelf: "count", id: "hizuke", href: "days.html", glyph: "日", name: "Hizuke", ja: "日付",
+    what: "Days of the month on a real calendar: say the date, find it, or hear it. Drills ついたち, ようか vs よっか, はつか and friends.", scope: "31 days" },
+  { shelf: "listen", id: "listening", href: "listening.html", glyph: "聴", name: "Listening Pilot", ja: "聴解",
+    what: "A short mock of the listening paper with recorded voices: one question set for each of the four もんだい types.", scope: "6 questions" },
+];
+const SHELVES = [
+  { id: "chars", ja: "文字", en: "Characters" },
+  { id: "words", ja: "語彙", en: "Words & grammar" },
+  { id: "count", ja: "助数詞", en: "Counters & dates" },
+  { id: "listen", ja: "聴解", en: "Listening" },
+];
+
+/* All exercises now live on this page's origin, so their own saved progress can be read here. */
+const read = k => { try { const v = localStorage.getItem(k); return v === null ? null : JSON.parse(v); } catch (e) { return null; } };
+const esc = s => String(s).replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+
+function srs(key, total) {
+  const S = read(key);
+  if (!S || !S.cards) return null;
+  const seen = Object.values(S.cards).filter(c => c && c.s > 0).length;
+  if (!seen) return null;
+  const done = Object.values(S.cards).filter(c => c && c.s >= 4).length;
+  return { text: `${done} of ${total} mastered`, frac: done / total, full: done >= total };
+}
+function progress(id) {
+  if (id === "kanji") return srs("n5kanji:progress", 110);
+  if (id === "kotoba") return srs("n5vocab:progress", 667);
+  if (id === "keiyoshi") return srs("n5adj:progress", 80);
+  if (id === "asobiba") {
+    const b = read("asobiba:best"); const n = b ? Object.keys(b).length : 0;
+    return n ? { text: `${Math.min(n, 5)} of 5 games played`, frac: Math.min(n, 5) / 5, full: n >= 5 } : null;
+  }
+  if (id === "countersort") {
+    const b = read("countersort:best"); if (!b) return null;
+    const passed = [0, 1, 2, 3].filter(i => (b[i] || 0) >= 8).length;
+    return { text: `${passed} of 4 stages passed${b.all ? ` · mixed ${b.all}/10` : ""}`, frac: passed / 4, full: passed === 4 };
+  }
+  if (id === "kazoeru") {
+    const best = read("kazoeru:best"), st = read("kazoeru:stats");
+    const seen = st ? Object.keys(st).length : 0;
+    if (!best && !seen) return null;
+    return { text: `Best ${best || 0}/12 · ${seen} of 26 seen`, frac: seen / 26, full: (best || 0) === 12 && seen >= 26 };
+  }
+  if (id === "hizuke") {
+    const st = read("hizuke:stats"); if (!st || !Object.keys(st).length) return null;
+    const known = Object.values(st).filter(s => s && s.s >= 2).length;
+    return { text: `${known} of 31 dates known`, frac: known / 31, full: known >= 31 };
+  }
+  if (id === "listening") {
+    const h = read("n5pilot:history"); if (!h || !h.length) return null;
+    const last = h[h.length - 1];
+    return { text: `Last exam ${last.right}/${last.total} · ${h.length} taken`, frac: last.right / last.total, full: last.right === last.total };
+  }
+  return null;
+}
+
+function streak() {
+  const days = new Set();
+  ["n5kanji:progress", "n5vocab:progress", "n5adj:progress"].forEach(k => { const S = read(k); (S && S.days || []).forEach(d => days.add(d)); });
+  const fmt = d => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+  const d = new Date(); let n = 0;
+  if (!days.has(fmt(d))) d.setDate(d.getDate() - 1);
+  while (days.has(fmt(d))) { n++; d.setDate(d.getDate() - 1); }
+  return n;
+}
+
+function render() {
+  document.getElementById("shelves").innerHTML = SHELVES.map(sh => `
+    <section class="shelf" aria-labelledby="sh-${sh.id}">
+      <div class="shelf-h"><span class="ja">${sh.ja}</span><h2 id="sh-${sh.id}">${sh.en}</h2></div>
+      <div class="cards">${APPS.filter(a => a.shelf === sh.id).map(a => {
+        const p = progress(a.id);
+        return `<a class="card" href="${a.href}" data-app="${a.id}">
+          ${p && p.full ? `<span class="stamp" title="Complete">合</span>` : ""}
+          <span class="sq" aria-hidden="true"><span class="${a.two ? "two" : ""}">${a.glyph}</span></span>
+          <span class="body">
+            <span class="name"><b>${esc(a.name)}</b><span class="ja">${a.ja}</span></span>
+            <span class="what">${esc(a.what)}</span>
+            <span class="meta"><span class="chip">${a.scope}</span>${p ? `<span class="chip prog">${esc(p.text)}</span>` : `<span class="chip new">Not started</span>`}</span>
+            ${p ? `<span class="track" aria-hidden="true"><i style="width:${Math.round(Math.min(1, p.frac) * 100)}%"></i></span>` : ""}
+          </span>
+        </a>`;
+      }).join("")}</div>
+    </section>`).join("");
+
+  document.getElementById("streak").textContent = streak();
+
+  const last = read("n5hub:last");
+  const a = APPS.find(x => x.id === last) || APPS[0];
+  const r = document.getElementById("resume");
+  r.href = a.href; r.dataset.app = a.id;
+  document.getElementById("resume-gk").textContent = a.glyph.slice(0, 1);
+  document.getElementById("resume-name").textContent = a.name;
+  document.getElementById("resume-lbl").textContent = last ? "Pick up where you left off" : "Start here";
+
+  document.querySelectorAll("[data-app]").forEach(el => el.addEventListener("click", () => {
+    try { localStorage.setItem("n5hub:last", JSON.stringify(el.dataset.app)); } catch (e) {}
+  }));
+}
+render();
+/* Coming back with the browser's back button can restore this page from cache; refresh the numbers. */
+window.addEventListener("pageshow", e => { if (e.persisted) render(); });
+</script>
+
+</body></html>
